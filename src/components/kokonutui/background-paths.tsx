@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 function FloatingPaths({ position }: { position: number }) {
 	const paths = Array.from({ length: 36 }, (_, i) => ({
@@ -54,6 +55,11 @@ export default function BackgroundPaths({ title = 'SS1/23' }: { title?: string }
 				<FloatingPaths position={-1} />
 			</div>
 
+			{/* Bank Logo in the top-left corner */}
+			<div className='absolute top-4 left-4 z-50'>
+				<img src='/bank-logo.png' alt='Lloyds Bank Logo' className='h-12 w-auto' />
+			</div>
+
 			<div className='relative z-10 container mx-auto px-4 md:px-6 text-center'>
 				<motion.div
 					initial={{ opacity: 0 }}
@@ -92,6 +98,7 @@ export default function BackgroundPaths({ title = 'SS1/23' }: { title?: string }
                         overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300'
 					>
 						<Button
+							asChild
 							variant='ghost'
 							className='rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md
                             bg-[#231F20]/95 hover:bg-[#231F20]/100 dark:bg-[#00864F]/95 dark:hover:bg-[#00864F]/100
@@ -99,13 +106,15 @@ export default function BackgroundPaths({ title = 'SS1/23' }: { title?: string }
                             group-hover:-translate-y-0.5 border border-[#00864F]/10 dark:border-[#231F20]/10
                             hover:shadow-md dark:hover:shadow-[#231F20]/50'
 						>
-							<span className='opacity-90 group-hover:opacity-100 transition-opacity'>Discover Excellence</span>
-							<span
-								className='ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5
-                                transition-all duration-300'
-							>
-								→
-							</span>
+							<Link href='/dashboard'>
+								<span className='opacity-90 group-hover:opacity-100 transition-opacity'>Discover Excellence</span>
+								<span
+									className='ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5
+								transition-all duration-300'
+								>
+									→
+								</span>
+							</Link>
 						</Button>
 					</div>
 				</motion.div>

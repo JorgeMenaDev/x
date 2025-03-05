@@ -53,18 +53,18 @@ export function TableView({
 	}
 
 	return (
-		<div className='flex-1 overflow-auto text-sm'>
+		<div className='flex-1 overflow-auto text-xs'>
 			<Table>
 				<TableHeader>
 					<TableRow>
-						<TableHead className='w-[40px]'>
-							<Checkbox checked={selectAll} onCheckedChange={onSelectAll} />
+						<TableHead className='w-[32px]'>
+							<Checkbox checked={selectAll} onCheckedChange={onSelectAll} className='h-3.5 w-3.5' />
 						</TableHead>
 						{columns.map(column => (
 							<TableHead key={column.name}>
 								<div className='flex items-center gap-1'>
-									<span>{column.name}</span>
-									<span className='text-xs text-muted-foreground'>{column.type}</span>
+									<span className='font-medium'>{column.name}</span>
+									<span className='text-[10px] text-muted-foreground'>{column.type}</span>
 								</div>
 							</TableHead>
 						))}
@@ -72,9 +72,13 @@ export function TableView({
 				</TableHeader>
 				<TableBody>
 					{localData.map(row => (
-						<TableRow key={row.id}>
-							<BaseTableCell>
-								<Checkbox checked={selectedRows.has(row.id)} onCheckedChange={() => onSelectRow(row.id)} />
+						<TableRow key={row.id} className='h-8'>
+							<BaseTableCell className='p-0 pl-2'>
+								<Checkbox
+									checked={selectedRows.has(row.id)}
+									onCheckedChange={() => onSelectRow(row.id)}
+									className='h-3.5 w-3.5'
+								/>
 							</BaseTableCell>
 							{columns.map(column => (
 								<BaseTableCell key={`${row.id}-${column.name}`} className='p-0'>

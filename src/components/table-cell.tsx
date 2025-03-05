@@ -37,9 +37,9 @@ export function TableCell({
 			) : (
 				<div
 					onDoubleClick={handleDoubleClick}
-					className='px-4 py-2 h-full w-full flex items-center cursor-pointer hover:bg-gray-50'
+					className='px-2 py-1.5 h-full w-full flex items-center cursor-pointer hover:bg-gray-50 text-xs truncate'
 				>
-					{value === null ? <span className='text-gray-400 italic'>NULL</span> : value}
+					{value === null ? <span className='text-gray-400 italic text-xs'>NULL</span> : value}
 				</div>
 			)}
 		</div>

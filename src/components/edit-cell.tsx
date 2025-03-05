@@ -89,27 +89,37 @@ export function EditCell({ initialValue, onSave, onCancel, className, type = 'te
 	}
 
 	return (
-		<div ref={containerRef} className={`bg-gray-50 p-2 ${className}`}>
+		<div ref={containerRef} className={`bg-gray-50 p-1.5 ${className}`}>
 			<Textarea
 				ref={textareaRef}
 				value={value}
 				onChange={handleChange}
 				onKeyDown={handleKeyDown}
-				className={`min-h-[80px] mb-2 w-full bg-white ${error ? 'border-red-500' : 'border-gray-200'}`}
+				className={`min-h-[60px] mb-1.5 w-full bg-white text-xs ${error ? 'border-red-500' : 'border-gray-200'}`}
 			/>
-			{error && <div className='text-red-500 text-xs mb-2'>{error}</div>}
-			<div className='flex flex-col gap-2'>
-				<div className='flex gap-2'>
-					<Button size='sm' variant='outline' onClick={handleSave} className='flex items-center gap-1 h-7 px-2 text-xs'>
-						<span className='text-xs'>↩</span> Save changes
+			{error && <div className='text-red-500 text-[10px] mb-1.5'>{error}</div>}
+			<div className='flex gap-1.5 justify-between'>
+				<Button size='sm' variant='outline' onClick={handleSetNull} className='h-6 px-2 text-[10px]'>
+					Set NULL
+				</Button>
+				<div className='flex gap-1.5'>
+					<Button
+						size='sm'
+						variant='outline'
+						onClick={onCancel}
+						className='h-6 px-2 text-[10px] flex items-center gap-1'
+					>
+						<span className='text-[10px]'>Esc</span> Cancel
 					</Button>
-					<Button size='sm' variant='outline' onClick={onCancel} className='flex items-center gap-1 h-7 px-2 text-xs'>
-						<span className='text-xs'>Esc</span> Cancel changes
+					<Button
+						size='sm'
+						variant='outline'
+						onClick={handleSave}
+						className='h-6 px-2 text-[10px] flex items-center gap-1'
+					>
+						<span className='text-[10px]'>↩</span> Save
 					</Button>
 				</div>
-				<Button size='sm' variant='outline' onClick={handleSetNull} className='h-7 px-2 text-xs'>
-					Set to NULL
-				</Button>
 			</div>
 		</div>
 	)

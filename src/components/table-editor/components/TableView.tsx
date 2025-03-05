@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Table, TableBody, TableCell as BaseTableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
@@ -22,8 +22,20 @@ export function TableView({
 	onCellEdit
 }: TableViewProps) {
 	const [editingCell, setEditingCell] = useState<EditingCell | null>(null)
+	const [localData, setLocalData] = useState(data)
+
+	// Update local data when prop changes
+	useEffect(() => {
+		setLocalData(data)
+	}, [data])
 
 	const updateCell = (rowId: string, columnName: string, value: string | null) => {
+		// Update local state immediately for UI responsiveness
+		setLocalData(prevData =>
+			prevData.map(row => (row.id === rowId ? { ...row, [columnName]: value === null ? null : value } : row))
+		)
+
+		// Notify parent component
 		onCellEdit?.(rowId, columnName, value)
 		setEditingCell(null)
 	}
@@ -59,7 +71,7 @@ export function TableView({
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{data.map(row => (
+					{localData.map(row => (
 						<TableRow key={row.id}>
 							<BaseTableCell>
 								<Checkbox checked={selectedRows.has(row.id)} onCheckedChange={() => onSelectRow(row.id)} />
@@ -69,7 +81,7 @@ export function TableView({
 									<ContextMenu>
 										<ContextMenuTrigger className='h-full w-full'>
 											<TableCell
-												value={String(row[column.name])}
+												value={row[column.name] === null ? null : String(row[column.name])}
 												onChange={value => updateCell(row.id, column.name, value)}
 												onStartEdit={() => startEditing(row.id, column.name)}
 												onCancelEdit={cancelEditing}

@@ -29,7 +29,7 @@ export function EditCell({ initialValue, onSave, onCancel, className }: EditCell
 	useEffect(() => {
 		function handleClickOutside(event: MouseEvent) {
 			if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-				onCancel()
+				handleSave()
 			}
 		}
 
@@ -37,7 +37,7 @@ export function EditCell({ initialValue, onSave, onCancel, className }: EditCell
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside)
 		}
-	}, [onCancel])
+	}, [])
 
 	const handleSave = () => {
 		onSave(value)
@@ -51,7 +51,7 @@ export function EditCell({ initialValue, onSave, onCancel, className }: EditCell
 		if (e.key === 'Escape') {
 			e.preventDefault()
 			onCancel()
-		} else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+		} else if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault()
 			handleSave()
 		}

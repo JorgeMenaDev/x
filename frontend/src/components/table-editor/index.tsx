@@ -1,16 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sidebar } from './components/Sidebar'
 import { TableView } from './components/TableView'
 import { TableToolbar } from './components/TableToolbar'
 import { TablePagination } from './components/TablePagination'
-import { MOCK_TABLES, TableData } from './types'
+import { MOCK_TABLES, TableData, TableColumn } from './types'
+import { useTables } from '../../hooks/inventory/tables/use-tables'
+import { useTableData } from '../../hooks/inventory/tables/use-table-data'
+import { QmPurpose } from '../../models/inventory/table'
 
 export function TableEditor() {
 	const [selectedSchema] = useState('public')
-	const [selectedTable, setSelectedTable] = useState('quotes')
-	const [tables] = useState<string[]>([
+	const [selectedTable, setSelectedTable] = useState('qm_purpose') // Default to qm_purpose since it's implemented
+	const [currentPage, setCurrentPage] = useState(1)
+	const [rowsPerPage] = useState(10)
+
+	// Fetch tables from the API
+	const { data: tablesResponse, isLoading: isLoadingTables } = useTables()
+
+	// Use the fetched tables if available, otherwise fall back to the hardcoded list
+	const tables = tablesResponse?.tables.map(table => table.name) || [
 		'qm_purpose',
 		'extracted_products',
 		'inventory',
@@ -18,22 +28,63 @@ export function TableEditor() {
 		'offices',
 		'price_lists',
 		'product_embeddings',
-		'product_embeddings2',
 		'product_types',
 		'products',
 		'quotes',
 		'variants'
-	])
+	]
+
+	// Fetch data for the selected table
+	const {
+		data: tableDataResponse,
+		isLoading: isLoadingTableData,
+		error: tableDataError
+	} = useTableData(selectedTable, currentPage, rowsPerPage)
+
 	const [searchQuery, setSearchQuery] = useState('')
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
 	const [selectAll, setSelectAll] = useState(false)
-	const [currentPage, setCurrentPage] = useState(1)
-	const [rowsPerPage] = useState(100)
 	const [tableData, setTableData] = useState(MOCK_TABLES)
 
+	// Update the table data when the API response changes
+	useEffect(() => {
+		if (tableDataResponse && selectedTable === 'qm_purpose') {
+			// Convert the API response to the format expected by the TableView component
+			const columns: TableColumn[] = [
+				{ name: 'id', type: 'uuid', sortable: true },
+				{ name: 'text', type: 'text', sortable: true },
+				{ name: 'created_at', type: 'timestamp', sortable: true },
+				{ name: 'updated_at', type: 'timestamp', sortable: true }
+			]
+
+			const data = tableDataResponse.data.map((record: QmPurpose) => ({
+				id: record.id,
+				text: record.text,
+				created_at: record.created_at,
+				updated_at: record.updated_at
+			}))
+
+			// Update the tableData state with the new data
+			setTableData(prev => ({
+				...prev,
+				qm_purpose: {
+					columns,
+					data
+				}
+			}))
+		}
+	}, [tableDataResponse, selectedTable])
+
+	// Reset selected rows when changing tables
+	useEffect(() => {
+		setSelectedRows(new Set())
+		setSelectAll(false)
+	}, [selectedTable])
+
 	// Get current table data
-	const currentTableData = tableData[selectedTable as keyof typeof tableData]
-	const totalRecords = currentTableData.data.length
+	const currentTableData = tableData[selectedTable as keyof typeof tableData] || { columns: [], data: [] }
+	const totalRecords =
+		selectedTable === 'qm_purpose' && tableDataResponse ? tableDataResponse.total : currentTableData.data.length
 
 	const handleSelectAll = () => {
 		if (selectAll) {
@@ -57,6 +108,8 @@ export function TableEditor() {
 	}
 
 	const handleInsertRow = (data: TableData) => {
+		// For now, just update the local state
+		// In a real implementation, this would call an API endpoint
 		setTableData(prev => ({
 			...prev,
 			[selectedTable]: {
@@ -67,6 +120,8 @@ export function TableEditor() {
 	}
 
 	const handleDeleteRows = (ids: string[]) => {
+		// For now, just update the local state
+		// In a real implementation, this would call an API endpoint
 		setTableData(prev => ({
 			...prev,
 			[selectedTable]: {
@@ -89,6 +144,7 @@ export function TableEditor() {
 					onTableSelect={setSelectedTable}
 					searchQuery={searchQuery}
 					onSearchChange={setSearchQuery}
+					isLoading={isLoadingTables}
 				/>
 
 				<div className='flex-1 flex flex-col overflow-hidden'>
@@ -100,14 +156,30 @@ export function TableEditor() {
 						onDeleteRows={handleDeleteRows}
 					/>
 
-					<TableView
-						columns={currentTableData.columns}
-						data={currentTableData.data}
-						selectedRows={selectedRows}
-						onSelectRow={handleSelectRow}
-						selectAll={selectAll}
-						onSelectAll={handleSelectAll}
-					/>
+					{isLoadingTableData ? (
+						<div className='flex-1 flex items-center justify-center'>
+							<div className='text-center'>
+								<div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto'></div>
+								<p className='mt-2'>Loading table data...</p>
+							</div>
+						</div>
+					) : tableDataError ? (
+						<div className='flex-1 flex items-center justify-center'>
+							<div className='text-center text-red-500'>
+								<p>Error loading table data.</p>
+								<p className='text-sm'>{(tableDataError as Error).message}</p>
+							</div>
+						</div>
+					) : (
+						<TableView
+							columns={currentTableData.columns}
+							data={currentTableData.data}
+							selectedRows={selectedRows}
+							onSelectRow={handleSelectRow}
+							selectAll={selectAll}
+							onSelectAll={handleSelectAll}
+						/>
+					)}
 
 					<TablePagination
 						currentPage={currentPage}

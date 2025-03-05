@@ -2,8 +2,28 @@
 
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Filter, Plus, Lock, Eye, ChevronDown } from 'lucide-react'
+import {
+	Filter,
+	Plus,
+	Lock,
+	Eye,
+	ChevronDown,
+	Database,
+	MoreVertical,
+	Copy,
+	Edit,
+	Clipboard,
+	FileOutput,
+	Trash2
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu'
 import type { SidebarProps } from '../types'
 
 export function Sidebar({
@@ -15,6 +35,13 @@ export function Sidebar({
 	onSearchChange
 }: SidebarProps) {
 	const filteredTables = tables.filter(table => table.toLowerCase().includes(searchQuery.toLowerCase()))
+
+	// Handle copy table name
+	const handleCopyName = (e: React.MouseEvent, tableName: string) => {
+		e.stopPropagation() // Prevent triggering the table selection
+		navigator.clipboard.writeText(tableName)
+		// You could add a toast notification here if you have a toast component
+	}
 
 	return (
 		<div className='w-56 border-r overflow-y-auto flex flex-col'>
@@ -50,17 +77,66 @@ export function Sidebar({
 					<div
 						key={table}
 						className={cn(
-							'flex items-center px-2 py-1 text-sm cursor-pointer hover:bg-muted/50',
+							'flex items-center px-2 py-1 text-sm cursor-pointer hover:bg-muted/50 group',
 							selectedTable === table && 'bg-muted'
 						)}
 						onClick={() => onTableSelect(table)}
 					>
 						<div className='w-5 flex justify-center'>
-							{table === 'email_sections' && <Lock className='h-3 w-3 text-amber-500' />}
-							{table === 'emails' && <Lock className='h-3 w-3 text-amber-500' />}
-							{table === 'reported_products' && <Eye className='h-3 w-3 text-muted-foreground' />}
+							{table === 'inventory' || table === 'price_lists' ? (
+								<Lock className='h-3.5 w-3.5 text-amber-500' />
+							) : table === 'product_embeddings' || table === 'product_embeddings_cache' ? (
+								<Eye className='h-3.5 w-3.5 text-muted-foreground' />
+							) : (
+								<Database className='h-3.5 w-3.5 text-muted-foreground' />
+							)}
 						</div>
-						<span>{table}</span>
+						<span className='flex-1 ml-1'>{table}</span>
+
+						<div className='opacity-0 group-hover:opacity-100 transition-opacity'>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button
+										variant='ghost'
+										size='icon'
+										className='h-5 w-5 p-0'
+										onClick={e => e.stopPropagation()} // Prevent triggering the table selection
+									>
+										<MoreVertical className='h-3.5 w-3.5 text-muted-foreground' />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align='end' className='w-56'>
+									<DropdownMenuItem className='cursor-pointer' onClick={e => handleCopyName(e, table)}>
+										<Copy className='h-4 w-4 mr-2' />
+										Copy name
+									</DropdownMenuItem>
+									<DropdownMenuItem className='cursor-pointer' onClick={e => e.stopPropagation()}>
+										<Edit className='h-4 w-4 mr-2' />
+										Edit table
+									</DropdownMenuItem>
+									<DropdownMenuItem className='cursor-pointer' onClick={e => e.stopPropagation()}>
+										<Clipboard className='h-4 w-4 mr-2' />
+										Duplicate table
+									</DropdownMenuItem>
+									<DropdownMenuItem className='cursor-pointer' onClick={e => e.stopPropagation()}>
+										<Eye className='h-4 w-4 mr-2' />
+										View policies
+									</DropdownMenuItem>
+									<DropdownMenuItem className='cursor-pointer' onClick={e => e.stopPropagation()}>
+										<FileOutput className='h-4 w-4 mr-2' />
+										Export data
+									</DropdownMenuItem>
+									<DropdownMenuSeparator />
+									<DropdownMenuItem
+										className='cursor-pointer text-destructive focus:text-destructive'
+										onClick={e => e.stopPropagation()}
+									>
+										<Trash2 className='h-4 w-4 mr-2' />
+										Delete table
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</div>
 					</div>
 				))}
 			</div>

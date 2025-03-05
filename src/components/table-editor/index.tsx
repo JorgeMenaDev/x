@@ -10,7 +10,20 @@ import { MOCK_TABLES, TableData } from './types'
 export function TableEditor() {
 	const [selectedSchema] = useState('public')
 	const [selectedTable, setSelectedTable] = useState('quotes')
-	const [tables] = useState<string[]>(['quotes', 'qm_purpose'])
+	const [tables] = useState<string[]>([
+		'qm_purpose',
+		'extracted_products',
+		'inventory',
+		'matched_products',
+		'offices',
+		'price_lists',
+		'product_embeddings',
+		'product_embeddings_cache',
+		'product_types',
+		'products',
+		'quotes',
+		'variants'
+	])
 	const [searchQuery, setSearchQuery] = useState('')
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
 	const [selectAll, setSelectAll] = useState(false)

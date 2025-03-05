@@ -26,7 +26,7 @@ export function TableToolbar({ selectedTable, columns, onInsertRow }: TableToolb
 
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Button variant='default' size='sm' className='bg-emerald-500 hover:bg-emerald-600'>
+						<Button variant='default' size='sm'>
 							<Plus className='h-4 w-4 mr-2' />
 							Insert
 							<ChevronDownIcon className='h-4 w-4 ml-1' />

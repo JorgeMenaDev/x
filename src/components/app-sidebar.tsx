@@ -12,6 +12,7 @@ import {
 	Send,
 	Settings,
 	Settings2,
+	ShieldUser,
 	SquareTerminal
 } from 'lucide-react'
 
@@ -112,7 +113,7 @@ const data = {
 		{
 			title: 'Admin',
 			url: '#',
-			icon: Settings,
+			icon: ShieldUser,
 			items: [
 				{
 					title: 'Table Editor',

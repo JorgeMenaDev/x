@@ -65,7 +65,7 @@ export function InsertRowDrawer({ isOpen, onClose, columns, selectedTable, onSub
 
 	return (
 		<Drawer open={isOpen} onOpenChange={onClose}>
-			<DrawerContent className='w-full max-w-md'>
+			<DrawerContent className='w-full max-w-md border-none'>
 				<DrawerHeader>
 					<DrawerTitle>Add new row to {selectedTable}</DrawerTitle>
 				</DrawerHeader>

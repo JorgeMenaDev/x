@@ -57,8 +57,8 @@ export function TableView({
 			<Table>
 				<TableHeader>
 					<TableRow>
-						<TableHead className='w-[32px]'>
-							<Checkbox checked={selectAll} onCheckedChange={onSelectAll} className='h-3.5 w-3.5' />
+						<TableHead className='w-[32px] p-2'>
+							<Checkbox checked={selectAll} onCheckedChange={onSelectAll} />
 						</TableHead>
 						{columns.map(column => (
 							<TableHead key={column.name}>
@@ -73,12 +73,8 @@ export function TableView({
 				<TableBody>
 					{localData.map(row => (
 						<TableRow key={row.id} className='h-8'>
-							<BaseTableCell className='p-0 pl-2'>
-								<Checkbox
-									checked={selectedRows.has(row.id)}
-									onCheckedChange={() => onSelectRow(row.id)}
-									className='h-3.5 w-3.5'
-								/>
+							<BaseTableCell className='p-2'>
+								<Checkbox checked={selectedRows.has(row.id)} onCheckedChange={() => onSelectRow(row.id)} className='' />
 							</BaseTableCell>
 							{columns.map(column => (
 								<BaseTableCell key={`${row.id}-${column.name}`} className='p-0'>

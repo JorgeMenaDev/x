@@ -5,10 +5,10 @@ import { Sidebar } from './components/Sidebar'
 import { TableView } from './components/TableView'
 import { TableToolbar } from './components/TableToolbar'
 import { TablePagination } from './components/TablePagination'
-import { MOCK_TABLES } from './types'
+import { MOCK_TABLES, TableData } from './types'
 
 export function TableEditor() {
-	const [selectedSchema, setSelectedSchema] = useState('public')
+	const [selectedSchema] = useState('public')
 	const [selectedTable, setSelectedTable] = useState('quotes')
 	const [tables] = useState<string[]>(['quotes', 'qm_purpose'])
 	const [searchQuery, setSearchQuery] = useState('')
@@ -16,9 +16,10 @@ export function TableEditor() {
 	const [selectAll, setSelectAll] = useState(false)
 	const [currentPage, setCurrentPage] = useState(1)
 	const [rowsPerPage] = useState(100)
+	const [tableData, setTableData] = useState(MOCK_TABLES)
 
 	// Get current table data
-	const currentTableData = MOCK_TABLES[selectedTable as keyof typeof MOCK_TABLES]
+	const currentTableData = tableData[selectedTable as keyof typeof tableData]
 	const totalRecords = currentTableData.data.length
 
 	const handleSelectAll = () => {
@@ -42,6 +43,16 @@ export function TableEditor() {
 		setSelectAll(newSelectedRows.size === currentTableData.data.length)
 	}
 
+	const handleInsertRow = (data: TableData) => {
+		setTableData(prev => ({
+			...prev,
+			[selectedTable]: {
+				...prev[selectedTable as keyof typeof prev],
+				data: [...prev[selectedTable as keyof typeof prev].data, data]
+			}
+		}))
+	}
+
 	return (
 		<div className='flex flex-col h-screen'>
 			<div className='border-b'>
@@ -59,7 +70,11 @@ export function TableEditor() {
 				/>
 
 				<div className='flex-1 flex flex-col overflow-hidden'>
-					<TableToolbar selectedTable={selectedTable} />
+					<TableToolbar
+						selectedTable={selectedTable}
+						columns={currentTableData.columns}
+						onInsertRow={handleInsertRow}
+					/>
 
 					<TableView
 						columns={currentTableData.columns}

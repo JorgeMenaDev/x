@@ -1,7 +1,19 @@
 'use client'
 
 import * as React from 'react'
-import { BookOpen, Bot, Command, Frame, LifeBuoy, Map, PieChart, Send, Settings2, SquareTerminal } from 'lucide-react'
+import {
+	BookOpen,
+	Bot,
+	Command,
+	Frame,
+	LifeBuoy,
+	Map,
+	PieChart,
+	Send,
+	Settings,
+	Settings2,
+	SquareTerminal
+} from 'lucide-react'
 
 import { NavMain } from '@/components/nav-main'
 import { NavProjects } from '@/components/nav-projects'
@@ -94,18 +106,17 @@ const data = {
 				{
 					title: 'General',
 					url: '#'
-				},
+				}
+			]
+		},
+		{
+			title: 'Admin',
+			url: '#',
+			icon: Settings,
+			items: [
 				{
-					title: 'Team',
-					url: '#'
-				},
-				{
-					title: 'Billing',
-					url: '#'
-				},
-				{
-					title: 'Limits',
-					url: '#'
+					title: 'Table Editor',
+					url: '/dashboard/admin/table-editor'
 				}
 			]
 		}

@@ -5,9 +5,7 @@ export type TableColumn = {
 	sortable: boolean
 }
 
-export type TableData = {
-	[key: string]: any // TODO: Make this more type-safe based on column types
-}
+export type TableData = Record<string, string | number | boolean>
 
 // Mock data for different tables
 export const MOCK_TABLES = {
@@ -81,6 +79,8 @@ export interface TableViewProps {
 
 export interface TableToolbarProps {
 	selectedTable: string
+	columns: TableColumn[]
+	onInsertRow: (data: TableData) => void
 }
 
 export interface TablePaginationProps {

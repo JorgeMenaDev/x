@@ -2,7 +2,9 @@ import { HttpTablesRepository } from '../adapters/http/inventory/tables-reposito
 import { TablesRepository } from './inventory/tables-repository'
 
 // Get the API base URL from environment variables
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'
+
+console.log(API_BASE_URL)
 
 /**
  * Factory function to create a TablesRepository instance

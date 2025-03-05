@@ -1,0 +1,76 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Database Repository Pattern for Service-Based Architecture
+
+Here's a draft of the adapted rules for your project structure with multiple services and client-side data fetching:
+
+## Service Repository Pattern:
+
+- Always use the repository pattern for all service API operations
+- When adding a new service endpoint:
+  1. Create a corresponding model in `src/models/<service-name>/<entity-name>.ts`
+  2. Define a repository interface in `src/repositories/<service-name>/<entity-name>-repository.ts`
+  3. Implement the HTTP adapter in `src/adapters/http/<service-name>/<entity-name>-repository.ts`
+  4. Add a factory function in `src/repositories/index.ts` to expose the repository
+  5. Create React Query hooks in `src/hooks/<service-name>/<entity-name>/use-<operation>.ts`
+
+- Repository interfaces should:
+  1. Define clear method signatures with descriptive names
+  2. Use TypeScript for proper typing of parameters and return values
+  3. Handle all operations needed for the entity (GET, POST, PUT, DELETE)
+  4. Match the service API endpoints and expected data formats
+
+- Repository implementations should:
+  1. Extend BaseHttpRepository for common functionality
+  2. Implement proper error handling using the base repository's handleError method
+  3. Include descriptive logging for debugging purposes
+  4. Follow consistent patterns for API requests and response handling
+  5. Use appropriate HTTP methods for different operations
+
+- Service organization:
+  1. Inventory Query Service: `src/repositories/inventory/...`
+  2. Report Service: `src/repositories/reports/...`
+  3. Auth Service: `src/repositories/auth/...`
+
+- When modifying existing endpoints:
+  1. Update the corresponding model
+  2. Add new methods to the repository interface
+  3. Implement the new methods in the adapter
+  4. Update or create React Query hooks for the new methods
+
+- Always verify API contracts with service teams before implementation
+- Use TypeScript interfaces to ensure type safety across the application
+
+## Client-Side Data Fetching:
+
+- Always use React Query (TanStack Query) for all client-side data fetching
+- Avoid using useEffect for data fetching
+- Organize React Query hooks by service and domain in `src/hooks/<service-name>/<entity-name>/` directories
+- Use query keys from the centralized config in `src/lib/query-keys.ts`
+- Follow this pattern for React Query hooks:
+  1. Accept minimal parameters needed for the query
+  2. Use repositories to interact with services
+  3. Handle loading, error, and success states properly
+  4. Return well-typed data and utility functions
+  5. Implement proper caching strategies based on data freshness requirements
+
+- For mutations:
+  1. Always invalidate related queries after successful operations
+  2. Use optimistic updates when appropriate for better UX
+  3. Handle error states and rollbacks for failed optimistic updates
+
+- Implement proper authentication handling in repositories:
+  1. Automatically attach auth tokens to requests
+  2. Handle token refresh when needed
+  3. Redirect to login when authentication fails
+
+- For performance optimization:
+  1. Use pagination where appropriate
+  2. Implement infinite scrolling for large data sets
+  3. Configure proper staleTime and cacheTime for different types of data
+  4. Use prefetching for anticipated user actions
+
+Would you like me to expand on any specific section or provide more details about the implementation?

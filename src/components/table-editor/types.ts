@@ -5,7 +5,16 @@ export type TableColumn = {
 	sortable: boolean
 }
 
-export type TableData = Record<string, string | number | boolean>
+export type TableData = {
+	id: string // Ensure id is always a string
+	[key: string]: string | number | boolean | null
+}
+
+export type EditingCell = {
+	rowId: string
+	columnName: string
+	value: string
+} | null
 
 // Mock data for different tables
 export const MOCK_TABLES = {
@@ -75,6 +84,7 @@ export interface TableViewProps {
 	onSelectRow: (id: string) => void
 	selectAll: boolean
 	onSelectAll: () => void
+	onCellEdit?: (rowId: string, columnName: string, value: string | null) => void
 }
 
 export interface TableToolbarProps {

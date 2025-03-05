@@ -1,10 +1,45 @@
 'use client'
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useState } from 'react'
+import { Table, TableBody, TableCell as BaseTableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
+import { TableCell } from '@/components/table-cell'
 import type { TableViewProps } from '../types'
 
-export function TableView({ columns, data, selectedRows, onSelectRow, selectAll, onSelectAll }: TableViewProps) {
+interface EditingCell {
+	rowId: string
+	columnName: string
+}
+
+export function TableView({
+	columns,
+	data,
+	selectedRows,
+	onSelectRow,
+	selectAll,
+	onSelectAll,
+	onCellEdit
+}: TableViewProps) {
+	const [editingCell, setEditingCell] = useState<EditingCell | null>(null)
+
+	const updateCell = (rowId: string, columnName: string, value: string | null) => {
+		onCellEdit?.(rowId, columnName, value)
+		setEditingCell(null)
+	}
+
+	const startEditing = (rowId: string, columnName: string) => {
+		setEditingCell({ rowId, columnName })
+	}
+
+	const cancelEditing = () => {
+		setEditingCell(null)
+	}
+
+	const isEditing = (rowId: string, columnName: string) => {
+		return editingCell?.rowId === rowId && editingCell?.columnName === columnName
+	}
+
 	return (
 		<div className='flex-1 overflow-auto text-sm'>
 			<Table>
@@ -14,7 +49,7 @@ export function TableView({ columns, data, selectedRows, onSelectRow, selectAll,
 							<Checkbox checked={selectAll} onCheckedChange={onSelectAll} />
 						</TableHead>
 						{columns.map(column => (
-							<TableHead key={column.name} className='whitespace-nowrap'>
+							<TableHead key={column.name}>
 								<div className='flex items-center gap-1'>
 									<span>{column.name}</span>
 									<span className='text-xs text-muted-foreground'>{column.type}</span>
@@ -26,13 +61,28 @@ export function TableView({ columns, data, selectedRows, onSelectRow, selectAll,
 				<TableBody>
 					{data.map(row => (
 						<TableRow key={row.id}>
-							<TableCell>
+							<BaseTableCell>
 								<Checkbox checked={selectedRows.has(row.id)} onCheckedChange={() => onSelectRow(row.id)} />
-							</TableCell>
+							</BaseTableCell>
 							{columns.map(column => (
-								<TableCell key={`${row.id}-${column.name}`} className='whitespace-nowrap truncate max-w-[200px]'>
-									{row[column.name]}
-								</TableCell>
+								<BaseTableCell key={`${row.id}-${column.name}`} className='p-0'>
+									<ContextMenu>
+										<ContextMenuTrigger className='h-full w-full'>
+											<TableCell
+												value={String(row[column.name])}
+												onChange={value => updateCell(row.id, column.name, value)}
+												onStartEdit={() => startEditing(row.id, column.name)}
+												onCancelEdit={cancelEditing}
+												isEditing={isEditing(row.id, column.name)}
+											/>
+										</ContextMenuTrigger>
+										<ContextMenuContent>
+											<ContextMenuItem onClick={() => navigator.clipboard.writeText(String(row[column.name]))}>
+												Copy cell content
+											</ContextMenuItem>
+										</ContextMenuContent>
+									</ContextMenu>
+								</BaseTableCell>
 							))}
 						</TableRow>
 					))}

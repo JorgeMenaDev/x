@@ -86,6 +86,7 @@ export function TableView({
 												onStartEdit={() => startEditing(row.id, column.name)}
 												onCancelEdit={cancelEditing}
 												isEditing={isEditing(row.id, column.name)}
+												type={column.type}
 											/>
 										</ContextMenuTrigger>
 										<ContextMenuContent>

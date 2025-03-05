@@ -8,24 +8,37 @@ interface TableCellProps {
 	onStartEdit: () => void
 	onCancelEdit: () => void
 	isEditing: boolean
+	type?: string
 	className?: string
 }
 
-export function TableCell({ value, onChange, onStartEdit, onCancelEdit, isEditing, className }: TableCellProps) {
+export function TableCell({
+	value,
+	onChange,
+	onStartEdit,
+	onCancelEdit,
+	isEditing,
+	type = 'text',
+	className
+}: TableCellProps) {
 	const handleDoubleClick = () => {
 		onStartEdit()
 	}
 
-	const handleSave = (newValue: string | null) => {
-		onChange(newValue)
-	}
-
 	return (
-		<div className={`w-full h-full ${className}`}>
+		<div className={`h-full w-full ${className}`}>
 			{isEditing ? (
-				<EditCell initialValue={value || ''} onSave={handleSave} onCancel={onCancelEdit} />
+				<EditCell
+					initialValue={value === null ? '' : String(value)}
+					onSave={onChange}
+					onCancel={onCancelEdit}
+					type={type}
+				/>
 			) : (
-				<div onDoubleClick={handleDoubleClick} className='p-2 min-h-[40px] cursor-pointer hover:bg-gray-50'>
+				<div
+					onDoubleClick={handleDoubleClick}
+					className='px-4 py-2 h-full w-full flex items-center cursor-pointer hover:bg-gray-50'
+				>
 					{value === null ? <span className='text-gray-400 italic'>NULL</span> : value}
 				</div>
 			)}

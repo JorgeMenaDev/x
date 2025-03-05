@@ -18,7 +18,7 @@ export function TableEditor() {
 		'offices',
 		'price_lists',
 		'product_embeddings',
-		'product_embeddings_cache',
+		'product_embeddings2',
 		'product_types',
 		'products',
 		'quotes',

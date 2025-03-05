@@ -1,7 +1,7 @@
 'use client'
 
 import type React from 'react'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 
@@ -16,6 +16,10 @@ export function EditCell({ initialValue, onSave, onCancel, className }: EditCell
 	const [value, setValue] = useState(initialValue)
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 	const containerRef = useRef<HTMLDivElement>(null)
+
+	const handleSave = useCallback(() => {
+		onSave(value)
+	}, [onSave, value])
 
 	// Focus the textarea when the component mounts
 	useEffect(() => {
@@ -37,11 +41,7 @@ export function EditCell({ initialValue, onSave, onCancel, className }: EditCell
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside)
 		}
-	}, [])
-
-	const handleSave = () => {
-		onSave(value)
-	}
+	}, [handleSave])
 
 	const handleSetNull = () => {
 		onSave(null)

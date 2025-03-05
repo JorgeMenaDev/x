@@ -53,6 +53,19 @@ export function TableEditor() {
 		}))
 	}
 
+	const handleDeleteRows = (ids: string[]) => {
+		setTableData(prev => ({
+			...prev,
+			[selectedTable]: {
+				...prev[selectedTable as keyof typeof prev],
+				data: prev[selectedTable as keyof typeof prev].data.filter(row => !ids.includes(row.id))
+			}
+		}))
+		// Clear selected rows after deletion
+		setSelectedRows(new Set())
+		setSelectAll(false)
+	}
+
 	return (
 		<div className='flex flex-col h-screen'>
 			<div className='flex flex-1 overflow-hidden'>
@@ -70,6 +83,8 @@ export function TableEditor() {
 						selectedTable={selectedTable}
 						columns={currentTableData.columns}
 						onInsertRow={handleInsertRow}
+						selectedRows={selectedRows}
+						onDeleteRows={handleDeleteRows}
 					/>
 
 					<TableView

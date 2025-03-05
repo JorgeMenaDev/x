@@ -91,6 +91,8 @@ export interface TableToolbarProps {
 	selectedTable: string
 	columns: TableColumn[]
 	onInsertRow: (data: TableData) => void
+	selectedRows: Set<string>
+	onDeleteRows?: (ids: string[]) => void
 }
 
 export interface TablePaginationProps {

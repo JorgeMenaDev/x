@@ -7,14 +7,13 @@ import {
 	Command,
 	Frame,
 	LifeBuoy,
-	Map,
 	PieChart,
 	Send,
-	Settings,
 	Settings2,
 	ShieldUser,
 	SquareTerminal
 } from 'lucide-react'
+import Link from 'next/link'
 
 import { NavMain } from '@/components/nav-main'
 import { NavProjects } from '@/components/nav-projects'
@@ -39,80 +38,79 @@ const data = {
 	navMain: [
 		{
 			title: 'Playground',
-			url: '#',
+			url: '/dashboard/playground',
 			icon: SquareTerminal,
-			isActive: true,
 			items: [
 				{
-					title: 'new',
-					url: '/dashboard/new'
+					title: 'New',
+					url: '/dashboard/playground/new'
 				},
 				{
 					title: 'Starred',
-					url: '#'
+					url: '/dashboard/playground/starred'
 				},
 				{
 					title: 'Settings',
-					url: '#'
+					url: '/dashboard/playground/settings'
 				}
 			]
 		},
 		{
 			title: 'Models',
-			url: '#',
+			url: '/dashboard/models',
 			icon: Bot,
 			items: [
 				{
 					title: 'Genesis',
-					url: '#'
+					url: '/dashboard/models/genesis'
 				},
 				{
 					title: 'Explorer',
-					url: '#'
+					url: '/dashboard/models/explorer'
 				},
 				{
 					title: 'Quantum',
-					url: '#'
+					url: '/dashboard/models/quantum'
 				}
 			]
 		},
 		{
 			title: 'Documentation',
-			url: '#',
+			url: '/dashboard/docs',
 			icon: BookOpen,
 			items: [
 				{
 					title: 'Introduction',
-					url: '#'
+					url: '/dashboard/docs/introduction'
 				},
 				{
 					title: 'Get Started',
-					url: '#'
+					url: '/dashboard/docs/getting-started'
 				},
 				{
 					title: 'Tutorials',
-					url: '#'
+					url: '/dashboard/docs/tutorials'
 				},
 				{
 					title: 'Changelog',
-					url: '#'
+					url: '/dashboard/docs/changelog'
 				}
 			]
 		},
 		{
 			title: 'Settings',
-			url: '#',
+			url: '/dashboard/settings',
 			icon: Settings2,
 			items: [
 				{
 					title: 'General',
-					url: '#'
+					url: '/dashboard/settings/general'
 				}
 			]
 		},
 		{
 			title: 'Admin',
-			url: '#',
+			url: '/dashboard/admin',
 			icon: ShieldUser,
 			items: [
 				{
@@ -125,24 +123,24 @@ const data = {
 	navSecondary: [
 		{
 			title: 'Support',
-			url: '#',
+			url: '/dashboard/support',
 			icon: LifeBuoy
 		},
 		{
 			title: 'Feedback',
-			url: '#',
+			url: '/dashboard/feedback',
 			icon: Send
 		}
 	],
 	projects: [
 		{
 			name: 'MERIT',
-			url: '#',
+			url: '/dashboard/projects/merit',
 			icon: Frame
 		},
 		{
 			name: 'Lemans',
-			url: '#',
+			url: '/dashboard/projects/lemans',
 			icon: PieChart
 		}
 	]
@@ -155,7 +153,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<SidebarMenuButton size='lg' asChild>
-							<a href='#'>
+							<Link href='/dashboard'>
 								<div className='bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg'>
 									<Command className='size-4' />
 								</div>
@@ -163,7 +161,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 									<span className='truncate font-medium'>Acme Inc</span>
 									<span className='truncate text-xs'>Enterprise</span>
 								</div>
-							</a>
+							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>

@@ -55,10 +55,6 @@ export function TableEditor() {
 
 	return (
 		<div className='flex flex-col h-screen'>
-			<div className='border-b'>
-				<h1 className='p-4 text-lg font-medium'>Table Editor</h1>
-			</div>
-
 			<div className='flex flex-1 overflow-hidden'>
 				<Sidebar
 					selectedSchema={selectedSchema}

@@ -11,14 +11,16 @@ function authRequestInterceptor(config: InternalAxiosRequestConfig) {
 }
 
 export const api = axios.create({
-	baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
-	withCredentials: true
+	baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1',
+	headers: {
+		'Content-Type': 'application/json'
+	}
 })
 
 api.interceptors.request.use(authRequestInterceptor)
 api.interceptors.response.use(
 	response => response.data,
-	(error: AxiosError) => {
+	(error: AxiosError<{ message: string }>) => {
 		const message = error.response?.data?.message || error.message
 		useNotifications.getState().addNotification({
 			type: 'error',

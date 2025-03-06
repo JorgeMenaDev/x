@@ -44,7 +44,7 @@ export function TableEditor() {
 	} = useTableRecords(selectedTable, currentPage, rowsPerPage)
 
 	// Mutations for table operations
-	const createRecord = useCreateTableRecord(selectedTable)
+	const createRecord = useCreateTableRecord(selectedTable, { showSuccessToast: true })
 	const updateRecord = useUpdateTableRecord(selectedTable)
 	const deleteRecord = useDeleteTableRecord(selectedTable)
 
@@ -82,9 +82,9 @@ export function TableEditor() {
 	const handleInsertRow = async (data: TableRecord) => {
 		try {
 			await createRecord.mutateAsync(data)
-			toast.success('Record created successfully')
 		} catch (error) {
 			handleAPIError(error)
+			throw error // Re-throw to prevent drawer from closing
 		}
 	}
 

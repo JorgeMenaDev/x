@@ -3,6 +3,7 @@ import { createTablesRepository } from '../../../repositories'
 import { queryKeys } from '../../../lib/query-keys'
 import { TablesRepository } from '../../../repositories/inventory/tables-repository'
 import { TableRecord } from '../../../models/inventory/table'
+import { toast } from 'sonner'
 
 /**
  * Hook for fetching data from a specific table
@@ -60,16 +61,22 @@ export function useTableRecords<T = TableRecord>(tableName: string, page: number
 /**
  * Hook for creating a new table record
  */
-export function useCreateTableRecord<T = TableRecord>(tableName: string) {
+export function useCreateTableRecord<T = TableRecord>(tableName: string, options?: { showSuccessToast?: boolean }) {
 	const queryClient = useQueryClient()
 	const tablesRepository = createTablesRepository()
 
 	return useMutation({
 		mutationFn: (data: Partial<T>) => tablesRepository.createTableRecord<T>(tableName, data),
 		onSuccess: () => {
+			// Invalidate queries
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.tables.all(tableName)
 			})
+
+			// Show success toast if enabled
+			if (options?.showSuccessToast) {
+				toast.success('Row inserted successfully')
+			}
 		}
 	})
 }

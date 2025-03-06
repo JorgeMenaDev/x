@@ -1,0 +1,48 @@
+import type { Metadata } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import './globals.css'
+import { ThemeProvider } from '@/components/theme-provider'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { Toaster } from 'sonner'
+import { Providers } from '@/components/providers'
+import { Navbar } from '@/components/Navbar'
+
+const geistSans = Geist({
+	variable: '--font-geist-sans',
+	subsets: ['latin']
+})
+
+const geistMono = Geist_Mono({
+	variable: '--font-geist-mono',
+	subsets: ['latin']
+})
+
+export const metadata: Metadata = {
+	title: 'Inventory System',
+	description: 'Inventory management system'
+}
+
+export default function RootLayout({
+	children
+}: Readonly<{
+	children: React.ReactNode
+}>) {
+	return (
+		<html lang='en' suppressHydrationWarning>
+			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+				<ThemeProvider attribute='class' defaultTheme='system' enableSystem disableTransitionOnChange>
+					<Providers>
+						<div className='flex flex-col min-h-screen'>
+							<Navbar />
+							<div className='flex-1'>{children}</div>
+						</div>
+						<div className='fixed bottom-4 right-4'>
+							<ThemeToggle />
+						</div>
+					</Providers>
+				</ThemeProvider>
+				<Toaster />
+			</body>
+		</html>
+	)
+}

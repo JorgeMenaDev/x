@@ -701,9 +701,9 @@ export default function DependencyGraph() {
 													})
 												}
 											/>
-											<Label htmlFor='filter-high' className='flex items-center'>
+											<Label htmlFor='filter-high' className='flex items-center text-white'>
 												<div className='w-3 h-3 rounded-full bg-red-500 mr-2'></div>
-												High Risk
+												<span className='text-white'>High Risk</span>
 											</Label>
 										</div>
 										<div className='flex items-center space-x-2'>
@@ -796,15 +796,15 @@ export default function DependencyGraph() {
 						<div className='mb-4 flex gap-4'>
 							<div className='flex items-center gap-2'>
 								<div className='w-3 h-3 rounded-full bg-red-500'></div>
-								<span className='text-sm'>High Risk</span>
+								<span className='text-sm text-white'>High Risk</span>
 							</div>
 							<div className='flex items-center gap-2'>
 								<div className='w-3 h-3 rounded-full bg-orange-500'></div>
-								<span className='text-sm'>Medium Risk</span>
+								<span className='text-sm text-white'>Medium Risk</span>
 							</div>
 							<div className='flex items-center gap-2'>
 								<div className='w-3 h-3 rounded-full bg-green-500'></div>
-								<span className='text-sm'>Low Risk</span>
+								<span className='text-sm text-white'>Low Risk</span>
 							</div>
 						</div>
 						<canvas ref={canvasRef} className='w-full border rounded-md' style={{ height: '500px' }} />

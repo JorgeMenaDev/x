@@ -31,6 +31,8 @@ export function TableView({
 	}, [data])
 
 	const handleCellUpdate = (rowId: string, columnName: string, value: string | null) => {
+		console.log('TableView handleCellUpdate:', { rowId, columnName, value })
+
 		// Update local state immediately for UI responsiveness
 		setLocalData(prevData =>
 			prevData.map(row => (row.id === rowId ? { ...row, [columnName]: value === null ? null : value } : row))
@@ -38,7 +40,9 @@ export function TableView({
 
 		// Notify parent component with the correct data structure
 		if (onUpdateRow) {
-			onUpdateRow(rowId, { [columnName]: value })
+			const updateData = { [columnName]: value }
+			console.log('Sending update data:', updateData)
+			onUpdateRow(rowId, updateData)
 		}
 		setEditingCell(null)
 	}

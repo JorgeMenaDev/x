@@ -1,4 +1,5 @@
 import { toast } from 'sonner'
+import { AxiosError } from 'axios'
 
 export type ErrorType = 'ValidationError' | 'AuthenticationError' | 'NotFoundError' | 'ServerError' | 'NetworkError'
 
@@ -6,11 +7,10 @@ export type ErrorType = 'ValidationError' | 'AuthenticationError' | 'NotFoundErr
  * Interface for API error responses
  */
 export interface APIErrorResponse {
-	error: true
+	error: boolean
 	code: string
 	message: string
 	details?: unknown
-	stack?: string
 }
 
 /**
@@ -70,61 +70,26 @@ function getErrorTypeFromStatus(status: number): ErrorType {
 /**
  * Function to handle API errors and show appropriate toast messages
  */
-export function handleAPIError(error: unknown): void {
-	if (error instanceof APIError) {
-		// Show toast based on error type
-		switch (error.type) {
-			case 'ValidationError':
-				toast.error(`Validation Error: ${error.message}`, {
-					description: error.details ? JSON.stringify(error.details) : undefined
-				})
-				break
-			case 'AuthenticationError':
-				toast.error('Authentication Error', {
-					description: 'Please log in again to continue.'
-				})
-				break
-			case 'NotFoundError':
-				toast.error(`Not Found: ${error.message}`)
-				break
-			case 'ServerError':
-				toast.error('Server Error', {
-					description: 'Our team has been notified. Please try again later.'
-				})
-				break
-			case 'NetworkError':
-				toast.error('Network Error', {
-					description: 'Please check your internet connection and try again.'
-				})
-				break
-			default:
-				toast.error(`Error: ${error.message}`)
+export function handleAPIError(error: unknown) {
+	console.error('API Error:', error)
+
+	if (error instanceof AxiosError) {
+		const apiError = error.response?.data as APIErrorResponse | undefined
+		const statusCode = error.response?.status
+
+		if (apiError) {
+			const errorMessage = `${apiError.message}${
+				apiError.details ? ` (Details: ${JSON.stringify(apiError.details)})` : ''
+			}`
+			toast.error(`Error [${apiError.code}]: ${errorMessage}`)
+			return
 		}
 
-		// Log the error for debugging
-		if (process.env.NODE_ENV !== 'production') {
-			console.group('API Error')
-			console.error('Type:', error.type)
-			console.error('Code:', error.code)
-			console.error('Message:', error.message)
-			console.error('Status:', error.statusCode)
-			if (error.details) console.error('Details:', error.details)
-			if (error.stack) console.error('Stack:', error.stack)
-			console.groupEnd()
-		} else {
-			// In production, we might want to send this to an error tracking service
-			console.error('API Error:', {
-				type: error.type,
-				code: error.code,
-				message: error.message,
-				status: error.statusCode
-			})
-		}
-	} else if (error instanceof Error) {
-		toast.error(`Unexpected Error: ${error.message}`)
-		console.error('Unexpected Error:', error)
-	} else {
-		toast.error('An unknown error occurred')
-		console.error('Unknown Error:', error)
+		toast.error(`Error ${statusCode}: ${error.message}`)
+		return
 	}
+
+	// Fallback for non-Axios errors
+	const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
+	toast.error(errorMessage)
 }

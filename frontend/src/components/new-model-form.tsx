@@ -13,74 +13,82 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-// Reference data based on the screenshot
+// Reference data from reference_data_form.json
 const typeOfQMOptions = [
-	{ value: 'model', label: 'Model' },
-	{ value: 'dqm_in_scope', label: 'DQM In scope' },
-	{ value: 'dqm_out_scope', label: 'DQM out scope' },
-	{ value: 'other', label: 'Other' }
+	{ value: '1', label: 'Model' },
+	{ value: '2', label: 'DQM in scope' },
+	{ value: '3', label: 'DQM out of scope' },
+	{ value: '10', label: 'Other' }
 ]
 
 const modelPurposeOptions = [
-	{ value: 'market', label: 'Market' },
-	{ value: 'credit', label: 'Credit' },
-	{ value: 'operational', label: 'Operational' },
-	{ value: 'other', label: 'Other' }
+	{ value: '1', label: 'Credit' },
+	{ value: '2', label: 'Market' },
+	{ value: '3', label: 'Operational' },
+	{ value: '10', label: 'Other' }
 ]
 
 // Sub-Group options
 const subGroupOptions = [
-	{ value: 'sg1', label: 'SG1' },
-	{ value: 'sg2', label: 'SG2' },
-	{ value: 'sg3', label: 'SG3' }
+	{ value: '1', label: 'SG1' },
+	{ value: '2', label: 'SG2' },
+	{ value: '3', label: 'SG10' },
+	{ value: '4', label: 'SG30' }
 ]
 
-// Model Use options are dependent on Purpose
+// Model Use options based on purpose_id
 const modelUseOptions = {
-	market: [
-		{ value: 'capital', label: 'Capital' },
-		{ value: 'liquidity_management', label: 'Liquidity Management' },
-		{ value: 'pricing', label: 'Pricing' },
-		{ value: 'valuation', label: 'Valuation' },
-		{ value: 'interest_rate_risk', label: 'Interest Rate Risk Banking Book' },
-		{ value: 'portfolio_management', label: 'Portfolio Management' },
-		{ value: 'stress_testing', label: 'Stress Testing' },
-		{ value: 'other', label: 'Other' }
+	'1': [
+		// Credit
+		{ value: '1', label: 'Capital' },
+		{ value: '3', label: 'Pricing' },
+		{ value: '4', label: 'Valuation' },
+		{ value: '20', label: 'Other' }
 	],
-	credit: [
-		{ value: 'capital', label: 'Capital' },
-		{ value: 'pricing', label: 'Pricing' },
-		{ value: 'valuation', label: 'Valuation' },
-		{ value: 'other', label: 'Other' }
+	'2': [
+		// Market
+		{ value: '1', label: 'Capital' },
+		{ value: '2', label: 'Liq Management' },
+		{ value: '3', label: 'Pricing' },
+		{ value: '4', label: 'Valuation' },
+		{ value: '5', label: 'Interest Rate Risk Banking book' },
+		{ value: '6', label: 'Portfolio Management' },
+		{ value: '7', label: 'Stress Testing' },
+		{ value: '20', label: 'Other' }
 	],
-	operational: [
-		{ value: 'risk_assessment', label: 'Risk Assessment' },
-		{ value: 'other', label: 'Other' }
+	'3': [
+		// Operational
+		{ value: '6', label: 'Portfolio Management' },
+		{ value: '7', label: 'Stress Testing' },
+		{ value: '8', label: 'Risk Assessment' },
+		{ value: '20', label: 'Other' }
 	],
-	other: [{ value: 'other', label: 'Other' }]
+	'10': [{ value: '20', label: 'Other' }] // Other
 }
 
-// Asset Class options are dependent on Purpose
+// Asset Class options based on purpose_id
 const assetClassOptions = {
-	market: [
-		{ value: 'rates', label: 'Rates' },
-		{ value: 'equity', label: 'Equity' },
-		{ value: 'commodity', label: 'Commodity' },
-		{ value: 'fx', label: 'FX' },
-		{ value: 'hybrid', label: 'Hybrid' },
-		{ value: 'inflation', label: 'Inflation' },
-		{ value: 'credit', label: 'Credit' },
-		{ value: 'other', label: 'Other' }
+	'1': [
+		// Credit
+		{ value: '4', label: 'Credit' },
+		{ value: '20', label: 'Other' }
 	],
-	credit: [
-		{ value: 'credit', label: 'Credit' },
-		{ value: 'other', label: 'Other' }
+	'2': [
+		// Market
+		{ value: '1', label: 'Rates' },
+		{ value: '2', label: 'Equity' },
+		{ value: '3', label: 'Commodity' },
+		{ value: '5', label: 'FX' },
+		{ value: '5', label: 'Hybrid' },
+		{ value: '6', label: 'Inflation' },
+		{ value: '7', label: 'Credit' },
+		{ value: '20', label: 'Other' }
 	],
-	operational: [
-		{ value: 'operational', label: 'Operational' },
-		{ value: 'other', label: 'Other' }
+	'3': [
+		// Operational
+		{ value: '20', label: 'Other' }
 	],
-	other: [{ value: 'other', label: 'Other' }]
+	'10': [{ value: '20', label: 'Other' }] // Other
 }
 
 // Legal Entity options
@@ -104,7 +112,34 @@ const execOptions = [
 	{ value: 'mrae3', label: 'MRAE3' }
 ]
 
-// Form schema
+// Validation helpers
+const isValidUseForPurpose = (purposeId: string, useId: string) => {
+	const purposeToUse = {
+		'1': ['1'], // Credit -> Capital
+		'2': ['1', '2', '3'], // Market -> Capital, Liq Management, Pricing
+		'3': ['6', '7', '8'] // Operational -> Portfolio Management, Stress Testing, Risk Assessment
+	}
+	return purposeToUse[purposeId as keyof typeof purposeToUse]?.includes(useId) || false
+}
+
+const isValidAssetClassForPurpose = (purposeId: string, assetClassId: string) => {
+	const purposeToAssetClass = {
+		'1': ['2', '6'], // Credit -> Equity, Inflation
+		'2': ['1', '2', '3'], // Market -> Rates, Equity, Commodity
+		'3': ['20'] // Operational -> Other
+	}
+	return purposeToAssetClass[purposeId as keyof typeof purposeToAssetClass]?.includes(assetClassId) || false
+}
+
+const isValidSubgroupForUse = (subgroupId: string, useId: string) => {
+	const subgroupToUse = {
+		'1': ['1', '7'], // SG1 -> Capital, Stress Testing
+		'2': ['3'] // SG2 -> Pricing
+	}
+	return subgroupToUse[subgroupId as keyof typeof subgroupToUse]?.includes(useId) || false
+}
+
+// Form schema with validation
 const formSchema = z.object({
 	qmId: z.string().min(1, { message: 'QM ID is required' }),
 	qmName: z.string().min(1, { message: 'QM Name is required' }),
@@ -130,7 +165,8 @@ const formSchema = z.object({
 		.min(1, { message: 'At least one legal entity is required' })
 })
 
-// Type used for documentation and type safety in helper functions
+export type FormData = z.infer<typeof formSchema>
+
 type LegalEntityUse = {
 	use: string
 	accountableExec: string
@@ -142,7 +178,7 @@ export default function NewModelForm() {
 	const [selectedPurpose, setSelectedPurpose] = useState<string>('')
 	const [activeTab, setActiveTab] = useState('basic-info')
 
-	const form = useForm<z.infer<typeof formSchema>>({
+	const form = useForm<FormData>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			qmId: '',
@@ -157,8 +193,49 @@ export default function NewModelForm() {
 
 	const legalEntities = form.watch('legalEntities')
 
-	function onSubmit(values: z.infer<typeof formSchema>) {
-		console.log(values)
+	// Add validation function that uses the form context
+	const validateFormData = (data: FormData) => {
+		const { qmPurpose, legalEntities } = data
+		if (!qmPurpose) return true
+
+		return legalEntities.every(entity =>
+			entity.uses.every(use => {
+				const isValidUse = isValidUseForPurpose(qmPurpose, use.use)
+				const isValidAssetClasses = use.assetClasses.every(ac => isValidAssetClassForPurpose(qmPurpose, ac))
+				const isValidSubgroup = isValidSubgroupForUse(entity.subGroup, use.use)
+				return isValidUse && isValidAssetClasses && isValidSubgroup
+			})
+		)
+	}
+
+	function onSubmit(values: FormData) {
+		// Validate the form data
+		if (!validateFormData(values)) {
+			alert('Invalid combination of purpose, use, asset class, or subgroup')
+			return
+		}
+
+		// Transform the form data to match the expected format
+		const transformedData = {
+			qm_id: values.qmId,
+			qm_name: values.qmName,
+			qm_type_id: parseInt(values.typeOfQM),
+			purpose_id: parseInt(values.qmPurpose),
+			owner: values.owner,
+			accountable_exec: values.accountableExec,
+			legal_entities: values.legalEntities.map(entity => ({
+				entity_id: entity.entity,
+				subgroup_id: parseInt(entity.subGroup),
+				uses: entity.uses.map(use => ({
+					use_id: parseInt(use.use),
+					accountable_exec: use.accountableExec,
+					users: use.users.map(user => user),
+					asset_classes: use.assetClasses.map(ac => parseInt(ac))
+				}))
+			}))
+		}
+
+		console.log('Transformed data:', transformedData)
 		alert('Form submitted successfully! Check console for details.')
 	}
 

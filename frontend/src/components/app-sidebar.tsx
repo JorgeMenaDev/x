@@ -37,40 +37,13 @@ const data = {
 	},
 	navMain: [
 		{
-			title: 'Playground',
-			url: '/dashboard/playground',
-			icon: SquareTerminal,
-			items: [
-				{
-					title: 'New',
-					url: '/dashboard/playground/new'
-				},
-				{
-					title: 'Starred',
-					url: '/dashboard/playground/starred'
-				},
-				{
-					title: 'Settings',
-					url: '/dashboard/playground/settings'
-				}
-			]
-		},
-		{
 			title: 'Models',
 			url: '/dashboard/models',
 			icon: Bot,
 			items: [
 				{
-					title: 'Genesis',
-					url: '/dashboard/models/genesis'
-				},
-				{
-					title: 'Explorer',
-					url: '/dashboard/models/explorer'
-				},
-				{
-					title: 'Quantum',
-					url: '/dashboard/models/quantum'
+					title: 'New',
+					url: '/dashboard/new'
 				}
 			]
 		},

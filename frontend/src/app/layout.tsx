@@ -32,10 +32,7 @@ export default function RootLayout({
 			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
 				<ThemeProvider attribute='class' defaultTheme='system' enableSystem disableTransitionOnChange>
 					<Providers>
-						<div className='flex flex-col min-h-screen'>
-							<Navbar />
-							<div className='flex-1'>{children}</div>
-						</div>
+						<div className='flex-1'>{children}</div>
 						<div className='fixed bottom-4 right-4'>
 							<ThemeToggle />
 						</div>

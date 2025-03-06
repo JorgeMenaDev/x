@@ -9,6 +9,7 @@ export function getDB(): DB {
 	if (!db) {
 		db = new DB(config.dbPath)
 		initDatabase()
+		seedDatabase()
 	}
 	return db
 }
@@ -32,7 +33,67 @@ function initDatabase() {
     )
   `)
 
+	// Create qm_purpose table
+	db.execute(`
+    CREATE TABLE IF NOT EXISTS qm_purpose (
+      id TEXT PRIMARY KEY,
+      text TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
 	console.log('Database initialized')
+}
+
+// Seed the database with initial data
+function seedDatabase() {
+	const db = getDB()
+
+	// Check if qm_purpose table is empty
+	const qmPurposeCount = db.query('SELECT COUNT(*) as count FROM qm_purpose')[0][0]
+
+	if (qmPurposeCount === 0) {
+		// Add seed data for qm_purpose
+		const now = new Date().toISOString()
+		const seedData = [
+			{
+				id: generateUUID(),
+				text: 'Risk Management',
+				created_at: now,
+				updated_at: now
+			},
+			{
+				id: generateUUID(),
+				text: 'Portfolio Optimization',
+				created_at: now,
+				updated_at: now
+			},
+			{
+				id: generateUUID(),
+				text: 'Compliance',
+				created_at: now,
+				updated_at: now
+			},
+			{
+				id: generateUUID(),
+				text: 'Market Analysis',
+				created_at: now,
+				updated_at: now
+			}
+		]
+
+		for (const item of seedData) {
+			db.query('INSERT INTO qm_purpose (id, text, created_at, updated_at) VALUES (?, ?, ?, ?)', [
+				item.id,
+				item.text,
+				item.created_at,
+				item.updated_at
+			])
+		}
+
+		console.log('Seed data added for qm_purpose table')
+	}
 }
 
 // Close database connection (useful for tests and clean shutdown)
@@ -41,4 +102,9 @@ export function closeDB() {
 		db.close()
 		db = null
 	}
+}
+
+// Generate a UUID
+export function generateUUID(): string {
+	return crypto.randomUUID()
 }

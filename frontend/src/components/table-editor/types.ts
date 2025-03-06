@@ -75,6 +75,7 @@ export interface SidebarProps {
 	onTableSelect: (table: string) => void
 	searchQuery: string
 	onSearchChange: (query: string) => void
+	isLoading?: boolean
 }
 
 export interface TableViewProps {

@@ -8,9 +8,10 @@ const db = new Database(config.dbPath, { create: true })
 db.run('PRAGMA foreign_keys = ON')
 
 // Initialize database schema
-function initDatabase() {
+export function initDatabase() {
 	try {
-		// Create qm_purpose table
+		// Drop and recreate qm_purpose table
+		db.run('DROP TABLE IF EXISTS qm_purpose')
 		db.run(`
 			CREATE TABLE IF NOT EXISTS qm_purpose (
 				id TEXT PRIMARY KEY,
@@ -27,13 +28,26 @@ function initDatabase() {
 	}
 }
 
+// Reset and seed the database
+export function resetAndSeedDatabase() {
+	try {
+		// First reinitialize the database schema
+		initDatabase()
+		return seedDatabase(true)
+	} catch (error) {
+		console.error('Error resetting database:', error)
+		throw error
+	}
+}
+
 // Seed the database with initial data
-function seedDatabase() {
+export function seedDatabase(force = false) {
 	try {
 		// Check if qm_purpose table is empty
-		const qmPurposeCount = db.query('SELECT COUNT(*) as count FROM qm_purpose').get()?.count || 0
+		const result = db.prepare('SELECT COUNT(*) as count FROM qm_purpose').get() as { count: number }
+		const qmPurposeCount = result?.count || 0
 
-		if (qmPurposeCount === 0) {
+		if (qmPurposeCount === 0 || force) {
 			// Add seed data for qm_purpose
 			const now = new Date().toISOString()
 			const seedData = [
@@ -63,31 +77,19 @@ function seedDatabase() {
 				}
 			]
 
+			const stmt = db.prepare('INSERT INTO qm_purpose (id, text, created_at, updated_at) VALUES (?, ?, ?, ?)')
+
 			for (const item of seedData) {
-				db.query('INSERT INTO qm_purpose (id, text, created_at, updated_at) VALUES (?, ?, ?, ?)', [
-					item.id,
-					item.text,
-					item.created_at,
-					item.updated_at
-				])
+				stmt.run(item.id, item.text, item.created_at, item.updated_at)
 			}
 
-			console.log('Seed data added for qm_purpose table')
+			return { success: true, message: 'Database seeded successfully', count: seedData.length }
 		}
+		return { success: true, message: 'Database already contains data', count: qmPurposeCount }
 	} catch (error) {
 		console.error('Error seeding database:', error)
 		throw error
 	}
-}
-
-// Initialize and seed the database
-try {
-	initDatabase()
-	seedDatabase()
-	console.log('Database initialized and seeded successfully')
-} catch (error) {
-	console.error('Failed to initialize database:', error)
-	process.exit(1)
 }
 
 export default db

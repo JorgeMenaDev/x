@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Table, TableBody, TableCell as BaseTableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
-import { TableCell } from '@/components/table-cell'
+import { TableCell } from '@/components/table-editor/components/table-cell'
 import type { TableViewProps } from '../types'
 
 interface EditingCell {

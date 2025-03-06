@@ -9,29 +9,48 @@ import { Textarea } from '@/components/ui/textarea'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
 import type { TableColumn } from '../types'
+import { TableRecord } from '@/models/inventory/table'
+import { validateField } from '@/lib/validation/table-schemas'
+import { toast } from 'sonner'
 
 interface InsertRowDrawerProps {
 	isOpen: boolean
 	onClose: () => void
 	columns: TableColumn[]
 	selectedTable: string
-	onSubmit: (data: any) => void
+	onSubmit: (data: TableRecord) => void
 }
 
 // Helper function to get Zod schema type based on column type
-const getZodType = (columnType: string) => {
-	switch (columnType) {
+const getZodType = (column: TableColumn) => {
+	let schema: z.ZodTypeAny
+
+	switch (column.type.toLowerCase()) {
 		case 'uuid':
-			return z.string().uuid()
+			schema = z.string().uuid()
+			break
 		case 'text':
-			return z.string().min(1, 'This field is required')
+			schema = z.string()
+			break
 		case 'int4':
-			return z.number()
+			schema = z.number()
+			break
 		case 'timestamp':
-			return z.string().datetime()
+			schema = z.string().datetime()
+			break
+		case 'boolean':
+			schema = z.boolean()
+			break
 		default:
-			return z.string()
+			schema = z.string()
 	}
+
+	// Make the schema nullable if the column is nullable
+	if (column.nullable) {
+		schema = schema.nullable()
+	}
+
+	return schema
 }
 
 export function InsertRowDrawer({ isOpen, onClose, columns, selectedTable, onSubmit }: InsertRowDrawerProps) {
@@ -40,7 +59,7 @@ export function InsertRowDrawer({ isOpen, onClose, columns, selectedTable, onSub
 		columns.reduce(
 			(acc, column) => ({
 				...acc,
-				[column.name]: getZodType(column.type)
+				[column.name]: getZodType(column)
 			}),
 			{}
 		)
@@ -51,16 +70,33 @@ export function InsertRowDrawer({ isOpen, onClose, columns, selectedTable, onSub
 		defaultValues: columns.reduce(
 			(acc, column) => ({
 				...acc,
-				[column.name]: ''
+				[column.name]: column.nullable ? null : ''
 			}),
 			{}
 		)
 	})
 
-	const handleSubmit = (values: z.infer<typeof formSchema>) => {
-		onSubmit(values)
-		form.reset()
-		onClose()
+	const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+		try {
+			// Validate each field individually
+			for (const column of columns) {
+				const value = values[column.name as keyof typeof values]
+				const validation = validateField(value, column)
+				if (!validation.success) {
+					toast.error(`${column.name}: ${validation.error}`)
+					return
+				}
+			}
+
+			// If all validations pass, submit the form
+			await onSubmit(values as TableRecord)
+			form.reset()
+			onClose()
+			toast.success('Row inserted successfully')
+		} catch (error) {
+			toast.error('Failed to insert row')
+			console.error('Insert error:', error)
+		}
 	}
 
 	return (
@@ -83,15 +119,23 @@ export function InsertRowDrawer({ isOpen, onClose, columns, selectedTable, onSub
 											<FormLabel className='flex items-center gap-2'>
 												{column.name}
 												<span className='text-xs text-muted-foreground'>{column.type}</span>
+												{column.nullable && <span className='text-xs text-muted-foreground'>(Optional)</span>}
 											</FormLabel>
 											<FormControl>
 												{column.type === 'text' && field.name !== 'id' ? (
-													<Textarea {...field} placeholder={`Enter ${column.name}`} />
+													<Textarea
+														{...field}
+														value={field.value ?? ''}
+														placeholder={`Enter ${column.name}`}
+														disabled={column.isPrimary}
+													/>
 												) : (
 													<Input
 														{...field}
+														value={field.value ?? ''}
 														type={column.type === 'int4' ? 'number' : 'text'}
 														placeholder={column.type === 'timestamp' ? 'YYYY-MM-DD HH:mm:ss' : `Enter ${column.name}`}
+														disabled={column.isPrimary}
 													/>
 												)}
 											</FormControl>

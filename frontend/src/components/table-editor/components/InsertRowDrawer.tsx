@@ -95,7 +95,6 @@ export function InsertRowDrawer({ isOpen, onClose, columns, selectedTable, onSub
 
 		try {
 			setIsSubmitting(true)
-			console.log('Form values before cleaning:', values)
 
 			// Clean up the values before submission
 			const cleanedValues = Object.entries(values).reduce<Record<string, unknown>>((acc, [key, value]) => {
@@ -110,7 +109,6 @@ export function InsertRowDrawer({ isOpen, onClose, columns, selectedTable, onSub
 				return acc
 			}, {})
 
-			console.log('Cleaned values before submission:', cleanedValues)
 			await onSubmit(cleanedValues as TableRecord)
 			form.reset()
 			onClose()

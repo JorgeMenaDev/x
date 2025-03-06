@@ -4,6 +4,7 @@ import { StatusCodes } from 'http-status-codes'
 import inventoryRoutes from './routes/inventory'
 import seedRoutes from './routes/seed'
 import qmPurposeRoutes from './domains/qm/routes/purpose.routes'
+import tableRoutes from './routes/tables'
 import './db/init'
 
 // Load environment variables - Bun has built-in support for .env files
@@ -63,7 +64,7 @@ const app = new Elysia()
 		timestamp: new Date().toISOString()
 	}))
 	// Mount routes
-	.group('/api', app => app.use(inventoryRoutes).use(seedRoutes).use(qmPurposeRoutes))
+	.group('/api', app => app.use(inventoryRoutes).use(seedRoutes).use(qmPurposeRoutes).use(tableRoutes))
 
 // Start the server
 app.listen(port, () => {

@@ -1,8 +1,10 @@
-// Types for table data and configuration
-export type TableColumn = {
-	name: string
-	type: string
-	sortable: boolean
+import { TableColumn as BaseTableColumn, TableRecord } from '../../models/inventory/table'
+
+/**
+ * Extends the base table column with UI-specific properties
+ */
+export interface TableColumn extends BaseTableColumn {
+	sortable?: boolean
 }
 
 export type TableData = {
@@ -67,38 +69,49 @@ export const MOCK_TABLES = {
 	}
 }
 
-// Props types for components
-export interface SidebarProps {
-	selectedSchema: string
-	selectedTable: string
-	tables: string[]
-	onTableSelect: (table: string) => void
-	searchQuery: string
-	onSearchChange: (query: string) => void
-	isLoading?: boolean
-}
-
+/**
+ * Props for the TableView component
+ */
 export interface TableViewProps {
 	columns: TableColumn[]
-	data: TableData[]
+	data: TableRecord[]
 	selectedRows: Set<string>
 	onSelectRow: (id: string) => void
 	selectAll: boolean
 	onSelectAll: () => void
-	onCellEdit?: (rowId: string, columnName: string, value: string | null) => void
+	onUpdateRow?: (id: string, data: TableRecord) => void
 }
 
+/**
+ * Props for the TableToolbar component
+ */
 export interface TableToolbarProps {
 	selectedTable: string
 	columns: TableColumn[]
-	onInsertRow: (data: TableData) => void
 	selectedRows: Set<string>
-	onDeleteRows?: (ids: string[]) => void
+	onInsertRow: (data: TableRecord) => void
+	onDeleteRows: (ids: string[]) => void
 }
 
+/**
+ * Props for the TablePagination component
+ */
 export interface TablePaginationProps {
 	currentPage: number
 	totalRecords: number
 	rowsPerPage: number
 	onPageChange: (page: number) => void
+}
+
+/**
+ * Props for the Sidebar component
+ */
+export interface SidebarProps {
+	selectedSchema: string
+	selectedTable: string
+	tables: { name: string; schema: string }[]
+	onTableSelect: (table: string) => void
+	searchQuery: string
+	onSearchChange: (query: string) => void
+	isLoading: boolean
 }

@@ -1,40 +1,41 @@
-import { QmPurpose, QmPurposeResponse, TablesResponse } from '../../models/inventory/table'
+import { TablesResponse, TableDataResponse, TableRecord } from '../../models/inventory/table'
 
 /**
  * Repository interface for interacting with database tables
  */
 export interface TablesRepository {
 	/**
-	 * Fetches all available tables
+	 * Fetches all available tables with their metadata
 	 */
 	getTables(): Promise<TablesResponse>
 
 	/**
-	 * Fetches records from the qm_purpose table
+	 * Fetches records from any table
+	 * @param tableName The name of the table
 	 * @param page The page number to fetch
 	 * @param limit The number of records per page
 	 */
-	getQmPurposeRecords(page: number, limit: number): Promise<QmPurposeResponse>
+	getTableRecords<T = TableRecord>(tableName: string, page: number, limit: number): Promise<TableDataResponse<T>>
 
 	/**
-	 * Creates a new record in the qm_purpose table
+	 * Creates a new record in any table
+	 * @param tableName The name of the table
 	 * @param data The data for the new record
 	 */
-	createQmPurposeRecord(data: Omit<QmPurpose, 'id' | 'created_at' | 'updated_at'>): Promise<QmPurpose>
+	createTableRecord<T = TableRecord>(tableName: string, data: Partial<T>): Promise<T>
 
 	/**
-	 * Updates an existing record in the qm_purpose table
+	 * Updates an existing record in any table
+	 * @param tableName The name of the table
 	 * @param id The ID of the record to update
 	 * @param data The updated data
 	 */
-	updateQmPurposeRecord(
-		id: string,
-		data: Partial<Omit<QmPurpose, 'id' | 'created_at' | 'updated_at'>>
-	): Promise<QmPurpose>
+	updateTableRecord<T = TableRecord>(tableName: string, id: string, data: Partial<T>): Promise<T>
 
 	/**
-	 * Deletes a record from the qm_purpose table
+	 * Deletes a record from any table
+	 * @param tableName The name of the table
 	 * @param id The ID of the record to delete
 	 */
-	deleteQmPurposeRecord(id: string): Promise<void>
+	deleteTableRecord(tableName: string, id: string): Promise<void>
 }

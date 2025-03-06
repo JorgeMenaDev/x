@@ -1,16 +1,57 @@
 /**
- * Represents a database table in the system
+ * Represents a column in a table
  */
-export interface Table {
+export interface TableColumn {
 	name: string
-	schema: string
+	type: string
+	nullable: boolean
+	isPrimary: boolean
 }
 
 /**
- * Represents the response from the API when fetching tables
+ * Represents the endpoints available for a table
+ */
+export interface TableEndpoints {
+	get: string
+	create: string
+	update: string
+	delete: string
+}
+
+/**
+ * Represents a table's metadata
+ */
+export interface TableMetadata {
+	name: string
+	schema: string
+	columns: TableColumn[]
+	endpoints: TableEndpoints
+}
+
+/**
+ * Response from the tables API
  */
 export interface TablesResponse {
-	tables: Table[]
+	success: boolean
+	tables: TableMetadata[]
+}
+
+/**
+ * Generic table record type
+ */
+export type TableRecord = {
+	[key: string]: unknown
+}
+
+/**
+ * Generic table data response
+ */
+export interface TableDataResponse<T = TableRecord> {
+	success: boolean
+	data: T[]
+	total: number
+	page: number
+	limit: number
 }
 
 /**

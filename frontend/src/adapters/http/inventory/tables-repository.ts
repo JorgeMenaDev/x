@@ -42,7 +42,15 @@ export class HttpTablesRepository extends BaseHttpRepository implements TablesRe
 	 * Creates a new record in any table
 	 */
 	async createTableRecord<T = TableRecord>(tableName: string, data: Partial<T>): Promise<T> {
+		console.log('Repository creating record:', { tableName, data })
 		return this.post<T>(`/api/v1/tables/${tableName}`, data)
+	}
+
+	/**
+	 * Creates a new record in the qm_purpose table
+	 */
+	async createQmPurposeRecord<T = TableRecord>(data: Partial<T>): Promise<T> {
+		return this.post<T>('/api/v1/qm/purpose', data)
 	}
 
 	/**

@@ -32,6 +32,12 @@ export interface TablesRepository {
 	createTableRecord<T = TableRecord>(tableName: string, data: Partial<T>): Promise<T>
 
 	/**
+	 * Creates a new record in the qm_purpose table
+	 * @param data The data for the new record
+	 */
+	createQmPurposeRecord<T = TableRecord>(data: Partial<T>): Promise<T>
+
+	/**
 	 * Updates an existing record in any table
 	 * @param tableName The name of the table
 	 * @param id The ID of the record to update

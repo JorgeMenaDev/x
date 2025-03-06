@@ -66,7 +66,15 @@ export function useCreateTableRecord<T = TableRecord>(tableName: string, options
 	const tablesRepository = createTablesRepository()
 
 	return useMutation({
-		mutationFn: (data: Partial<T>) => tablesRepository.createTableRecord<T>(tableName, data),
+		mutationFn: async (data: Partial<T>) => {
+			console.log('Mutation received data:', data)
+			// Use the specific endpoint for qm_purpose table
+			const result = await (tableName === 'qm_purpose'
+				? tablesRepository.createQmPurposeRecord(data)
+				: tablesRepository.createTableRecord<T>(tableName, data))
+			console.log('Mutation result:', result)
+			return result
+		},
 		onSuccess: () => {
 			// Invalidate queries
 			queryClient.invalidateQueries({

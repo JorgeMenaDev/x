@@ -29,6 +29,8 @@ const getZodType = (column: TableColumn) => {
 			schema = z.string().uuid()
 			break
 		case 'text':
+			// FIXME: we shouldn't define this here, the schema in the api
+			// is the one that says if the field is required or not
 			schema = z.string().min(1, 'This field is required')
 			break
 		case 'int4':
@@ -93,6 +95,7 @@ export function InsertRowDrawer({ isOpen, onClose, columns, selectedTable, onSub
 
 		try {
 			setIsSubmitting(true)
+			console.log('Form values before cleaning:', values)
 
 			// Clean up the values before submission
 			const cleanedValues = Object.entries(values).reduce<Record<string, unknown>>((acc, [key, value]) => {
@@ -107,6 +110,7 @@ export function InsertRowDrawer({ isOpen, onClose, columns, selectedTable, onSub
 				return acc
 			}, {})
 
+			console.log('Cleaned values before submission:', cleanedValues)
 			await onSubmit(cleanedValues as TableRecord)
 			form.reset()
 			onClose()

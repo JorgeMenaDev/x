@@ -246,3 +246,11 @@ If you want to run the API without Docker:
 ## License
 
 [MIT License](LICENSE)
+
+## API Documentation
+
+_Make sure to run the following commands to make the data directory and database file writable_
+
+```
+cd backend && chmod 755 data && chmod 644 data/database.sqlite
+```

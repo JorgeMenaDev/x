@@ -5,7 +5,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { validateColumnValue } from '@/lib/validation'
-import { toast } from 'sonner'
+import { useNotifications } from '@/components/notifications/notifications-store'
 
 interface EditCellProps {
 	initialValue: string
@@ -21,13 +21,18 @@ export function EditCell({ initialValue, columnName, onSave, onCancel, className
 	const [error, setError] = useState<string | null>(null)
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 	const containerRef = useRef<HTMLDivElement>(null)
+	const { addNotification } = useNotifications()
 
 	const validate = (val: string): boolean => {
 		if (val === '') return true // Allow empty string as it will be converted to NULL
 		const result = validateColumnValue(val, type)
 		if (!result.success) {
 			setError(result.error)
-			toast.error(result.error)
+			addNotification({
+				type: 'error',
+				title: 'Validation Error',
+				message: result.error
+			})
 			return false
 		}
 		setError(null)

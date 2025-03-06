@@ -31,15 +31,6 @@ export function TableView({
 	}, [data])
 
 	const handleCellUpdate = (rowId: string, columnName: string, value: string | null) => {
-		console.log('TableView handleCellUpdate - Input:', {
-			rowId,
-			columnName,
-			value,
-			valueType: typeof value,
-			isNull: value === null,
-			isEmpty: value === ''
-		})
-
 		// Update local state immediately for UI responsiveness
 		setLocalData(prevData =>
 			prevData.map(row => (row.id === rowId ? { ...row, [columnName]: value === null ? null : value } : row))
@@ -49,12 +40,7 @@ export function TableView({
 		if (onUpdateRow) {
 			// Ensure we're sending a proper value that the backend can handle
 			const updateData = { [columnName]: value }
-			console.log('TableView handleCellUpdate - Sending:', {
-				updateData,
-				keys: Object.keys(updateData),
-				values: Object.values(updateData),
-				columnValue: updateData[columnName]
-			})
+
 			onUpdateRow(rowId, updateData)
 		}
 		setEditingCell(null)

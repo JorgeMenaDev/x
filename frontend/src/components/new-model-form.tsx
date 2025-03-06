@@ -235,7 +235,6 @@ export default function NewModelForm() {
 			}))
 		}
 
-		console.log('Transformed data:', transformedData)
 		alert('Form submitted successfully! Check console for details.')
 	}
 

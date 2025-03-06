@@ -91,7 +91,6 @@ export function TableEditor() {
 	const handleUpdateRow = async (id: string, data: TableRecord) => {
 		try {
 			// Skip data cleaning since we're already getting clean data
-			console.log('Making API call with:', { id, data })
 			await updateRecord.mutateAsync({ id, data })
 			toast.success('Record updated successfully')
 		} catch (error) {

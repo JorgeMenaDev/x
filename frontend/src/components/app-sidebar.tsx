@@ -26,19 +26,19 @@ const data = {
 	},
 	navMain: [
 		{
-			title: 'Models',
-			url: '/dashboard/models',
+			title: 'Model Hub',
+			url: '',
 			icon: Bot,
 			items: [
 				{
-					title: 'Add New',
-					url: '/dashboard/new'
+					title: 'Create Model',
+					url: '/dashboard/models/new'
 				}
 			]
 		},
 		{
 			title: 'Analytics',
-			url: '/dashboard/analytics',
+			url: '',
 			icon: ChartLine,
 			items: [
 				{
@@ -71,7 +71,7 @@ const data = {
 		},
 		{
 			title: 'Admin',
-			url: '/dashboard/admin',
+			url: '',
 			icon: ShieldUser,
 			items: [
 				{

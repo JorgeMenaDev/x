@@ -1,18 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import {
-	BookOpen,
-	Bot,
-	Command,
-	Frame,
-	LifeBuoy,
-	PieChart,
-	Send,
-	Settings2,
-	ShieldUser,
-	SquareTerminal
-} from 'lucide-react'
+import { BookOpen, Bot, ChartLine, Command, Frame, LifeBuoy, PieChart, Send, Settings2, ShieldUser } from 'lucide-react'
 import Link from 'next/link'
 
 import { NavMain } from '@/components/nav-main'
@@ -37,13 +26,24 @@ const data = {
 	},
 	navMain: [
 		{
-			title: 'Models',
-			url: '/dashboard/models',
+			title: 'Model Hub',
+			url: '',
 			icon: Bot,
 			items: [
 				{
-					title: 'New',
-					url: '/dashboard/new'
+					title: 'Create Model',
+					url: '/dashboard/models/new'
+				}
+			]
+		},
+		{
+			title: 'Analytics',
+			url: '',
+			icon: ChartLine,
+			items: [
+				{
+					title: 'Dependency Graph',
+					url: '/dashboard/analytics/dependency-graph'
 				}
 			]
 		},
@@ -53,20 +53,8 @@ const data = {
 			icon: BookOpen,
 			items: [
 				{
-					title: 'Introduction',
-					url: '/dashboard/docs/introduction'
-				},
-				{
 					title: 'Get Started',
-					url: '/dashboard/docs/getting-started'
-				},
-				{
-					title: 'Tutorials',
-					url: '/dashboard/docs/tutorials'
-				},
-				{
-					title: 'Changelog',
-					url: '/dashboard/docs/changelog'
+					url: '/dashboard/docs/get-started'
 				}
 			]
 		},
@@ -83,7 +71,7 @@ const data = {
 		},
 		{
 			title: 'Admin',
-			url: '/dashboard/admin',
+			url: '',
 			icon: ShieldUser,
 			items: [
 				{

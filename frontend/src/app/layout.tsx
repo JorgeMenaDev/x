@@ -33,7 +33,6 @@ export default function RootLayout({
 				<ThemeProvider attribute='class' defaultTheme='system' enableSystem disableTransitionOnChange>
 					<Providers>
 						<div className='flex-1'>{children}</div>
-
 						<div className='fixed bottom-4 right-4'>
 							<ThemeToggle />
 						</div>

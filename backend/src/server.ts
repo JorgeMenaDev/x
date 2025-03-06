@@ -1,8 +1,6 @@
 import { Elysia } from 'elysia'
 import { cors } from '@elysiajs/cors'
 import { StatusCodes } from 'http-status-codes'
-import productRoutes from './routes/products'
-import categoryRoutes from './routes/categories'
 import inventoryRoutes from './routes/inventory'
 import seedRoutes from './routes/seed'
 import './db/init'
@@ -27,34 +25,34 @@ const app = new Elysia()
 		console.log(`${request.method} ${request.url}`)
 	})
 	// Add error handling middleware
-	.onError(({ error, set }) => {
+	.onError(({ code, error, set }) => {
 		console.error('Server error:', {
 			error,
-			name: error.name,
-			message: error.message,
-			stack: error.stack,
-			cause: error.cause
+			code,
+			message: error instanceof Error ? error.message : 'No message available'
 		})
 
-		// Set appropriate status code
-		if (error.name === 'NotFoundError') {
-			set.status = StatusCodes.NOT_FOUND
-		} else if (error.name === 'ValidationError') {
-			set.status = StatusCodes.BAD_REQUEST
-		} else if (error.name === 'TypeError') {
-			set.status = StatusCodes.BAD_REQUEST
-		} else {
-			set.status = error.status || StatusCodes.INTERNAL_SERVER_ERROR
+		switch (code) {
+			case 'NOT_FOUND':
+				set.status = StatusCodes.NOT_FOUND
+				break
+			case 'VALIDATION':
+				set.status = StatusCodes.BAD_REQUEST
+				break
+			case 'PARSE':
+				set.status = StatusCodes.BAD_REQUEST
+				break
+			default:
+				set.status = StatusCodes.INTERNAL_SERVER_ERROR
 		}
 
-		// Return error response
 		return {
 			error: true,
-			message: error.message || 'Internal Server Error',
+			message: error instanceof Error ? error.message : 'Internal Server Error',
 			status: set.status,
 			...(process.env.NODE_ENV !== 'production' && {
-				stack: error.stack,
-				cause: error.cause
+				stack: error instanceof Error ? error.stack : undefined,
+				cause: error instanceof Error ? error.cause : undefined
 			})
 		}
 	})
@@ -64,7 +62,7 @@ const app = new Elysia()
 		timestamp: new Date().toISOString()
 	}))
 	// Mount routes
-	.group('/api', app => app.use(productRoutes).use(categoryRoutes).use(inventoryRoutes).use(seedRoutes))
+	.group('/api', app => app.use(inventoryRoutes).use(seedRoutes))
 
 // Start the server
 app.listen(port, () => {

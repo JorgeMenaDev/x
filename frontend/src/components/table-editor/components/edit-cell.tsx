@@ -31,7 +31,7 @@ export function EditCell({ initialValue, columnName, onSave, onCancel, className
 			addNotification({
 				type: 'error',
 				title: 'Validation Error',
-				message: result.error
+				message: result.error || 'Invalid value'
 			})
 			return false
 		}

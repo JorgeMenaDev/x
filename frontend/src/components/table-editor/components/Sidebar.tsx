@@ -36,7 +36,12 @@ export function Sidebar({
 	onSearchChange,
 	isLoading = false
 }: SidebarProps) {
-	const filteredTables = tables.filter(table => table.toLowerCase().includes(searchQuery.toLowerCase()))
+	// Filter tables based on search query
+	const filteredTables = tables.filter(
+		table =>
+			table.schema === selectedSchema &&
+			(searchQuery === '' || table.name.toLowerCase().includes(searchQuery.toLowerCase()))
+	)
 
 	// Handle copy table name
 	const handleCopyName = (e: React.MouseEvent, tableName: string) => {
@@ -85,23 +90,23 @@ export function Sidebar({
 				) : (
 					filteredTables.map(table => (
 						<div
-							key={table}
+							key={table.name}
 							className={cn(
 								'flex items-center px-2 py-1 text-sm cursor-pointer hover:bg-muted/50 group',
-								selectedTable === table && 'bg-muted'
+								selectedTable === table.name && 'bg-muted'
 							)}
-							onClick={() => onTableSelect(table)}
+							onClick={() => onTableSelect(table.name)}
 						>
 							<div className='w-5 flex justify-center'>
-								{table === 'inventory' || table === 'price_lists' ? (
+								{table.name === 'inventory' || table.name === 'price_lists' ? (
 									<Lock className='h-3.5 w-3.5 text-amber-500' />
-								) : table === 'product_embeddings' || table === 'product_embeddings_cache' ? (
+								) : table.name === 'product_embeddings' || table.name === 'product_embeddings_cache' ? (
 									<Eye className='h-3.5 w-3.5 text-muted-foreground' />
 								) : (
 									<Database className='h-3.5 w-3.5 text-muted-foreground' />
 								)}
 							</div>
-							<span className='flex-1 ml-1'>{table}</span>
+							<span className='flex-1 ml-1'>{table.name}</span>
 
 							<div className='opacity-0 group-hover:opacity-100 transition-opacity'>
 								<DropdownMenu>
@@ -116,7 +121,7 @@ export function Sidebar({
 										</Button>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent align='end' className='w-56'>
-										<DropdownMenuItem className='cursor-pointer' onClick={e => handleCopyName(e, table)}>
+										<DropdownMenuItem className='cursor-pointer' onClick={e => handleCopyName(e, table.name)}>
 											<Copy className='h-4 w-4 mr-2' />
 											Copy name
 										</DropdownMenuItem>

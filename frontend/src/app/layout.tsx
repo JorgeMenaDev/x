@@ -5,7 +5,6 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Toaster } from 'sonner'
 import { Providers } from '@/components/providers'
-import { Navbar } from '@/components/Navbar'
 
 const geistSans = Geist({
 	variable: '--font-geist-sans',
@@ -38,7 +37,7 @@ export default function RootLayout({
 						</div>
 					</Providers>
 				</ThemeProvider>
-				<Toaster />
+				<Toaster richColors />
 			</body>
 		</html>
 	)

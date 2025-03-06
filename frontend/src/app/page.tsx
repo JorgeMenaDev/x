@@ -17,7 +17,7 @@ export default function Home() {
 
 						<div className='flex justify-center gap-4 pt-4'>
 							<Button asChild size='lg'>
-								<Link href='/table-editor'>
+								<Link href='/dashboard/admin/table-editor'>
 									Go to Table Editor <ArrowRight className='ml-2 h-4 w-4' />
 								</Link>
 							</Button>

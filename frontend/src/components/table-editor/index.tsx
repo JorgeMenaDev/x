@@ -5,75 +5,52 @@ import { Sidebar } from './components/Sidebar'
 import { TableView } from './components/TableView'
 import { TableToolbar } from './components/TableToolbar'
 import { TablePagination } from './components/TablePagination'
-import { MOCK_TABLES, TableData, TableColumn } from './types'
 import { useTables } from '../../hooks/inventory/tables/use-tables'
-import { useTableData } from '../../hooks/inventory/tables/use-table-data'
-import { QmPurpose } from '../../models/inventory/table'
+import {
+	useTableRecords,
+	useCreateTableRecord,
+	useUpdateTableRecord,
+	useDeleteTableRecord
+} from '../../hooks/inventory/tables/use-table-data'
+import { TableRecord } from '../../models/inventory/table'
+import { TableColumn } from './types'
+import { handleAPIError } from '@/lib/errors'
+import { toast } from 'sonner'
 
 export function TableEditor() {
 	const [selectedSchema] = useState('public')
-	const [selectedTable, setSelectedTable] = useState('qm_purpose') // Default to qm_purpose since it's implemented
+	const [selectedTable, setSelectedTable] = useState<string>('')
 	const [currentPage, setCurrentPage] = useState(1)
 	const [rowsPerPage] = useState(10)
 
-	// Fetch tables from the API
+	// Fetch tables metadata from the API
 	const { data: tablesResponse, isLoading: isLoadingTables } = useTables()
 
-	// Use the fetched tables if available, otherwise fall back to the hardcoded list
-	const tables = tablesResponse?.tables.map(table => table.name) || [
-		'qm_purpose',
-		'extracted_products',
-		'inventory',
-		'matched_products',
-		'offices',
-		'price_lists',
-		'product_embeddings',
-		'product_types',
-		'products',
-		'quotes',
-		'variants'
-	]
+	// Get the selected table's metadata
+	const selectedTableMetadata = tablesResponse?.tables.find(t => t.name === selectedTable)
+
+	// Add UI-specific column properties
+	const tableColumns: TableColumn[] =
+		selectedTableMetadata?.columns.map(col => ({
+			...col,
+			sortable: true // Make all columns sortable by default
+		})) || []
 
 	// Fetch data for the selected table
 	const {
 		data: tableDataResponse,
 		isLoading: isLoadingTableData,
 		error: tableDataError
-	} = useTableData(selectedTable, currentPage, rowsPerPage)
+	} = useTableRecords(selectedTable, currentPage, rowsPerPage)
+
+	// Mutations for table operations
+	const createRecord = useCreateTableRecord(selectedTable, { showSuccessToast: true })
+	const updateRecord = useUpdateTableRecord(selectedTable)
+	const deleteRecord = useDeleteTableRecord(selectedTable)
 
 	const [searchQuery, setSearchQuery] = useState('')
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
 	const [selectAll, setSelectAll] = useState(false)
-	const [tableData, setTableData] = useState(MOCK_TABLES)
-
-	// Update the table data when the API response changes
-	useEffect(() => {
-		if (tableDataResponse && selectedTable === 'qm_purpose') {
-			// Convert the API response to the format expected by the TableView component
-			const columns: TableColumn[] = [
-				{ name: 'id', type: 'uuid', sortable: true },
-				{ name: 'text', type: 'text', sortable: true },
-				{ name: 'created_at', type: 'timestamp', sortable: true },
-				{ name: 'updated_at', type: 'timestamp', sortable: true }
-			]
-
-			const data = tableDataResponse.data.map((record: QmPurpose) => ({
-				id: record.id,
-				text: record.text,
-				created_at: record.created_at,
-				updated_at: record.updated_at
-			}))
-
-			// Update the tableData state with the new data
-			setTableData(prev => ({
-				...prev,
-				qm_purpose: {
-					columns,
-					data
-				}
-			}))
-		}
-	}, [tableDataResponse, selectedTable])
 
 	// Reset selected rows when changing tables
 	useEffect(() => {
@@ -81,16 +58,11 @@ export function TableEditor() {
 		setSelectAll(false)
 	}, [selectedTable])
 
-	// Get current table data
-	const currentTableData = tableData[selectedTable as keyof typeof tableData] || { columns: [], data: [] }
-	const totalRecords =
-		selectedTable === 'qm_purpose' && tableDataResponse ? tableDataResponse.total : currentTableData.data.length
-
 	const handleSelectAll = () => {
 		if (selectAll) {
 			setSelectedRows(new Set())
 		} else {
-			const allIds = currentTableData.data.map(row => row.id)
+			const allIds = (tableDataResponse?.data || []).map(row => row.id as string)
 			setSelectedRows(new Set(allIds))
 		}
 		setSelectAll(!selectAll)
@@ -104,34 +76,38 @@ export function TableEditor() {
 			newSelectedRows.add(id)
 		}
 		setSelectedRows(newSelectedRows)
-		setSelectAll(newSelectedRows.size === currentTableData.data.length)
+		setSelectAll(newSelectedRows.size === (tableDataResponse?.data || []).length)
 	}
 
-	const handleInsertRow = (data: TableData) => {
-		// For now, just update the local state
-		// In a real implementation, this would call an API endpoint
-		setTableData(prev => ({
-			...prev,
-			[selectedTable]: {
-				...prev[selectedTable as keyof typeof prev],
-				data: [...prev[selectedTable as keyof typeof prev].data, data]
-			}
-		}))
+	const handleInsertRow = async (data: TableRecord) => {
+		try {
+			await createRecord.mutateAsync(data)
+		} catch (error) {
+			handleAPIError(error)
+			throw error // Re-throw to prevent drawer from closing
+		}
 	}
 
-	const handleDeleteRows = (ids: string[]) => {
-		// For now, just update the local state
-		// In a real implementation, this would call an API endpoint
-		setTableData(prev => ({
-			...prev,
-			[selectedTable]: {
-				...prev[selectedTable as keyof typeof prev],
-				data: prev[selectedTable as keyof typeof prev].data.filter(row => !ids.includes(row.id))
-			}
-		}))
-		// Clear selected rows after deletion
-		setSelectedRows(new Set())
-		setSelectAll(false)
+	const handleUpdateRow = async (id: string, data: TableRecord) => {
+		try {
+			// Skip data cleaning since we're already getting clean data
+			await updateRecord.mutateAsync({ id, data })
+			toast.success('Record updated successfully')
+		} catch (error) {
+			console.error('Update error:', error)
+			handleAPIError(error)
+		}
+	}
+
+	const handleDeleteRows = async (ids: string[]) => {
+		try {
+			await Promise.all(ids.map(id => deleteRecord.mutateAsync(id)))
+			setSelectedRows(new Set())
+			setSelectAll(false)
+			toast.success(`${ids.length} record(s) deleted successfully`)
+		} catch (error) {
+			handleAPIError(error)
+		}
 	}
 
 	return (
@@ -140,7 +116,7 @@ export function TableEditor() {
 				<Sidebar
 					selectedSchema={selectedSchema}
 					selectedTable={selectedTable}
-					tables={tables}
+					tables={tablesResponse?.tables || []}
 					onTableSelect={setSelectedTable}
 					searchQuery={searchQuery}
 					onSearchChange={setSearchQuery}
@@ -148,13 +124,15 @@ export function TableEditor() {
 				/>
 
 				<div className='flex-1 flex flex-col overflow-hidden'>
-					<TableToolbar
-						selectedTable={selectedTable}
-						columns={currentTableData.columns}
-						onInsertRow={handleInsertRow}
-						selectedRows={selectedRows}
-						onDeleteRows={handleDeleteRows}
-					/>
+					{selectedTableMetadata && (
+						<TableToolbar
+							selectedTable={selectedTable}
+							columns={tableColumns}
+							onInsertRow={handleInsertRow}
+							selectedRows={selectedRows}
+							onDeleteRows={handleDeleteRows}
+						/>
+					)}
 
 					{isLoadingTableData ? (
 						<div className='flex-1 flex items-center justify-center'>
@@ -170,23 +148,30 @@ export function TableEditor() {
 								<p className='text-sm'>{(tableDataError as Error).message}</p>
 							</div>
 						</div>
-					) : (
+					) : selectedTableMetadata ? (
 						<TableView
-							columns={currentTableData.columns}
-							data={currentTableData.data}
+							columns={tableColumns}
+							data={tableDataResponse?.data || []}
 							selectedRows={selectedRows}
 							onSelectRow={handleSelectRow}
 							selectAll={selectAll}
 							onSelectAll={handleSelectAll}
+							onUpdateRow={handleUpdateRow}
 						/>
+					) : (
+						<div className='flex-1 flex items-center justify-center'>
+							<p className='text-muted-foreground'>Select a table to view its data</p>
+						</div>
 					)}
 
-					<TablePagination
-						currentPage={currentPage}
-						totalRecords={totalRecords}
-						rowsPerPage={rowsPerPage}
-						onPageChange={setCurrentPage}
-					/>
+					{selectedTable && tableDataResponse && (
+						<TablePagination
+							currentPage={currentPage}
+							totalRecords={tableDataResponse.total}
+							rowsPerPage={rowsPerPage}
+							onPageChange={setCurrentPage}
+						/>
+					)}
 				</div>
 			</div>
 		</div>

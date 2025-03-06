@@ -5,28 +5,34 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { validateColumnValue } from '@/lib/validation'
-import { toast } from 'sonner'
+import { useNotifications } from '@/components/notifications/notifications-store'
 
 interface EditCellProps {
 	initialValue: string
-	onSave: (value: string | null) => void
+	columnName: string
+	onSave: (value: string | null, columnName: string) => void
 	onCancel: () => void
 	className?: string
 	type?: string
 }
 
-export function EditCell({ initialValue, onSave, onCancel, className, type = 'text' }: EditCellProps) {
+export function EditCell({ initialValue, columnName, onSave, onCancel, className, type = 'text' }: EditCellProps) {
 	const [value, setValue] = useState(initialValue)
 	const [error, setError] = useState<string | null>(null)
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 	const containerRef = useRef<HTMLDivElement>(null)
+	const { addNotification } = useNotifications()
 
 	const validate = (val: string): boolean => {
 		if (val === '') return true // Allow empty string as it will be converted to NULL
 		const result = validateColumnValue(val, type)
 		if (!result.success) {
 			setError(result.error)
-			toast.error(result.error)
+			addNotification({
+				type: 'error',
+				title: 'Validation Error',
+				message: result.error || 'Invalid value'
+			})
 			return false
 		}
 		setError(null)
@@ -35,15 +41,15 @@ export function EditCell({ initialValue, onSave, onCancel, className, type = 'te
 
 	const handleSave = useCallback(() => {
 		if (value === '') {
-			onSave(null)
+			onSave(null, columnName)
 			return
 		}
 
 		if (!validate(value)) {
 			return // Don't save if validation fails
 		}
-		onSave(value)
-	}, [onSave, value, type])
+		onSave(value, columnName)
+	}, [onSave, value, columnName, type])
 
 	// Focus the textarea when the component mounts
 	useEffect(() => {
@@ -68,7 +74,7 @@ export function EditCell({ initialValue, onSave, onCancel, className, type = 'te
 	}, [handleSave])
 
 	const handleSetNull = () => {
-		onSave(null)
+		onSave(null, columnName)
 	}
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {

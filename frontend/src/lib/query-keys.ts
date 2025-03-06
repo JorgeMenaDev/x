@@ -15,5 +15,11 @@ export const queryKeys = {
 				detail: (id: string) => [...queryKeys.inventory.tables.qmPurpose.all, 'detail', id] as const
 			}
 		}
+	},
+	tables: {
+		all: (tableName: string) => ['tables', tableName] as const,
+		records: (tableName: string, page: number, limit: number) =>
+			[...queryKeys.tables.all(tableName), 'records', { page, limit }] as const,
+		record: (tableName: string, id: string) => [...queryKeys.tables.all(tableName), 'record', id] as const
 	}
 }

@@ -4,6 +4,7 @@ import { EditCell } from './edit-cell'
 
 interface TableCellProps {
 	value: string | null
+	columnName: string
 	onChange: (value: string | null) => void
 	onStartEdit: () => void
 	onCancelEdit: () => void
@@ -14,6 +15,7 @@ interface TableCellProps {
 
 export function TableCell({
 	value,
+	columnName,
 	onChange,
 	onStartEdit,
 	onCancelEdit,
@@ -30,6 +32,7 @@ export function TableCell({
 			{isEditing ? (
 				<EditCell
 					initialValue={value === null ? '' : String(value)}
+					columnName={columnName}
 					onSave={onChange}
 					onCancel={onCancelEdit}
 					type={type}

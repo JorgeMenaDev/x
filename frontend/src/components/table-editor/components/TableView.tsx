@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react'
 import { Table, TableBody, TableCell as BaseTableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
-import { TableCell } from '@/components/table-cell'
+import { TableCell } from '@/components/table-editor/components/table-cell'
 import type { TableViewProps } from '../types'
+import { TableRecord } from '@/models/inventory/table'
+import { validateField, isFieldEditable } from '@/lib/validation/table-schemas'
+import { toast } from 'sonner'
 
 interface EditingCell {
 	rowId: string
@@ -19,28 +22,60 @@ export function TableView({
 	onSelectRow,
 	selectAll,
 	onSelectAll,
-	onCellEdit
+	onUpdateRow
 }: TableViewProps) {
 	const [editingCell, setEditingCell] = useState<EditingCell | null>(null)
-	const [localData, setLocalData] = useState(data)
+	const [localData, setLocalData] = useState<TableRecord[]>(data)
 
 	// Update local data when prop changes
 	useEffect(() => {
 		setLocalData(data)
 	}, [data])
 
-	const updateCell = (rowId: string, columnName: string, value: string | null) => {
+	const handleCellUpdate = (rowId: string, columnName: string, value: string | null) => {
+		// Find the column definition
+		const column = columns.find(col => col.name === columnName)
+		if (!column) return
+
+		// Check if the field is editable
+		if (!isFieldEditable(column)) {
+			toast.error('This field cannot be edited')
+			setEditingCell(null)
+			return
+		}
+
+		// Validate the new value
+		const validation = validateField(value, column)
+		if (!validation.success) {
+			toast.error(validation.error || 'Invalid value for this field type')
+			setEditingCell(null)
+			return
+		}
+
 		// Update local state immediately for UI responsiveness
 		setLocalData(prevData =>
 			prevData.map(row => (row.id === rowId ? { ...row, [columnName]: value === null ? null : value } : row))
 		)
 
-		// Notify parent component
-		onCellEdit?.(rowId, columnName, value)
+		// Notify parent component with the correct data structure
+		if (onUpdateRow) {
+			const updateData = { [columnName]: value }
+			onUpdateRow(rowId, updateData)
+		}
 		setEditingCell(null)
 	}
 
 	const startEditing = (rowId: string, columnName: string) => {
+		// Find the column definition
+		const column = columns.find(col => col.name === columnName)
+		if (!column) return
+
+		// Show a toast for non-editable fields but still allow clicking
+		if (!isFieldEditable(column)) {
+			toast.error('This field cannot be edited')
+			return
+		}
+
 		setEditingCell({ rowId, columnName })
 	}
 
@@ -65,6 +100,7 @@ export function TableView({
 								<div className='flex items-center gap-1'>
 									<span className='font-medium'>{column.name}</span>
 									<span className='text-[10px] text-muted-foreground'>{column.type}</span>
+									{column.isPrimary && <span className='text-[10px] text-muted-foreground'>(Primary Key)</span>}
 								</div>
 							</TableHead>
 						))}
@@ -72,20 +108,28 @@ export function TableView({
 				</TableHeader>
 				<TableBody>
 					{localData.map(row => (
-						<TableRow key={row.id} className='h-8'>
+						<TableRow key={row.id as string} className='h-8'>
 							<BaseTableCell className='p-2'>
-								<Checkbox checked={selectedRows.has(row.id)} onCheckedChange={() => onSelectRow(row.id)} className='' />
+								<Checkbox
+									checked={selectedRows.has(row.id as string)}
+									onCheckedChange={() => onSelectRow(row.id as string)}
+									className=''
+								/>
 							</BaseTableCell>
 							{columns.map(column => (
-								<BaseTableCell key={`${row.id}-${column.name}`} className='p-0'>
+								<BaseTableCell
+									key={`${row.id}-${column.name}`}
+									className={`p-0 ${!isFieldEditable(column) ? 'cursor-not-allowed bg-muted/30' : ''}`}
+								>
 									<ContextMenu>
 										<ContextMenuTrigger className='h-full w-full'>
 											<TableCell
 												value={row[column.name] === null ? null : String(row[column.name])}
-												onChange={value => updateCell(row.id, column.name, value)}
-												onStartEdit={() => startEditing(row.id, column.name)}
+												columnName={column.name}
+												onChange={value => handleCellUpdate(row.id as string, column.name, value)}
+												onStartEdit={() => startEditing(row.id as string, column.name)}
 												onCancelEdit={cancelEditing}
-												isEditing={isEditing(row.id, column.name)}
+												isEditing={isEditing(row.id as string, column.name)}
 												type={column.type}
 											/>
 										</ContextMenuTrigger>

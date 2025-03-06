@@ -1,10 +1,32 @@
-import { getDB, generateUUID } from '../db/database.ts'
-import { QmPurpose } from '../db/models/qm_purpose.ts'
+import { getDB } from '../db/database.ts'
 import db from '../db/database'
-import { Elysia } from 'elysia'
 
 interface TableInfo {
 	name: string
+	schema: string
+	columns: ColumnInfo[]
+	endpoints: TableEndpoints
+}
+
+interface ColumnInfo {
+	name: string
+	type: string
+	nullable: boolean
+	isPrimary: boolean
+}
+
+interface TableEndpoints {
+	get: string
+	create: string
+	update: string
+	delete: string
+}
+
+interface PragmaResult {
+	name: string
+	type: string
+	notnull: number
+	pk: number
 }
 
 // Get low inventory products
@@ -16,190 +38,42 @@ export const getLowInventory = () => {
 	}
 }
 
-// Get all tables
+// Get all tables with their metadata
 export const getTables = () => {
 	try {
 		// Get all table names from the SQLite master table
-		const tables = db
-			.query('SELECT name FROM sqlite_master WHERE type="table" AND name NOT LIKE "sqlite_%"')
-			.all() as TableInfo[]
+		const tables = db.query('SELECT name FROM sqlite_master WHERE type="table" AND name NOT LIKE "sqlite_%"').all() as {
+			name: string
+		}[]
 
-		// Format the response
+		// Get column information for each table
+		const tablesWithMetadata = tables.map(table => {
+			const columns = db.query(`PRAGMA table_info(${table.name})`).all() as PragmaResult[]
+
+			return {
+				name: table.name,
+				schema: 'public',
+				columns: columns.map(col => ({
+					name: col.name,
+					type: col.type.toLowerCase(),
+					nullable: !col.notnull,
+					isPrimary: !!col.pk
+				})),
+				endpoints: {
+					get: `/api/v1/tables/${table.name}`,
+					create: `/api/v1/tables/${table.name}`,
+					update: `/api/v1/tables/${table.name}/:id`,
+					delete: `/api/v1/tables/${table.name}/:id`
+				}
+			}
+		})
+
 		return {
 			success: true,
-			tables: tables.map(table => ({
-				name: table.name,
-				schema: 'public'
-			}))
+			tables: tablesWithMetadata
 		}
 	} catch (error) {
 		console.error('Error fetching tables:', error)
 		throw new Error('Failed to fetch tables')
-	}
-}
-
-// Get records from the qm_purpose table
-export const getQmPurposeRecords = ({ query }: { query: { page?: string; limit?: string } }) => {
-	try {
-		const db = getDB()
-		const page = parseInt(query.page || '1')
-		const limit = parseInt(query.limit || '100')
-		const offset = (page - 1) * limit
-
-		// Get total count
-		const countQuery = 'SELECT COUNT(*) as count FROM qm_purpose'
-		const countResult = db.query(countQuery).get() as { count: number }
-		const total = countResult?.count || 0
-
-		// Get paginated records - Convert numbers to strings for SQLite
-		const recordsQuery = `
-			SELECT * FROM qm_purpose
-			ORDER BY created_at DESC
-			LIMIT ${limit} OFFSET ${offset}
-		`
-		const records = db.query(recordsQuery).all()
-
-		console.log(`Retrieved ${records.length} records`)
-
-		return {
-			success: true,
-			data: records,
-			total,
-			page,
-			limit
-		}
-	} catch (error) {
-		console.error('Error in getQmPurposeRecords:', {
-			error,
-			stack: error instanceof Error ? error.stack : undefined,
-			message: error instanceof Error ? error.message : 'Unknown error'
-		})
-		throw new Error('Failed to fetch qm_purpose records')
-	}
-}
-
-// Create a new record in the qm_purpose table
-export const createQmPurposeRecord = ({ body }: { body: { text: string } }) => {
-	try {
-		if (!body.text) {
-			throw new Error('Text is required')
-		}
-
-		const db = getDB()
-		const id = generateUUID()
-		const now = new Date().toISOString()
-
-		const query = `
-			INSERT INTO qm_purpose (id, text, created_at, updated_at)
-			VALUES ($id, $text, $created_at, $updated_at)
-		`
-		db.query(query).run({
-			$id: id,
-			$text: body.text,
-			$created_at: now,
-			$updated_at: now
-		})
-
-		const newRecord: QmPurpose = {
-			id,
-			text: body.text,
-			created_at: now,
-			updated_at: now
-		}
-
-		return {
-			success: true,
-			data: newRecord
-		}
-	} catch (error) {
-		console.error('Error in createQmPurposeRecord:', {
-			error,
-			stack: error instanceof Error ? error.stack : undefined,
-			message: error instanceof Error ? error.message : 'Unknown error'
-		})
-		throw error
-	}
-}
-
-// Update an existing record in the qm_purpose table
-export const updateQmPurposeRecord = ({ params, body }: { params: { id: string }; body: { text: string } }) => {
-	try {
-		if (!body.text) {
-			throw new Error('Text is required')
-		}
-
-		const db = getDB()
-		const id = params.id
-
-		// Check if record exists
-		const checkQuery = 'SELECT * FROM qm_purpose WHERE id = $id'
-		const existingRecord = db.query(checkQuery).get({ $id: id }) as QmPurpose | undefined
-
-		if (!existingRecord) {
-			throw new Error('Record not found')
-		}
-
-		const now = new Date().toISOString()
-
-		const query = `
-			UPDATE qm_purpose
-			SET text = $text, updated_at = $updated_at
-			WHERE id = $id
-		`
-		db.query(query).run({
-			$text: body.text,
-			$updated_at: now,
-			$id: id
-		})
-
-		const updatedRecord: QmPurpose = {
-			id,
-			text: body.text,
-			created_at: existingRecord.created_at,
-			updated_at: now
-		}
-
-		return {
-			success: true,
-			data: updatedRecord
-		}
-	} catch (error) {
-		console.error('Error in updateQmPurposeRecord:', {
-			error,
-			stack: error instanceof Error ? error.stack : undefined,
-			message: error instanceof Error ? error.message : 'Unknown error'
-		})
-		throw error
-	}
-}
-
-// Delete a record from the qm_purpose table
-export const deleteQmPurposeRecord = ({ params }: { params: { id: string } }) => {
-	try {
-		const db = getDB()
-		const id = params.id
-
-		// Check if record exists
-		const checkQuery = 'SELECT * FROM qm_purpose WHERE id = $id'
-		const existingRecord = db.query(checkQuery).get({ $id: id }) as QmPurpose | undefined
-
-		if (!existingRecord) {
-			throw new Error('Record not found')
-		}
-
-		const query = 'DELETE FROM qm_purpose WHERE id = $id'
-		db.query(query).run({ $id: id })
-
-		return {
-			success: true,
-			message: 'Record deleted successfully'
-		}
-	} catch (error) {
-		console.error('Error in deleteQmPurposeRecord:', {
-			error,
-			stack: error instanceof Error ? error.stack : undefined,
-			message: error instanceof Error ? error.message : 'Unknown error'
-		})
-		throw error
 	}
 }

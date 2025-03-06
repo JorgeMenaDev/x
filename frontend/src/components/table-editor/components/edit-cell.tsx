@@ -9,13 +9,14 @@ import { toast } from 'sonner'
 
 interface EditCellProps {
 	initialValue: string
-	onSave: (value: string | null) => void
+	columnName: string
+	onSave: (value: string | null, columnName: string) => void
 	onCancel: () => void
 	className?: string
 	type?: string
 }
 
-export function EditCell({ initialValue, onSave, onCancel, className, type = 'text' }: EditCellProps) {
+export function EditCell({ initialValue, columnName, onSave, onCancel, className, type = 'text' }: EditCellProps) {
 	const [value, setValue] = useState(initialValue)
 	const [error, setError] = useState<string | null>(null)
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -35,15 +36,15 @@ export function EditCell({ initialValue, onSave, onCancel, className, type = 'te
 
 	const handleSave = useCallback(() => {
 		if (value === '') {
-			onSave(null)
+			onSave(null, columnName)
 			return
 		}
 
 		if (!validate(value)) {
 			return // Don't save if validation fails
 		}
-		onSave(value)
-	}, [onSave, value, type])
+		onSave(value, columnName)
+	}, [onSave, value, columnName, type])
 
 	// Focus the textarea when the component mounts
 	useEffect(() => {
@@ -68,7 +69,7 @@ export function EditCell({ initialValue, onSave, onCancel, className, type = 'te
 	}, [handleSave])
 
 	const handleSetNull = () => {
-		onSave(null)
+		onSave(null, columnName)
 	}
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {

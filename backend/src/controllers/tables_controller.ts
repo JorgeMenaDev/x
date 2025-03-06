@@ -1,5 +1,6 @@
 import { getDB } from '../db/database'
 import db from '../db/database'
+import { ValidationError, NotFoundError } from '../lib/errors'
 
 type SQLValue = string | number | boolean | null | Uint8Array
 
@@ -25,7 +26,7 @@ export const getTableRecords = ({
 			| undefined
 
 		if (!tableExists) {
-			throw new Error(`Table ${params.table} does not exist`)
+			throw new NotFoundError(`Table ${params.table} does not exist`)
 		}
 
 		// Get total count
@@ -69,7 +70,7 @@ export const createTableRecord = ({ params, body }: { params: { table: string };
 			| undefined
 
 		if (!tableExists) {
-			throw new Error(`Table ${params.table} does not exist`)
+			throw new NotFoundError(`Table ${params.table} does not exist`)
 		}
 
 		// Get table columns
@@ -116,16 +117,24 @@ export const updateTableRecord = ({
 			| undefined
 
 		if (!tableExists) {
-			throw new Error(`Table ${params.table} does not exist`)
+			throw new NotFoundError(`Table ${params.table} does not exist`)
 		}
 
-		// Get table columns
-		const columns = db.query(`PRAGMA table_info(${params.table})`).all() as { name: string }[]
-		const columnNames = columns.map(col => col.name).filter(name => name !== 'id')
+		// Get the columns that are being updated
+		const columnsToUpdate = Object.keys(body)
+		if (columnsToUpdate.length === 0) {
+			throw new ValidationError('No columns to update', { body })
+		}
+
+		// Validate that the record exists
+		const recordExists = db.query(`SELECT id FROM ${params.table} WHERE id = ?`).get(params.id)
+		if (!recordExists) {
+			throw new NotFoundError(`Record with id ${params.id} not found in table ${params.table}`)
+		}
 
 		// Prepare the query
-		const updates = columnNames.map(name => `${name} = ?`).join(', ')
-		const values = [...columnNames.map(name => body[name]), params.id] as SQLValue[]
+		const updates = columnsToUpdate.map(name => `${name} = ?`).join(', ')
+		const values = [...columnsToUpdate.map(name => body[name]), params.id] as SQLValue[]
 		const query = `
 			UPDATE ${params.table}
 			SET ${updates}
@@ -135,9 +144,12 @@ export const updateTableRecord = ({
 		// Execute the query
 		db.query(query).run(...values)
 
+		// Get the updated record
+		const updatedRecord = db.query(`SELECT * FROM ${params.table} WHERE id = ?`).get(params.id)
+
 		return {
 			success: true,
-			data: { id: params.id, ...body }
+			data: updatedRecord
 		}
 	} catch (error) {
 		console.error(`Error updating record in table ${params.table}:`, error)
@@ -158,7 +170,13 @@ export const deleteTableRecord = ({ params }: { params: { table: string; id: str
 			| undefined
 
 		if (!tableExists) {
-			throw new Error(`Table ${params.table} does not exist`)
+			throw new NotFoundError(`Table ${params.table} does not exist`)
+		}
+
+		// Validate that the record exists
+		const recordExists = db.query(`SELECT id FROM ${params.table} WHERE id = ?`).get(params.id)
+		if (!recordExists) {
+			throw new NotFoundError(`Record with id ${params.id} not found in table ${params.table}`)
 		}
 
 		// Execute the query

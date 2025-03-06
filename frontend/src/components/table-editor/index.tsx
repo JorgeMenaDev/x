@@ -14,6 +14,8 @@ import {
 } from '../../hooks/inventory/tables/use-table-data'
 import { TableRecord } from '../../models/inventory/table'
 import { TableColumn } from './types'
+import { handleAPIError } from '@/lib/errors'
+import { toast } from 'sonner'
 
 export function TableEditor() {
 	const [selectedSchema] = useState('public')
@@ -80,16 +82,18 @@ export function TableEditor() {
 	const handleInsertRow = async (data: TableRecord) => {
 		try {
 			await createRecord.mutateAsync(data)
+			toast.success('Record created successfully')
 		} catch (error) {
-			console.error('Error creating record:', error)
+			handleAPIError(error)
 		}
 	}
 
 	const handleUpdateRow = async (id: string, data: TableRecord) => {
 		try {
 			await updateRecord.mutateAsync({ id, data })
+			toast.success('Record updated successfully')
 		} catch (error) {
-			console.error('Error updating record:', error)
+			handleAPIError(error)
 		}
 	}
 
@@ -98,8 +102,9 @@ export function TableEditor() {
 			await Promise.all(ids.map(id => deleteRecord.mutateAsync(id)))
 			setSelectedRows(new Set())
 			setSelectAll(false)
+			toast.success(`${ids.length} record(s) deleted successfully`)
 		} catch (error) {
-			console.error('Error deleting records:', error)
+			handleAPIError(error)
 		}
 	}
 

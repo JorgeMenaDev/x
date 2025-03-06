@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { TableCell } from '@/components/table-editor/components/table-cell'
 import type { TableViewProps } from '../types'
+import { TableRecord } from '@/models/inventory/table'
 
 interface EditingCell {
 	rowId: string
@@ -19,24 +20,26 @@ export function TableView({
 	onSelectRow,
 	selectAll,
 	onSelectAll,
-	onCellEdit
+	onUpdateRow
 }: TableViewProps) {
 	const [editingCell, setEditingCell] = useState<EditingCell | null>(null)
-	const [localData, setLocalData] = useState(data)
+	const [localData, setLocalData] = useState<TableRecord[]>(data)
 
 	// Update local data when prop changes
 	useEffect(() => {
 		setLocalData(data)
 	}, [data])
 
-	const updateCell = (rowId: string, columnName: string, value: string | null) => {
+	const handleCellUpdate = (rowId: string, columnName: string, value: string | null) => {
 		// Update local state immediately for UI responsiveness
 		setLocalData(prevData =>
 			prevData.map(row => (row.id === rowId ? { ...row, [columnName]: value === null ? null : value } : row))
 		)
 
-		// Notify parent component
-		onCellEdit?.(rowId, columnName, value)
+		// Notify parent component with the correct data structure
+		if (onUpdateRow) {
+			onUpdateRow(rowId, { [columnName]: value })
+		}
 		setEditingCell(null)
 	}
 
@@ -72,9 +75,13 @@ export function TableView({
 				</TableHeader>
 				<TableBody>
 					{localData.map(row => (
-						<TableRow key={row.id} className='h-8'>
+						<TableRow key={row.id as string} className='h-8'>
 							<BaseTableCell className='p-2'>
-								<Checkbox checked={selectedRows.has(row.id)} onCheckedChange={() => onSelectRow(row.id)} className='' />
+								<Checkbox
+									checked={selectedRows.has(row.id as string)}
+									onCheckedChange={() => onSelectRow(row.id as string)}
+									className=''
+								/>
 							</BaseTableCell>
 							{columns.map(column => (
 								<BaseTableCell key={`${row.id}-${column.name}`} className='p-0'>
@@ -82,10 +89,11 @@ export function TableView({
 										<ContextMenuTrigger className='h-full w-full'>
 											<TableCell
 												value={row[column.name] === null ? null : String(row[column.name])}
-												onChange={value => updateCell(row.id, column.name, value)}
-												onStartEdit={() => startEditing(row.id, column.name)}
+												columnName={column.name}
+												onChange={value => handleCellUpdate(row.id as string, column.name, value)}
+												onStartEdit={() => startEditing(row.id as string, column.name)}
 												onCancelEdit={cancelEditing}
-												isEditing={isEditing(row.id, column.name)}
+												isEditing={isEditing(row.id as string, column.name)}
 												type={column.type}
 											/>
 										</ContextMenuTrigger>

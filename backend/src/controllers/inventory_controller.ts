@@ -20,7 +20,9 @@ export const getLowInventory = () => {
 export const getTables = () => {
 	try {
 		// Get all table names from the SQLite master table
-		const tables = db.query('SELECT name FROM sqlite_master WHERE type="table" AND name NOT LIKE "sqlite_%"').all()
+		const tables = db
+			.query('SELECT name FROM sqlite_master WHERE type="table" AND name NOT LIKE "sqlite_%"')
+			.all() as TableInfo[]
 
 		// Format the response
 		return {
@@ -89,9 +91,14 @@ export const createQmPurposeRecord = ({ body }: { body: { text: string } }) => {
 
 		const query = `
 			INSERT INTO qm_purpose (id, text, created_at, updated_at)
-			VALUES (?, ?, ?, ?)
+			VALUES ($id, $text, $created_at, $updated_at)
 		`
-		db.query(query, [id, body.text, now, now])
+		db.query(query).run({
+			$id: id,
+			$text: body.text,
+			$created_at: now,
+			$updated_at: now
+		})
 
 		const newRecord: QmPurpose = {
 			id,
@@ -125,8 +132,8 @@ export const updateQmPurposeRecord = ({ params, body }: { params: { id: string }
 		const id = params.id
 
 		// Check if record exists
-		const checkQuery = 'SELECT * FROM qm_purpose WHERE id = ?'
-		const existingRecord = db.query(checkQuery, [id]).get() as QmPurpose | undefined
+		const checkQuery = 'SELECT * FROM qm_purpose WHERE id = $id'
+		const existingRecord = db.query(checkQuery).get({ $id: id }) as QmPurpose | undefined
 
 		if (!existingRecord) {
 			throw new Error('Record not found')
@@ -136,10 +143,14 @@ export const updateQmPurposeRecord = ({ params, body }: { params: { id: string }
 
 		const query = `
 			UPDATE qm_purpose
-			SET text = ?, updated_at = ?
-			WHERE id = ?
+			SET text = $text, updated_at = $updated_at
+			WHERE id = $id
 		`
-		db.query(query, [body.text, now, id])
+		db.query(query).run({
+			$text: body.text,
+			$updated_at: now,
+			$id: id
+		})
 
 		const updatedRecord: QmPurpose = {
 			id,
@@ -169,15 +180,15 @@ export const deleteQmPurposeRecord = ({ params }: { params: { id: string } }) =>
 		const id = params.id
 
 		// Check if record exists
-		const checkQuery = 'SELECT * FROM qm_purpose WHERE id = ?'
-		const existingRecord = db.query(checkQuery, [id]).get() as QmPurpose | undefined
+		const checkQuery = 'SELECT * FROM qm_purpose WHERE id = $id'
+		const existingRecord = db.query(checkQuery).get({ $id: id }) as QmPurpose | undefined
 
 		if (!existingRecord) {
 			throw new Error('Record not found')
 		}
 
-		const query = 'DELETE FROM qm_purpose WHERE id = ?'
-		db.query(query, [id])
+		const query = 'DELETE FROM qm_purpose WHERE id = $id'
+		db.query(query).run({ $id: id })
 
 		return {
 			success: true,

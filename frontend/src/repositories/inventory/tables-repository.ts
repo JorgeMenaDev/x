@@ -18,6 +18,13 @@ export interface TablesRepository {
 	getTableRecords<T = TableRecord>(tableName: string, page: number, limit: number): Promise<TableDataResponse<T>>
 
 	/**
+	 * Fetches records from the qm_purpose table
+	 * @param page The page number to fetch
+	 * @param limit The number of records per page
+	 */
+	getQmPurposeRecords(page: number, limit: number): Promise<TableDataResponse<TableRecord>>
+
+	/**
 	 * Creates a new record in any table
 	 * @param tableName The name of the table
 	 * @param data The data for the new record

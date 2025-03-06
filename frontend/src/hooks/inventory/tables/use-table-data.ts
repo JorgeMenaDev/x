@@ -82,8 +82,10 @@ export function useUpdateTableRecord<T = TableRecord>(tableName: string) {
 	const tablesRepository = createTablesRepository()
 
 	return useMutation({
-		mutationFn: ({ id, data }: { id: string; data: Partial<T> }) =>
-			tablesRepository.updateTableRecord<T>(tableName, id, data),
+		mutationFn: ({ id, data }: { id: string; data: Partial<T> }) => {
+			// Send the data directly without nesting
+			return tablesRepository.updateTableRecord<T>(tableName, id, data)
+		},
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.tables.record(tableName, variables.id)

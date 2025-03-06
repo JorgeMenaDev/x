@@ -120,8 +120,11 @@ export const updateTableRecord = ({
 			throw new NotFoundError(`Table ${params.table} does not exist`)
 		}
 
-		// Get the columns that are being updated
-		const columnsToUpdate = Object.keys(body)
+		// Get the columns that are being updated (filter out undefined values)
+		const columnsToUpdate = Object.entries(body)
+			.filter(([_, value]) => value !== undefined)
+			.map(([key]) => key)
+
 		if (columnsToUpdate.length === 0) {
 			throw new ValidationError('No columns to update', { body })
 		}
@@ -134,7 +137,15 @@ export const updateTableRecord = ({
 
 		// Prepare the query
 		const updates = columnsToUpdate.map(name => `${name} = ?`).join(', ')
-		const values = [...columnsToUpdate.map(name => body[name]), params.id] as SQLValue[]
+		const values = [
+			...columnsToUpdate.map(name => {
+				const value = body[name]
+				// Convert empty strings to null for the database
+				return value === '' ? null : value
+			}),
+			params.id
+		] as SQLValue[]
+
 		const query = `
 			UPDATE ${params.table}
 			SET ${updates}

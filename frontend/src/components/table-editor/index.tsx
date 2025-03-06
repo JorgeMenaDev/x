@@ -90,21 +90,9 @@ export function TableEditor() {
 
 	const handleUpdateRow = async (id: string, data: TableRecord) => {
 		try {
-			console.log('TableEditor handleUpdateRow - Initial data:', data)
-
-			// Remove any undefined, null, or empty values
-			const cleanData = Object.fromEntries(
-				Object.entries(data).filter(([_key, value]) => value !== undefined && value !== null && value !== '')
-			)
-
-			console.log('TableEditor handleUpdateRow - Clean data:', cleanData)
-
-			if (Object.keys(cleanData).length === 0) {
-				toast.error('No valid data to update')
-				return
-			}
-
-			await updateRecord.mutateAsync({ id, data: cleanData })
+			// Skip data cleaning since we're already getting clean data
+			console.log('Making API call with:', { id, data })
+			await updateRecord.mutateAsync({ id, data })
 			toast.success('Record updated successfully')
 		} catch (error) {
 			console.error('Update error:', error)

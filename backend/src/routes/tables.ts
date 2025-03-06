@@ -29,7 +29,7 @@ app
 			table: t.String(),
 			id: t.String()
 		}),
-		body: t.Object({}) // Allow any object as body
+		body: t.Object({}, { additionalProperties: true }) // allow any fields
 	})
 	.delete('/:table/:id', ({ params }) => deleteTableRecord({ params }), {
 		params: t.Object({

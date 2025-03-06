@@ -32,6 +32,13 @@ export class HttpTablesRepository extends BaseHttpRepository implements TablesRe
 	}
 
 	/**
+	 * Fetches records from the qm_purpose table
+	 */
+	async getQmPurposeRecords(page: number, limit: number): Promise<TableDataResponse<TableRecord>> {
+		return this.getTableRecords('qm_purpose', page, limit)
+	}
+
+	/**
 	 * Creates a new record in any table
 	 */
 	async createTableRecord<T = TableRecord>(tableName: string, data: Partial<T>): Promise<T> {

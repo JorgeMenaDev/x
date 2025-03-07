@@ -73,10 +73,11 @@ docker-compose up
 
 ## 🔧 Environment Variables
 
-| Variable        | Description          | Default |
-| --------------- | -------------------- | ------- |
-| PORT            | Server port          | 8000    |
-| ALLOWED_ORIGINS | CORS allowed origins | \*      |
+| Variable        | Description          | Default              |
+| --------------- | -------------------- | -------------------- |
+| PORT            | Server port          | 8000                 |
+| ALLOWED_ORIGINS | CORS allowed origins | \*                   |
+| DB_PATH         | SQLite database path | data/database.sqlite |
 
 ## 📝 API Endpoints
 
@@ -197,6 +198,8 @@ docker-compose up
 
    - Ensure the database file path is correct in the InventoryRepository constructor
    - Check file permissions for the database file
+   - Make sure all database connections are using the same database file (config.dbPath)
+   - If you're not seeing data after seeding, verify that your repository is using the same database path as the seeding functions
 
 3. **CORS Issues**
    - Verify that your frontend origin is included in the ALLOWED_ORIGINS environment variable
@@ -219,3 +222,26 @@ _Make sure to run the following commands to make the data directory and database
 ```
 cd backend && chmod 755 data && chmod 644 data/database.sqlite
 ```
+
+### Seeding the Database
+
+To populate your database with initial data, use the seeding endpoints:
+
+1. To seed the database with initial data (only if tables are empty):
+
+   ```
+   GET http://localhost:8000/api/seed/
+   ```
+
+2. To reset and reseed the database (drops existing tables and recreates them):
+   ```
+   GET http://localhost:8000/api/seed/reset
+   ```
+
+After seeding, you should be able to see data when accessing:
+
+```
+GET http://localhost:8000/api/v1/inventory/data/qm_purpose
+```
+
+If you're still not seeing data after seeding, check that all parts of your application are using the same database file path (DB_PATH in your .env file).

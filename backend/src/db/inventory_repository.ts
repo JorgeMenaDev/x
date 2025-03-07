@@ -1,4 +1,5 @@
 import { Database } from 'bun:sqlite'
+import config from '../config'
 
 interface TableInfo {
 	name: string
@@ -32,7 +33,7 @@ export class InventoryRepository {
 	private db: Database
 
 	constructor() {
-		this.db = new Database('inventory.db')
+		this.db = new Database(config.dbPath)
 		// Create qm_purpose table if it doesn't exist
 		// this.db.run('CREATE TABLE IF NOT EXISTS qm_purpose (id TEXT PRIMARY KEY, text TEXT)')
 	}

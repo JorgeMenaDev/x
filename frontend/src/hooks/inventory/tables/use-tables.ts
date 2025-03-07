@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { createTablesRepository } from '../../../repositories'
+import { createTablesRepository } from '../../../db/repositories'
 
 /**
  * Hook for fetching all available tables with their metadata

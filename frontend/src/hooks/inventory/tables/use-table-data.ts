@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createTablesRepository } from '../../../repositories'
-import { FilterValue } from '../../../repositories/inventory/tables-repository'
-import { TableRecord } from '../../../models/inventory/table'
+import { createTablesRepository } from '../../../db/repositories'
+import { FilterValue } from '../../../db/repositories/inventory/tables-repository'
+import { TableRecord } from '../../../db/models/inventory/table'
 import { toast } from 'sonner'
 
 /**

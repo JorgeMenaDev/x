@@ -1,6 +1,6 @@
-import { TablesResponse, TableDataResponse, TableRecord } from '../../../models/inventory/table'
-import { FilterValue, TablesRepository } from '../../../repositories/inventory/tables-repository'
-import { BaseHttpRepository } from '../base-http-repository'
+import { TablesResponse, TableDataResponse, TableRecord } from '@/db/models'
+import { FilterValue, TablesRepository } from '@/db/repositories/inventory/tables-repository'
+import { BaseHttpRepository } from '@/db/adapters/http/base-http-repository'
 
 /**
  * HTTP implementation of the TablesRepository interface

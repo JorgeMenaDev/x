@@ -12,7 +12,7 @@ import {
 	useUpdateTableRow,
 	useDeleteTableRow
 } from '../../hooks/inventory/tables/use-table-data'
-import { TableRecord } from '../../models/inventory/table'
+import { TableRecord } from '../../db/models/inventory/table'
 import { TableColumn } from './types'
 import { handleAPIError } from '@/lib/errors'
 

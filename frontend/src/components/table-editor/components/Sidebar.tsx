@@ -37,7 +37,7 @@ export function Sidebar({
 	}
 
 	return (
-		<div className='w-56 border-r overflow-y-auto flex flex-col'>
+		<div className='w-64 border-r overflow-y-auto flex flex-col'>
 			<div className='p-4 border-b'>
 				<div className='flex items-center space-x-1'>
 					<span className='text-sm'>schema</span>

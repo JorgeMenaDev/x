@@ -75,10 +75,10 @@ docker-compose up
 
 | Variable             | Description                            | Default               |
 | -------------------- | -------------------------------------- | --------------------- |
-| PORT                 | Server port                            | 3000                  |
+| PORT                 | Server port                            | 8000                  |
 | NODE_ENV             | Environment mode                       | development           |
 | DB_PATH              | SQLite database path                   | data/database.sqlite  |
-| ALLOWED_ORIGINS      | CORS allowed origins                   | http://localhost:3000 |
+| ALLOWED_ORIGINS      | CORS allowed origins                   | http://localhost:8000 |
 | LOG_LEVEL            | Logging level                          | DEBUG                 |
 | DEFAULT_MIN_QUANTITY | Default minimum quantity for inventory | 5                     |
 
@@ -129,7 +129,7 @@ Build and run with Docker:
 docker build -t backend-api .
 
 # Run the container
-docker run -p 3000:3000 backend-api
+docker run -p 8000:8000 backend-api
 ```
 
 Or use docker-compose:
@@ -185,7 +185,7 @@ docker-compose up
    docker-compose up -d
    ```
 
-4. The API will now be available at `http://localhost:3000/api`
+4. The API will now be available at `http://localhost:8000/api`
 
 ### Using with Multiple Frontend Apps
 
@@ -211,7 +211,7 @@ You can use the provided API client or create your own. Here's an example using 
 import { InventoryApiClient } from './inventory-api-client'
 
 // Initialize the client
-const api = new InventoryApiClient('http://localhost:3000/api')
+const api = new InventoryApiClient('http://localhost:8000/api')
 
 // Example: Get all products
 async function getProducts() {
@@ -239,7 +239,7 @@ If you want to run the API without Docker:
 
 ### Environment Variables
 
-- `PORT`: API server port (default: 3000)
+- `PORT`: API server port (default: 8000)
 - `NODE_ENV`: Environment mode (development/production)
 - `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins
 

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createTablesRepository } from '../../../repositories'
+import { createTablesRepository } from '../../../db/repositories'
 import { queryKeys } from '../../../lib/query-keys'
-import { QmPurpose, QmPurposeResponse } from '../../../models/inventory/table'
+import { QmPurpose, QmPurposeResponse } from '../../../db/models/inventory/table'
 
 /**
  * Hook for fetching qm_purpose records

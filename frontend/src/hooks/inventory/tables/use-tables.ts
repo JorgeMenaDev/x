@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { createTablesRepository } from '../../../repositories'
+import { createTablesRepository } from '../../../db/repositories'
 import { queryKeys } from '../../../lib/query-keys'
-import { TablesResponse } from '../../../models/inventory/table'
+import { TablesResponse } from '../../../db/models/inventory/table'
 
 /**
  * Hook for fetching all available tables

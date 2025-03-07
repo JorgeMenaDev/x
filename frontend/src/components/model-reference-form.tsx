@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm, useFieldArray, Controller } from 'react-hook-form'
+import { useForm, useFieldArray } from 'react-hook-form'
 import * as z from 'zod'
 import { submitModelData } from '@/lib/actions'
 import { PlusCircle, Trash2 } from 'lucide-react'
@@ -42,19 +42,10 @@ const formSchema = z.object({
 		.min(1, 'At least one model use configuration is required')
 })
 
-// Define types for dropdown options
-interface DropdownOption {
-	id: string
-	name: string
-}
-
 export default function ModelReferenceForm() {
 	// Use the hook to fetch data from the API
 	const { data: modelReferenceData, isLoading, isError, error } = useSeparateModelReferenceData()
-
-	const [availableUses, setAvailableUses] = useState<DropdownOption[]>([])
-	const [availableAssetClasses, setAvailableAssetClasses] = useState<DropdownOption[]>([])
-	const [isSubmitting, setIsSubmitting] = useState(false)
+	const [submitting, setSubmitting] = useState(false)
 
 	// Initialize the form
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -83,33 +74,57 @@ export default function ModelReferenceForm() {
 		name: 'modelUses'
 	})
 
-	const { watch } = form
-	const selectedPurpose = watch('purpose')
+	// Helper functions to get filtered options based on relationships
+	const getFilteredUses = (purposeId: string) => {
+		if (!modelReferenceData || !purposeId) return []
 
-	// Only update the form when data is available
-	useEffect(() => {
-		if (modelReferenceData) {
-			// Update available uses when purpose changes
-			const purposeId = watch('purpose')
-			if (purposeId) {
-				updateAvailableUses(purposeId)
-			}
-		}
-	}, [watch('purpose'), modelReferenceData])
+		const purposeToUseRelations = modelReferenceData.model_reference_data_level2.PurposeToUse.filter(
+			relation => relation.purpose_id.toString() === purposeId
+		)
 
-	// Update available asset classes when purpose changes
-	useEffect(() => {
-		if (modelReferenceData) {
-			const purposeId = watch('purpose')
-			if (purposeId) {
-				updateAvailableAssetClasses(purposeId)
-			}
-		}
-	}, [watch('purpose'), modelReferenceData])
+		const useIds = purposeToUseRelations.map(relation => relation.use_id.toString())
+
+		return modelReferenceData.Uses.filter(use => useIds.includes(use.use_id.toString()))
+	}
+
+	const getFilteredAssetClasses = (purposeId: string) => {
+		if (!modelReferenceData || !purposeId) return []
+
+		const purposeToAssetClassRelations = modelReferenceData.model_reference_data_level2.PurposeToAssetClass.filter(
+			relation => relation.purpose_id.toString() === purposeId
+		)
+
+		const assetClassIds = purposeToAssetClassRelations.map(relation => relation.assetclass_id.toString())
+
+		return modelReferenceData.AssetClass.filter(assetClass =>
+			assetClassIds.includes(assetClass.assetclass_id.toString())
+		)
+	}
+
+	// Helper functions to get names for display
+	const getPurposeName = (id: string) => {
+		const purpose = modelReferenceData?.QModelPurpose.find(p => p.purpose_id.toString() === id)
+		return purpose ? purpose.purpose : id
+	}
+
+	const getUseName = (id: string) => {
+		const use = modelReferenceData?.Uses.find(u => u.use_id.toString() === id)
+		return use ? use.use : id
+	}
+
+	const getAssetClassName = (id: string) => {
+		const asset = modelReferenceData?.AssetClass.find(a => a.assetclass_id.toString() === id)
+		return asset ? asset.assetclass : id
+	}
+
+	const getSubgroupName = (id: string) => {
+		const subgroup = modelReferenceData?.Subgroup.find(s => s.subgroup_id.toString() === id)
+		return subgroup ? subgroup.subgroup : id
+	}
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		try {
-			setIsSubmitting(true)
+			setSubmitting(true)
 
 			// Convert string IDs back to numbers for the API
 			const formattedData = {
@@ -135,69 +150,12 @@ export default function ModelReferenceForm() {
 			} else {
 				throw new Error(result.error || 'Failed to submit form')
 			}
-		} catch (error: any) {
-			alert(`Error: ${error?.message || 'Something went wrong. Please try again.'}`)
+		} catch (error: unknown) {
+			const errorMessage = error instanceof Error ? error.message : 'Something went wrong. Please try again.'
+			alert(`Error: ${errorMessage}`)
 		} finally {
-			setIsSubmitting(false)
+			setSubmitting(false)
 		}
-	}
-
-	const getPurposeName = (id: string) => {
-		const purpose = modelReferenceData?.QModelPurpose.find(p => p.purpose_id.toString() === id)
-		return purpose ? purpose.purpose : id
-	}
-
-	const getUseName = (id: string) => {
-		const use = modelReferenceData?.Uses.find(u => u.use_id.toString() === id)
-		return use ? use.use : id
-	}
-
-	const getAssetClassName = (id: string) => {
-		const asset = modelReferenceData?.AssetClass.find(a => a.assetclass_id.toString() === id)
-		return asset ? asset.assetclass : id
-	}
-
-	const getSubgroupName = (id: string) => {
-		const subgroup = modelReferenceData?.Subgroup.find(s => s.subgroup_id.toString() === id)
-		return subgroup ? subgroup.subgroup : id
-	}
-
-	// Update available uses based on selected purpose
-	const updateAvailableUses = (purposeId: string) => {
-		if (!modelReferenceData) return
-
-		const purposeToUseRelations = modelReferenceData.model_reference_data_level2.PurposeToUse.filter(
-			relation => relation.purpose_id.toString() === purposeId
-		)
-
-		const useIds = purposeToUseRelations.map(relation => relation.use_id.toString())
-
-		const filteredUses = modelReferenceData.Uses.filter(use => useIds.includes(use.use_id.toString())).map(use => ({
-			id: use.use_id.toString(),
-			name: use.use
-		}))
-
-		setAvailableUses(filteredUses)
-	}
-
-	// Update available asset classes based on selected purpose
-	const updateAvailableAssetClasses = (purposeId: string) => {
-		if (!modelReferenceData) return
-
-		const purposeToAssetClassRelations = modelReferenceData.model_reference_data_level2.PurposeToAssetClass.filter(
-			relation => relation.purpose_id.toString() === purposeId
-		)
-
-		const assetClassIds = purposeToAssetClassRelations.map(relation => relation.assetclass_id.toString())
-
-		const filteredAssetClasses = modelReferenceData.AssetClass.filter(assetClass =>
-			assetClassIds.includes(assetClass.assetclass_id.toString())
-		).map(assetClass => ({
-			id: assetClass.assetclass_id.toString(),
-			name: assetClass.assetclass
-		}))
-
-		setAvailableAssetClasses(filteredAssetClasses)
 	}
 
 	// If data is loading, show loading skeleton
@@ -231,6 +189,9 @@ export default function ModelReferenceForm() {
 		)
 	}
 
+	// Get the current purpose value for filtering
+	const purposeValue = form.watch('purpose')
+
 	return (
 		<Tabs defaultValue='entry' className='w-full'>
 			<TabsList className='grid w-full grid-cols-2'>
@@ -250,20 +211,7 @@ export default function ModelReferenceForm() {
 											<FormItem>
 												<FormLabel>Unique Reference</FormLabel>
 												<FormControl>
-													<Controller
-														name='uniqueReference'
-														control={form.control}
-														render={({ field }) => (
-															<Input
-																type='text'
-																placeholder='Enter unique reference'
-																value={field.value}
-																onChange={field.onChange}
-																onBlur={field.onBlur}
-																name={field.name}
-															/>
-														)}
-													/>
+													<Input {...field} placeholder='Enter unique reference' />
 												</FormControl>
 												<FormMessage />
 											</FormItem>
@@ -277,48 +225,33 @@ export default function ModelReferenceForm() {
 											<FormItem>
 												<FormLabel>Model Name</FormLabel>
 												<FormControl>
-													<Controller
-														name='modelName'
-														control={form.control}
-														render={({ field }) => (
-															<Input
-																type='text'
-																placeholder='Enter model name'
-																value={field.value}
-																onChange={field.onChange}
-																onBlur={field.onBlur}
-																name={field.name}
-															/>
-														)}
-													/>
+													<Input {...field} placeholder='Enter model name' />
 												</FormControl>
 												<FormMessage />
 											</FormItem>
 										)}
 									/>
-								</div>
 
-								<div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
 									<FormField
 										control={form.control}
 										name='modelType'
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>Type of QM</FormLabel>
-												<FormControl>
-													<Select onValueChange={field.onChange} value={field.value || ''}>
+												<FormLabel>Model Type</FormLabel>
+												<Select onValueChange={field.onChange} defaultValue={field.value}>
+													<FormControl>
 														<SelectTrigger>
 															<SelectValue placeholder='Select model type' />
 														</SelectTrigger>
-														<SelectContent>
-															{modelReferenceData?.QModelType.map(type => (
-																<SelectItem key={type.qm_type_id} value={type.qm_type_id.toString()}>
-																	{type.qm_type}
-																</SelectItem>
-															))}
-														</SelectContent>
-													</Select>
-												</FormControl>
+													</FormControl>
+													<SelectContent>
+														{modelReferenceData?.QModelType.map(type => (
+															<SelectItem key={type.qm_type_id} value={type.qm_type_id.toString()}>
+																{type.qm_type}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
 												<FormMessage />
 											</FormItem>
 										)}
@@ -329,21 +262,21 @@ export default function ModelReferenceForm() {
 										name='purpose'
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>QM Purpose</FormLabel>
-												<FormControl>
-													<Select onValueChange={field.onChange} value={field.value || ''}>
+												<FormLabel>Purpose</FormLabel>
+												<Select onValueChange={field.onChange} defaultValue={field.value}>
+													<FormControl>
 														<SelectTrigger>
 															<SelectValue placeholder='Select purpose' />
 														</SelectTrigger>
-														<SelectContent>
-															{modelReferenceData?.QModelPurpose.map(purpose => (
-																<SelectItem key={purpose.purpose_id} value={purpose.purpose_id.toString()}>
-																	{purpose.purpose}
-																</SelectItem>
-															))}
-														</SelectContent>
-													</Select>
-												</FormControl>
+													</FormControl>
+													<SelectContent>
+														{modelReferenceData?.QModelPurpose.map(purpose => (
+															<SelectItem key={purpose.purpose_id} value={purpose.purpose_id.toString()}>
+																{purpose.purpose}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
 												<FormMessage />
 											</FormItem>
 										)}
@@ -356,20 +289,21 @@ export default function ModelReferenceForm() {
 											<FormItem>
 												<FormLabel>Owner</FormLabel>
 												<FormControl>
-													<Controller
-														name='owner'
-														control={form.control}
-														render={({ field }) => (
-															<Input
-																type='text'
-																placeholder='Enter owner'
-																value={field.value}
-																onChange={field.onChange}
-																onBlur={field.onBlur}
-																name={field.name}
-															/>
-														)}
-													/>
+													<Input {...field} placeholder='Enter owner' />
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+
+									<FormField
+										control={form.control}
+										name='accountableExec'
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Accountable Exec (Owner)</FormLabel>
+												<FormControl>
+													<Input {...field} placeholder='Enter accountable executive' />
 												</FormControl>
 												<FormMessage />
 											</FormItem>
@@ -377,36 +311,9 @@ export default function ModelReferenceForm() {
 									/>
 								</div>
 
-								<FormField
-									control={form.control}
-									name='accountableExec'
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Accountable Exec (Owner)</FormLabel>
-											<FormControl>
-												<Controller
-													name='accountableExec'
-													control={form.control}
-													render={({ field }) => (
-														<Input
-															type='text'
-															placeholder='Enter accountable executive'
-															value={field.value}
-															onChange={field.onChange}
-															onBlur={field.onBlur}
-															name={field.name}
-														/>
-													)}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<div className='space-y-4'>
-									<div className='flex items-center justify-between'>
-										<h3 className='text-base font-medium'>Model Uses Configuration</h3>
+								<div>
+									<div className='flex items-center justify-between mb-4'>
+										<h3 className='text-lg font-medium'>Model Uses</h3>
 										<Button
 											type='button'
 											variant='outline'
@@ -420,56 +327,50 @@ export default function ModelReferenceForm() {
 													user: ''
 												})
 											}
-											className='flex items-center gap-1 text-[#006a4d]'
 										>
-											<PlusCircle className='h-4 w-4' />
-											<span>Add Use</span>
+											<PlusCircle className='mr-2 h-4 w-4' />
+											Add Use
 										</Button>
 									</div>
 
-									<p className='text-sm text-gray-500'>
-										Add multiple uses for this model by configuring the subgroup, use, asset class, and user
-										information.
-									</p>
-
 									{fields.map((field, index) => (
-										<div key={field.id} className='p-4 border rounded-md bg-gray-50 relative'>
-											<div className='absolute right-2 top-2'>
-												{fields.length > 1 && (
+										<div key={field.id} className='p-4 border rounded-md mb-4'>
+											<div className='flex justify-between items-center mb-4'>
+												<h4 className='font-medium'>Use Configuration {index + 1}</h4>
+												{index > 0 && (
 													<Button
 														type='button'
 														variant='ghost'
 														size='sm'
 														onClick={() => remove(index)}
-														className='h-8 w-8 p-0 text-red-500'
+														className='text-red-500 hover:text-red-700'
 													>
 														<Trash2 className='h-4 w-4' />
-														<span className='sr-only'>Remove</span>
 													</Button>
 												)}
 											</div>
 
-											<div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-4'>
+											<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
 												<FormField
 													control={form.control}
 													name={`modelUses.${index}.subgroup`}
 													render={({ field }) => (
 														<FormItem>
-															<FormLabel>Sub Group</FormLabel>
-															<FormControl>
-																<Select onValueChange={field.onChange} value={field.value || ''}>
+															<FormLabel>Subgroup</FormLabel>
+															<Select onValueChange={field.onChange} defaultValue={field.value}>
+																<FormControl>
 																	<SelectTrigger>
 																		<SelectValue placeholder='Select subgroup' />
 																	</SelectTrigger>
-																	<SelectContent>
-																		{modelReferenceData?.Subgroup.map(subgroup => (
-																			<SelectItem key={subgroup.subgroup_id} value={subgroup.subgroup_id.toString()}>
-																				{subgroup.subgroup}
-																			</SelectItem>
-																		))}
-																	</SelectContent>
-																</Select>
-															</FormControl>
+																</FormControl>
+																<SelectContent>
+																	{modelReferenceData?.Subgroup.map(subgroup => (
+																		<SelectItem key={subgroup.subgroup_id} value={subgroup.subgroup_id.toString()}>
+																			{subgroup.subgroup}
+																		</SelectItem>
+																	))}
+																</SelectContent>
+															</Select>
 															<FormMessage />
 														</FormItem>
 													)}
@@ -481,20 +382,20 @@ export default function ModelReferenceForm() {
 													render={({ field }) => (
 														<FormItem>
 															<FormLabel>Use</FormLabel>
-															<FormControl>
-																<Select onValueChange={field.onChange} value={field.value || ''}>
+															<Select onValueChange={field.onChange} defaultValue={field.value}>
+																<FormControl>
 																	<SelectTrigger>
 																		<SelectValue placeholder='Select use' />
 																	</SelectTrigger>
-																	<SelectContent>
-																		{availableUses.map(use => (
-																			<SelectItem key={use.id} value={use.id}>
-																				{use.name}
-																			</SelectItem>
-																		))}
-																	</SelectContent>
-																</Select>
-															</FormControl>
+																</FormControl>
+																<SelectContent>
+																	{getFilteredUses(purposeValue).map(use => (
+																		<SelectItem key={use.use_id} value={use.use_id.toString()}>
+																			{use.use}
+																		</SelectItem>
+																	))}
+																</SelectContent>
+															</Select>
 															<FormMessage />
 														</FormItem>
 													)}
@@ -506,48 +407,33 @@ export default function ModelReferenceForm() {
 													render={({ field }) => (
 														<FormItem>
 															<FormLabel>Asset Class</FormLabel>
-															<FormControl>
-																<Select onValueChange={field.onChange} value={field.value || ''}>
+															<Select onValueChange={field.onChange} defaultValue={field.value}>
+																<FormControl>
 																	<SelectTrigger>
 																		<SelectValue placeholder='Select asset class' />
 																	</SelectTrigger>
-																	<SelectContent>
-																		{availableAssetClasses.map(asset => (
-																			<SelectItem key={asset.id} value={asset.id}>
-																				{asset.name}
-																			</SelectItem>
-																		))}
-																	</SelectContent>
-																</Select>
-															</FormControl>
+																</FormControl>
+																<SelectContent>
+																	{getFilteredAssetClasses(purposeValue).map(asset => (
+																		<SelectItem key={asset.assetclass_id} value={asset.assetclass_id.toString()}>
+																			{asset.assetclass}
+																		</SelectItem>
+																	))}
+																</SelectContent>
+															</Select>
 															<FormMessage />
 														</FormItem>
 													)}
 												/>
-											</div>
 
-											<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
 												<FormField
 													control={form.control}
 													name={`modelUses.${index}.execUsage`}
-													render={() => (
+													render={({ field }) => (
 														<FormItem>
 															<FormLabel>Accountable Exec Usage</FormLabel>
 															<FormControl>
-																<Controller
-																	name={`modelUses.${index}.execUsage`}
-																	control={form.control}
-																	render={({ field }) => (
-																		<Input
-																			type='text'
-																			placeholder='Enter executive usage code'
-																			value={field.value}
-																			onChange={field.onChange}
-																			onBlur={field.onBlur}
-																			name={field.name}
-																		/>
-																	)}
-																/>
+																<Input {...field} placeholder='Enter executive usage code' />
 															</FormControl>
 															<FormMessage />
 														</FormItem>
@@ -557,24 +443,11 @@ export default function ModelReferenceForm() {
 												<FormField
 													control={form.control}
 													name={`modelUses.${index}.user`}
-													render={() => (
+													render={({ field }) => (
 														<FormItem>
 															<FormLabel>User</FormLabel>
 															<FormControl>
-																<Controller
-																	name={`modelUses.${index}.user`}
-																	control={form.control}
-																	render={({ field }) => (
-																		<Input
-																			type='text'
-																			placeholder='Enter user'
-																			value={field.value}
-																			onChange={field.onChange}
-																			onBlur={field.onBlur}
-																			name={field.name}
-																		/>
-																	)}
-																/>
+																<Input {...field} placeholder='Enter user' />
 															</FormControl>
 															<FormMessage />
 														</FormItem>
@@ -584,12 +457,86 @@ export default function ModelReferenceForm() {
 										</div>
 									))}
 								</div>
+
+								<div className='flex justify-end gap-4'>
+									<Button type='button' variant='outline'>
+										<span>Cancel</span>
+									</Button>
+									<Button type='submit' disabled={submitting} className='bg-[#006a4d] hover:bg-[#005a40]'>
+										<span>{submitting ? 'Recording...' : 'Record Model'}</span>
+									</Button>
+								</div>
 							</form>
 						</Form>
 					</CardContent>
 				</Card>
 			</TabsContent>
-			<TabsContent value='preview'>{/* Preview content */}</TabsContent>
+
+			<TabsContent value='preview'>
+				<Card>
+					<CardContent className='pt-6'>
+						<div className='space-y-6'>
+							<div>
+								<h3 className='text-lg font-medium mb-2'>Model Details</h3>
+								<Table>
+									<TableHeader>
+										<TableRow>
+											<TableHead>QM ID</TableHead>
+											<TableHead>QM Name</TableHead>
+											<TableHead>Type of QM</TableHead>
+											<TableHead>QM Purpose</TableHead>
+											<TableHead>Owner</TableHead>
+											<TableHead>Accountable Exec (Owner)</TableHead>
+										</TableRow>
+									</TableHeader>
+									<TableBody>
+										<TableRow>
+											<TableCell>{form.watch('uniqueReference') || '-'}</TableCell>
+											<TableCell>{form.watch('modelName') || '-'}</TableCell>
+											<TableCell>
+												{form.watch('modelType')
+													? modelReferenceData?.QModelType.find(
+															t => t.qm_type_id.toString() === form.watch('modelType')
+													  )?.qm_type || '-'
+													: '-'}
+											</TableCell>
+											<TableCell>{form.watch('purpose') ? getPurposeName(form.watch('purpose')) : '-'}</TableCell>
+											<TableCell>{form.watch('owner') || '-'}</TableCell>
+											<TableCell>{form.watch('accountableExec') || '-'}</TableCell>
+										</TableRow>
+									</TableBody>
+								</Table>
+							</div>
+
+							<div>
+								<h3 className='text-lg font-medium mb-2'>Model Uses</h3>
+								<Table>
+									<TableHeader>
+										<TableRow>
+											<TableHead>Sub Group</TableHead>
+											<TableHead>Use</TableHead>
+											<TableHead>Accountable Exec Usage</TableHead>
+											<TableHead>User</TableHead>
+											<TableHead>Asset Class</TableHead>
+										</TableRow>
+									</TableHeader>
+									<TableBody>
+										{form.watch('modelUses').map((use, index) => (
+											<TableRow key={index}>
+												<TableCell>{use.subgroup ? getSubgroupName(use.subgroup) : '-'}</TableCell>
+												<TableCell>{use.use ? getUseName(use.use) : '-'}</TableCell>
+												<TableCell>{use.execUsage || '-'}</TableCell>
+												<TableCell>{use.user || '-'}</TableCell>
+												<TableCell>{use.assetClass ? getAssetClassName(use.assetClass) : '-'}</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+			</TabsContent>
 		</Tabs>
 	)
 }

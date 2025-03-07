@@ -190,10 +190,10 @@ export default function ModelReferenceForm() {
 	return (
 		<>
 			<Tabs defaultValue='entry' className='w-full'>
-				<TabsList className='grid w-full grid-cols-3'>
+				<TabsList className='grid w-full grid-cols-2'>
 					<TabsTrigger value='entry'>Model Entry</TabsTrigger>
 					<TabsTrigger value='preview'>Preview</TabsTrigger>
-					<TabsTrigger value='debug'>Debug</TabsTrigger>
+					{/* <TabsTrigger value='debug'>Debug</TabsTrigger> */}
 				</TabsList>
 				<TabsContent value='entry'>
 					<Card>

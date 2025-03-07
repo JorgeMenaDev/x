@@ -9,9 +9,12 @@ export interface QmPurpose {
 }
 
 /**
- * Represents the response from the API when fetching qm_purpose records
+ * Response type for QM Purpose operations
  */
 export interface QmPurposeResponse {
+	success: boolean
 	data: QmPurpose[]
 	total: number
+	page: number
+	limit: number
 }

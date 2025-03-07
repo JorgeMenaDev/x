@@ -33,8 +33,8 @@ export class InventoryRepository {
 
 	constructor() {
 		this.db = new Database('inventory.db')
-		// Example table creation (run once or in a migration script)
-		this.db.run('CREATE TABLE IF NOT EXISTS qm_purpose (id TEXT PRIMARY KEY, text TEXT)')
+		// Create qm_purpose table if it doesn't exist
+		// this.db.run('CREATE TABLE IF NOT EXISTS qm_purpose (id TEXT PRIMARY KEY, text TEXT)')
 	}
 
 	async getTables() {

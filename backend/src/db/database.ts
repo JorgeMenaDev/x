@@ -10,7 +10,7 @@ db.run('PRAGMA foreign_keys = ON')
 // Initialize database schema
 export function initDatabase() {
 	try {
-		// Create qm_purpose table if it doesn't exist (removed the DROP TABLE statement)
+		// Create qm_purpose table if it doesn't exist
 		db.run(`
 			CREATE TABLE IF NOT EXISTS qm_purpose (
 				id TEXT PRIMARY KEY,

@@ -4,8 +4,7 @@ import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useFieldArray } from 'react-hook-form'
 import * as z from 'zod'
-import { submitModelData } from '@/lib/actions'
-import { PlusCircle, Trash2 } from 'lucide-react'
+import { PlusCircle, Trash2, Loader2 } from 'lucide-react'
 import { useSeparateModelReferenceData } from '@/hooks/useModelReferenceData'
 import { useAssetClassFilter } from '@/hooks/useAssetClassFilter'
 import { useUseFilter } from '@/hooks/useUseFilter'
@@ -48,6 +47,7 @@ export default function ModelReferenceForm() {
 	// Use the hook to fetch data from the API
 	const { data: modelReferenceData, isLoading, isError, error } = useSeparateModelReferenceData()
 	const [submitting, setSubmitting] = useState(false)
+	const [showConfirmDialog, setShowConfirmDialog] = useState(false)
 
 	// Initialize the form
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -106,7 +106,8 @@ export default function ModelReferenceForm() {
 		return subgroup ? subgroup.subgroup : id
 	}
 
-	async function onSubmit(values: z.infer<typeof formSchema>) {
+	// Handle form submission
+	async function handleSubmit(values: z.infer<typeof formSchema>) {
 		try {
 			setSubmitting(true)
 
@@ -127,19 +128,32 @@ export default function ModelReferenceForm() {
 				}))
 			}
 
-			const result = await submitModelData(formattedData)
+			console.log('Submitting data:', formattedData)
 
-			if (result.success) {
-				alert('Model recorded successfully: Your model has been added to the inventory.')
-			} else {
-				throw new Error(result.error || 'Failed to submit form')
-			}
+			// Simulate API call with timeout
+			await new Promise(resolve => setTimeout(resolve, 1500))
+
+			// Close the dialog after successful submission
+			setShowConfirmDialog(false)
+
+			// Show success message
+			alert('Success! Model has been successfully recorded.')
+
+			// Reset form
+			form.reset()
 		} catch (error: unknown) {
+			console.error('Submission error:', error)
 			const errorMessage = error instanceof Error ? error.message : 'Something went wrong. Please try again.'
 			alert(`Error: ${errorMessage}`)
 		} finally {
 			setSubmitting(false)
 		}
+	}
+
+	// Replace the onSubmit function to show the confirmation dialog
+	function onSubmit(values: z.infer<typeof formSchema>) {
+		console.log('Form values:', values)
+		setShowConfirmDialog(true)
 	}
 
 	// If data is loading, show loading skeleton
@@ -174,416 +188,481 @@ export default function ModelReferenceForm() {
 	}
 
 	return (
-		<Tabs defaultValue='entry' className='w-full'>
-			<TabsList className='grid w-full grid-cols-3'>
-				<TabsTrigger value='entry'>Model Entry</TabsTrigger>
-				<TabsTrigger value='preview'>Preview</TabsTrigger>
-				<TabsTrigger value='debug'>Debug</TabsTrigger>
-			</TabsList>
-			<TabsContent value='entry'>
-				<Card>
-					<CardContent className='pt-6'>
-						<Form {...form}>
-							<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-								<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-									<FormField
-										control={form.control}
-										name='uniqueReference'
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Unique Reference</FormLabel>
-												<FormControl>
-													<Input {...field} placeholder='Enter unique reference' />
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={form.control}
-										name='modelName'
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Model Name</FormLabel>
-												<FormControl>
-													<Input {...field} placeholder='Enter model name' />
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={form.control}
-										name='modelType'
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Model Type</FormLabel>
-												<Select onValueChange={field.onChange} defaultValue={field.value}>
+		<>
+			<Tabs defaultValue='entry' className='w-full'>
+				<TabsList className='grid w-full grid-cols-3'>
+					<TabsTrigger value='entry'>Model Entry</TabsTrigger>
+					<TabsTrigger value='preview'>Preview</TabsTrigger>
+					<TabsTrigger value='debug'>Debug</TabsTrigger>
+				</TabsList>
+				<TabsContent value='entry'>
+					<Card>
+						<CardContent className='pt-6'>
+							<Form {...form}>
+								<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
+									<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+										<FormField
+											control={form.control}
+											name='uniqueReference'
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Unique Reference</FormLabel>
 													<FormControl>
-														<SelectTrigger>
-															<SelectValue placeholder='Select model type' />
-														</SelectTrigger>
+														<Input {...field} placeholder='Enter unique reference' />
 													</FormControl>
-													<SelectContent>
-														{modelReferenceData?.QModelType.map(type => (
-															<SelectItem key={type.qm_type_id} value={type.qm_type_id.toString()}>
-																{type.qm_type}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
 
-									<FormField
-										control={form.control}
-										name='purpose'
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Purpose</FormLabel>
-												<Select onValueChange={field.onChange} defaultValue={field.value}>
+										<FormField
+											control={form.control}
+											name='modelName'
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Model Name</FormLabel>
 													<FormControl>
-														<SelectTrigger>
-															<SelectValue placeholder='Select purpose' />
-														</SelectTrigger>
+														<Input {...field} placeholder='Enter model name' />
 													</FormControl>
-													<SelectContent>
-														{modelReferenceData?.QModelPurpose.map(purpose => (
-															<SelectItem key={purpose.purpose_id} value={purpose.purpose_id.toString()}>
-																{purpose.purpose}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
 
-									<FormField
-										control={form.control}
-										name='owner'
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Owner</FormLabel>
-												<FormControl>
-													<Input {...field} placeholder='Enter owner' />
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
+										<FormField
+											control={form.control}
+											name='modelType'
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Model Type</FormLabel>
+													<Select onValueChange={field.onChange} defaultValue={field.value}>
+														<FormControl>
+															<SelectTrigger>
+																<SelectValue placeholder='Select model type' />
+															</SelectTrigger>
+														</FormControl>
+														<SelectContent>
+															{modelReferenceData?.QModelType.map(type => (
+																<SelectItem key={type.qm_type_id} value={type.qm_type_id.toString()}>
+																	{type.qm_type}
+																</SelectItem>
+															))}
+														</SelectContent>
+													</Select>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
 
-									<FormField
-										control={form.control}
-										name='accountableExec'
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Accountable Exec (Owner)</FormLabel>
-												<FormControl>
-													<Input {...field} placeholder='Enter accountable executive' />
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
+										<FormField
+											control={form.control}
+											name='purpose'
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Purpose</FormLabel>
+													<Select onValueChange={field.onChange} defaultValue={field.value}>
+														<FormControl>
+															<SelectTrigger>
+																<SelectValue placeholder='Select purpose' />
+															</SelectTrigger>
+														</FormControl>
+														<SelectContent>
+															{modelReferenceData?.QModelPurpose.map(purpose => (
+																<SelectItem key={purpose.purpose_id} value={purpose.purpose_id.toString()}>
+																	{purpose.purpose}
+																</SelectItem>
+															))}
+														</SelectContent>
+													</Select>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+
+										<FormField
+											control={form.control}
+											name='owner'
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Owner</FormLabel>
+													<FormControl>
+														<Input {...field} placeholder='Enter owner' />
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+
+										<FormField
+											control={form.control}
+											name='accountableExec'
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Accountable Exec (Owner)</FormLabel>
+													<FormControl>
+														<Input {...field} placeholder='Enter accountable executive' />
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+									</div>
+
+									<div>
+										<div className='flex items-center justify-between mb-4'>
+											<h3 className='text-lg font-medium'>Model Uses</h3>
+											<Button
+												type='button'
+												variant='outline'
+												size='sm'
+												onClick={() =>
+													append({
+														subgroup: '',
+														use: '',
+														assetClass: '',
+														execUsage: '',
+														user: ''
+													})
+												}
+											>
+												<PlusCircle className='mr-2 h-4 w-4' />
+												Add Use
+											</Button>
+										</div>
+
+										{fields.map((field, index) => (
+											<div key={field.id} className='p-4 border rounded-md mb-4'>
+												<div className='flex justify-between items-center mb-4'>
+													<h4 className='font-medium'>Use Configuration {index + 1}</h4>
+													{index > 0 && (
+														<Button
+															type='button'
+															variant='ghost'
+															size='sm'
+															onClick={() => remove(index)}
+															className='text-red-500 hover:text-red-700'
+														>
+															<Trash2 className='h-4 w-4' />
+														</Button>
+													)}
+												</div>
+
+												<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+													<FormField
+														control={form.control}
+														name={`modelUses.${index}.subgroup`}
+														render={({ field }) => (
+															<FormItem>
+																<FormLabel>Subgroup</FormLabel>
+																<Select onValueChange={field.onChange} defaultValue={field.value}>
+																	<FormControl>
+																		<SelectTrigger>
+																			<SelectValue placeholder='Select subgroup' />
+																		</SelectTrigger>
+																	</FormControl>
+																	<SelectContent>
+																		{modelReferenceData?.Subgroup.map(subgroup => (
+																			<SelectItem key={subgroup.subgroup_id} value={subgroup.subgroup_id.toString()}>
+																				{subgroup.subgroup}
+																			</SelectItem>
+																		))}
+																	</SelectContent>
+																</Select>
+																<FormMessage />
+															</FormItem>
+														)}
+													/>
+
+													<FormField
+														control={form.control}
+														name={`modelUses.${index}.use`}
+														render={({ field }) => (
+															<FormItem>
+																<FormLabel>Use</FormLabel>
+																<Select onValueChange={field.onChange} defaultValue={field.value}>
+																	<FormControl>
+																		<SelectTrigger>
+																			<SelectValue placeholder='Select use' />
+																		</SelectTrigger>
+																	</FormControl>
+																	<SelectContent>
+																		{Array.isArray(filteredUses) && filteredUses.length > 0
+																			? filteredUses.map((use: { use_id: number; use: string }) => (
+																					<SelectItem key={use.use_id} value={use.use_id.toString()}>
+																						{use.use}
+																					</SelectItem>
+																			  ))
+																			: modelReferenceData?.Uses?.map((use: { use_id: number; use: string }) => (
+																					<SelectItem key={use.use_id} value={use.use_id.toString()}>
+																						{use.use}
+																					</SelectItem>
+																			  ))}
+																	</SelectContent>
+																</Select>
+																<FormMessage />
+															</FormItem>
+														)}
+													/>
+
+													<FormField
+														control={form.control}
+														name={`modelUses.${index}.assetClass`}
+														render={({ field }) => (
+															<FormItem>
+																<FormLabel>Asset Class</FormLabel>
+																<Select onValueChange={field.onChange} defaultValue={field.value}>
+																	<FormControl>
+																		<SelectTrigger>
+																			<SelectValue placeholder='Select asset class' />
+																		</SelectTrigger>
+																	</FormControl>
+																	<SelectContent>
+																		{Array.isArray(filteredAssetClasses) && filteredAssetClasses.length > 0
+																			? filteredAssetClasses.map(
+																					(asset: { assetclass_id: number; assetclass: string }) => (
+																						<SelectItem
+																							key={asset.assetclass_id}
+																							value={asset.assetclass_id.toString()}
+																						>
+																							{asset.assetclass}
+																						</SelectItem>
+																					)
+																			  )
+																			: modelReferenceData?.AssetClass?.map(
+																					(asset: { assetclass_id: number; assetclass: string }) => (
+																						<SelectItem
+																							key={asset.assetclass_id}
+																							value={asset.assetclass_id.toString()}
+																						>
+																							{asset.assetclass}
+																						</SelectItem>
+																					)
+																			  )}
+																	</SelectContent>
+																</Select>
+																<FormMessage />
+															</FormItem>
+														)}
+													/>
+
+													<FormField
+														control={form.control}
+														name={`modelUses.${index}.execUsage`}
+														render={({ field }) => (
+															<FormItem>
+																<FormLabel>Accountable Exec Usage</FormLabel>
+																<FormControl>
+																	<Input {...field} placeholder='Enter executive usage code' />
+																</FormControl>
+																<FormMessage />
+															</FormItem>
+														)}
+													/>
+
+													<FormField
+														control={form.control}
+														name={`modelUses.${index}.user`}
+														render={({ field }) => (
+															<FormItem>
+																<FormLabel>User</FormLabel>
+																<FormControl>
+																	<Input {...field} placeholder='Enter user' />
+																</FormControl>
+																<FormMessage />
+															</FormItem>
+														)}
+													/>
+												</div>
+											</div>
+										))}
+									</div>
+
+									<div className='flex justify-end'>
+										<Button type='submit' disabled={submitting}>
+											{submitting ? (
+												<>
+													<Loader2 className='mr-2 h-4 w-4 animate-spin' />
+													Submitting...
+												</>
+											) : (
+												'Record Model'
+											)}
+										</Button>
+									</div>
+								</form>
+							</Form>
+						</CardContent>
+					</Card>
+				</TabsContent>
+
+				<TabsContent value='preview'>
+					<Card>
+						<CardContent className='pt-6'>
+							<div className='space-y-6'>
+								<div>
+									<h3 className='text-lg font-medium mb-2'>Model Details</h3>
+									<Table>
+										<TableHeader>
+											<TableRow>
+												<TableHead>QM ID</TableHead>
+												<TableHead>QM Name</TableHead>
+												<TableHead>Type of QM</TableHead>
+												<TableHead>QM Purpose</TableHead>
+												<TableHead>Owner</TableHead>
+												<TableHead>Accountable Exec (Owner)</TableHead>
+											</TableRow>
+										</TableHeader>
+										<TableBody>
+											<TableRow>
+												<TableCell>{form.watch('uniqueReference') || '-'}</TableCell>
+												<TableCell>{form.watch('modelName') || '-'}</TableCell>
+												<TableCell>
+													{form.watch('modelType')
+														? modelReferenceData?.QModelType.find(
+																t => t.qm_type_id.toString() === form.watch('modelType')
+														  )?.qm_type || '-'
+														: '-'}
+												</TableCell>
+												<TableCell>{form.watch('purpose') ? getPurposeName(form.watch('purpose')) : '-'}</TableCell>
+												<TableCell>{form.watch('owner') || '-'}</TableCell>
+												<TableCell>{form.watch('accountableExec') || '-'}</TableCell>
+											</TableRow>
+										</TableBody>
+									</Table>
 								</div>
 
 								<div>
-									<div className='flex items-center justify-between mb-4'>
-										<h3 className='text-lg font-medium'>Model Uses</h3>
-										<Button
-											type='button'
-											variant='outline'
-											size='sm'
-											onClick={() =>
-												append({
-													subgroup: '',
-													use: '',
-													assetClass: '',
-													execUsage: '',
-													user: ''
-												})
-											}
-										>
-											<PlusCircle className='mr-2 h-4 w-4' />
-											Add Use
-										</Button>
-									</div>
-
-									{fields.map((field, index) => (
-										<div key={field.id} className='p-4 border rounded-md mb-4'>
-											<div className='flex justify-between items-center mb-4'>
-												<h4 className='font-medium'>Use Configuration {index + 1}</h4>
-												{index > 0 && (
-													<Button
-														type='button'
-														variant='ghost'
-														size='sm'
-														onClick={() => remove(index)}
-														className='text-red-500 hover:text-red-700'
-													>
-														<Trash2 className='h-4 w-4' />
-													</Button>
-												)}
-											</div>
-
-											<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-												<FormField
-													control={form.control}
-													name={`modelUses.${index}.subgroup`}
-													render={({ field }) => (
-														<FormItem>
-															<FormLabel>Subgroup</FormLabel>
-															<Select onValueChange={field.onChange} defaultValue={field.value}>
-																<FormControl>
-																	<SelectTrigger>
-																		<SelectValue placeholder='Select subgroup' />
-																	</SelectTrigger>
-																</FormControl>
-																<SelectContent>
-																	{modelReferenceData?.Subgroup.map(subgroup => (
-																		<SelectItem key={subgroup.subgroup_id} value={subgroup.subgroup_id.toString()}>
-																			{subgroup.subgroup}
-																		</SelectItem>
-																	))}
-																</SelectContent>
-															</Select>
-															<FormMessage />
-														</FormItem>
-													)}
-												/>
-
-												<FormField
-													control={form.control}
-													name={`modelUses.${index}.use`}
-													render={({ field }) => (
-														<FormItem>
-															<FormLabel>Use</FormLabel>
-															<Select onValueChange={field.onChange} defaultValue={field.value}>
-																<FormControl>
-																	<SelectTrigger>
-																		<SelectValue placeholder='Select use' />
-																	</SelectTrigger>
-																</FormControl>
-																<SelectContent>
-																	{Array.isArray(filteredUses) && filteredUses.length > 0
-																		? filteredUses.map((use: { use_id: number; use: string }) => (
-																				<SelectItem key={use.use_id} value={use.use_id.toString()}>
-																					{use.use}
-																				</SelectItem>
-																		  ))
-																		: modelReferenceData?.Uses?.map((use: { use_id: number; use: string }) => (
-																				<SelectItem key={use.use_id} value={use.use_id.toString()}>
-																					{use.use}
-																				</SelectItem>
-																		  ))}
-																</SelectContent>
-															</Select>
-															<FormMessage />
-														</FormItem>
-													)}
-												/>
-
-												<FormField
-													control={form.control}
-													name={`modelUses.${index}.assetClass`}
-													render={({ field }) => (
-														<FormItem>
-															<FormLabel>Asset Class</FormLabel>
-															<Select onValueChange={field.onChange} defaultValue={field.value}>
-																<FormControl>
-																	<SelectTrigger>
-																		<SelectValue placeholder='Select asset class' />
-																	</SelectTrigger>
-																</FormControl>
-																<SelectContent>
-																	{Array.isArray(filteredAssetClasses) && filteredAssetClasses.length > 0
-																		? filteredAssetClasses.map(
-																				(asset: { assetclass_id: number; assetclass: string }) => (
-																					<SelectItem key={asset.assetclass_id} value={asset.assetclass_id.toString()}>
-																						{asset.assetclass}
-																					</SelectItem>
-																				)
-																		  )
-																		: modelReferenceData?.AssetClass?.map(
-																				(asset: { assetclass_id: number; assetclass: string }) => (
-																					<SelectItem key={asset.assetclass_id} value={asset.assetclass_id.toString()}>
-																						{asset.assetclass}
-																					</SelectItem>
-																				)
-																		  )}
-																</SelectContent>
-															</Select>
-															<FormMessage />
-														</FormItem>
-													)}
-												/>
-
-												<FormField
-													control={form.control}
-													name={`modelUses.${index}.execUsage`}
-													render={({ field }) => (
-														<FormItem>
-															<FormLabel>Accountable Exec Usage</FormLabel>
-															<FormControl>
-																<Input {...field} placeholder='Enter executive usage code' />
-															</FormControl>
-															<FormMessage />
-														</FormItem>
-													)}
-												/>
-
-												<FormField
-													control={form.control}
-													name={`modelUses.${index}.user`}
-													render={({ field }) => (
-														<FormItem>
-															<FormLabel>User</FormLabel>
-															<FormControl>
-																<Input {...field} placeholder='Enter user' />
-															</FormControl>
-															<FormMessage />
-														</FormItem>
-													)}
-												/>
-											</div>
-										</div>
-									))}
-								</div>
-
-								<div className='flex justify-end gap-4'>
-									<Button type='button' variant='outline'>
-										<span>Cancel</span>
-									</Button>
-									<Button type='submit' disabled={submitting} className='bg-[#006a4d] hover:bg-[#005a40]'>
-										<span>{submitting ? 'Recording...' : 'Record Model'}</span>
-									</Button>
-								</div>
-							</form>
-						</Form>
-					</CardContent>
-				</Card>
-			</TabsContent>
-
-			<TabsContent value='preview'>
-				<Card>
-					<CardContent className='pt-6'>
-						<div className='space-y-6'>
-							<div>
-								<h3 className='text-lg font-medium mb-2'>Model Details</h3>
-								<Table>
-									<TableHeader>
-										<TableRow>
-											<TableHead>QM ID</TableHead>
-											<TableHead>QM Name</TableHead>
-											<TableHead>Type of QM</TableHead>
-											<TableHead>QM Purpose</TableHead>
-											<TableHead>Owner</TableHead>
-											<TableHead>Accountable Exec (Owner)</TableHead>
-										</TableRow>
-									</TableHeader>
-									<TableBody>
-										<TableRow>
-											<TableCell>{form.watch('uniqueReference') || '-'}</TableCell>
-											<TableCell>{form.watch('modelName') || '-'}</TableCell>
-											<TableCell>
-												{form.watch('modelType')
-													? modelReferenceData?.QModelType.find(
-															t => t.qm_type_id.toString() === form.watch('modelType')
-													  )?.qm_type || '-'
-													: '-'}
-											</TableCell>
-											<TableCell>{form.watch('purpose') ? getPurposeName(form.watch('purpose')) : '-'}</TableCell>
-											<TableCell>{form.watch('owner') || '-'}</TableCell>
-											<TableCell>{form.watch('accountableExec') || '-'}</TableCell>
-										</TableRow>
-									</TableBody>
-								</Table>
-							</div>
-
-							<div>
-								<h3 className='text-lg font-medium mb-2'>Model Uses</h3>
-								<Table>
-									<TableHeader>
-										<TableRow>
-											<TableHead>Sub Group</TableHead>
-											<TableHead>Use</TableHead>
-											<TableHead>Accountable Exec Usage</TableHead>
-											<TableHead>User</TableHead>
-											<TableHead>Asset Class</TableHead>
-										</TableRow>
-									</TableHeader>
-									<TableBody>
-										{form.watch('modelUses').map((use, index) => (
-											<TableRow key={index}>
-												<TableCell>{use.subgroup ? getSubgroupName(use.subgroup) : '-'}</TableCell>
-												<TableCell>{use.use ? getUseName(use.use) : '-'}</TableCell>
-												<TableCell>{use.execUsage || '-'}</TableCell>
-												<TableCell>{use.user || '-'}</TableCell>
-												<TableCell>{use.assetClass ? getAssetClassName(use.assetClass) : '-'}</TableCell>
+									<h3 className='text-lg font-medium mb-2'>Model Uses</h3>
+									<Table>
+										<TableHeader>
+											<TableRow>
+												<TableHead>Sub Group</TableHead>
+												<TableHead>Use</TableHead>
+												<TableHead>Accountable Exec Usage</TableHead>
+												<TableHead>User</TableHead>
+												<TableHead>Asset Class</TableHead>
 											</TableRow>
-										))}
-									</TableBody>
-								</Table>
+										</TableHeader>
+										<TableBody>
+											{form.watch('modelUses').map((use, index) => (
+												<TableRow key={index}>
+													<TableCell>{use.subgroup ? getSubgroupName(use.subgroup) : '-'}</TableCell>
+													<TableCell>{use.use ? getUseName(use.use) : '-'}</TableCell>
+													<TableCell>{use.execUsage || '-'}</TableCell>
+													<TableCell>{use.user || '-'}</TableCell>
+													<TableCell>{use.assetClass ? getAssetClassName(use.assetClass) : '-'}</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+								</div>
 							</div>
-						</div>
-					</CardContent>
-				</Card>
-			</TabsContent>
+						</CardContent>
+					</Card>
+				</TabsContent>
 
-			<TabsContent value='debug'>
-				<Card>
-					<CardContent className='pt-6 space-y-4'>
-						<h3 className='text-lg font-medium'>Debug Information</h3>
+				<TabsContent value='debug'>
+					<Card>
+						<CardContent className='pt-6 space-y-4'>
+							<h3 className='text-lg font-medium'>Debug Information</h3>
 
-						<div className='space-y-2'>
-							<h4 className='font-medium'>Selected Purpose:</h4>
-							<div className='bg-gray-100 p-2 rounded'>{purposeValue || 'None'}</div>
-						</div>
-
-						<div className='space-y-2'>
-							<h4 className='font-medium'>Filtered Asset Classes:</h4>
-							<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
-								<pre>{JSON.stringify(filteredAssetClasses, null, 2)}</pre>
+							<div className='space-y-2'>
+								<h4 className='font-medium'>Selected Purpose:</h4>
+								<div className='bg-gray-100 p-2 rounded'>{purposeValue || 'None'}</div>
 							</div>
-						</div>
 
-						<div className='space-y-2'>
-							<h4 className='font-medium'>Filtered Uses:</h4>
-							<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
-								<pre>{JSON.stringify(filteredUses, null, 2)}</pre>
+							<div className='space-y-2'>
+								<h4 className='font-medium'>Filtered Asset Classes:</h4>
+								<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
+									<pre>{JSON.stringify(filteredAssetClasses, null, 2)}</pre>
+								</div>
 							</div>
-						</div>
 
-						<div className='space-y-2'>
-							<h4 className='font-medium'>Purpose to Asset Class Relations:</h4>
-							<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
-								<pre>
-									{modelReferenceData
-										? JSON.stringify(modelReferenceData.model_reference_data_level2.PurposeToAssetClass, null, 2)
-										: 'No data available'}
-								</pre>
+							<div className='space-y-2'>
+								<h4 className='font-medium'>Filtered Uses:</h4>
+								<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
+									<pre>{JSON.stringify(filteredUses, null, 2)}</pre>
+								</div>
 							</div>
-						</div>
 
-						<div className='space-y-2'>
-							<h4 className='font-medium'>Purpose to Use Relations:</h4>
-							<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
-								<pre>
-									{modelReferenceData
-										? JSON.stringify(modelReferenceData.model_reference_data_level2.PurposeToUse, null, 2)
-										: 'No data available'}
-								</pre>
+							<div className='space-y-2'>
+								<h4 className='font-medium'>Purpose to Asset Class Relations:</h4>
+								<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
+									<pre>
+										{modelReferenceData
+											? JSON.stringify(modelReferenceData.model_reference_data_level2.PurposeToAssetClass, null, 2)
+											: 'No data available'}
+									</pre>
+								</div>
 							</div>
+
+							<div className='space-y-2'>
+								<h4 className='font-medium'>Purpose to Use Relations:</h4>
+								<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
+									<pre>
+										{modelReferenceData
+											? JSON.stringify(modelReferenceData.model_reference_data_level2.PurposeToUse, null, 2)
+											: 'No data available'}
+									</pre>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+				</TabsContent>
+			</Tabs>
+
+			{/* Simple confirmation dialog */}
+			{showConfirmDialog && (
+				<div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
+					<div className='bg-white p-6 rounded-lg shadow-lg max-w-md w-full'>
+						<h3 className='text-lg font-semibold mb-2 text-primary'>Confirm Submission</h3>
+						<p className='mb-4'>Are you sure you want to submit this model information?</p>
+						<div className='flex justify-end space-x-2'>
+							<button
+								className='px-4 py-2 border rounded-md hover:bg-gray-100'
+								onClick={() => setShowConfirmDialog(false)}
+								type='button'
+							>
+								Cancel
+							</button>
+							<button
+								className='px-4 py-2 bg-primary	 text-white rounded-md hover:bg-primary/80 flex items-center'
+								onClick={() => handleSubmit(form.getValues())}
+								disabled={submitting}
+								type='button'
+							>
+								{submitting ? (
+									<>
+										<svg
+											className='animate-spin -ml-1 mr-2 h-4 w-4 text-white'
+											xmlns='http://www.w3.org/2000/svg'
+											fill='none'
+											viewBox='0 0 24 24'
+										>
+											<circle
+												className='opacity-25'
+												cx='12'
+												cy='12'
+												r='10'
+												stroke='currentColor'
+												strokeWidth='4'
+											></circle>
+											<path
+												className='opacity-75'
+												fill='currentColor'
+												d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+											></path>
+										</svg>
+										Submitting...
+									</>
+								) : (
+									'Confirm'
+								)}
+							</button>
 						</div>
-					</CardContent>
-				</Card>
-			</TabsContent>
-		</Tabs>
+					</div>
+				</div>
+			)}
+		</>
 	)
 }

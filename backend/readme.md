@@ -1,12 +1,12 @@
 # Backend API
 
-A modern, fast backend API built with Bun and Elysia.
+A modern, fast backend API built with Bun and Elysia.js for inventory management.
 
 ## 🚀 Features
 
 - Built with Bun - ultra-fast JavaScript runtime and toolkit
 - Elysia.js for routing and middleware
-- Built-in SQLite support
+- SQLite database with built-in support from Bun
 - TypeScript support out of the box
 - Docker support
 - Environment configuration
@@ -73,14 +73,10 @@ docker-compose up
 
 ## 🔧 Environment Variables
 
-| Variable             | Description                            | Default               |
-| -------------------- | -------------------------------------- | --------------------- |
-| PORT                 | Server port                            | 8000                  |
-| NODE_ENV             | Environment mode                       | development           |
-| DB_PATH              | SQLite database path                   | data/database.sqlite  |
-| ALLOWED_ORIGINS      | CORS allowed origins                   | http://localhost:8000 |
-| LOG_LEVEL            | Logging level                          | DEBUG                 |
-| DEFAULT_MIN_QUANTITY | Default minimum quantity for inventory | 5                     |
+| Variable        | Description          | Default |
+| --------------- | -------------------- | ------- |
+| PORT            | Server port          | 8000    |
+| ALLOWED_ORIGINS | CORS allowed origins | \*      |
 
 ## 📝 API Endpoints
 
@@ -88,29 +84,61 @@ docker-compose up
 
 - GET `/api/health` - Check API health status
 
-### Products
+### Inventory Management
 
-- GET `/api/products` - List all products
-- POST `/api/products` - Create a new product
-- GET `/api/products/:id` - Get a specific product
-- PUT `/api/products/:id` - Update a product
-- DELETE `/api/products/:id` - Delete a product
+- GET `/api/v1/inventory/tables` - Get all tables in the database
+- GET `/api/v1/inventory/data/:table_name` - Get data from a specific table with pagination, filtering, and pause options
+- POST `/api/v1/inventory/data/:table_name` - Create a new row in a specific table
+- PUT `/api/v1/inventory/data/:table_name` - Update a row in a specific table
+- DELETE `/api/v1/inventory/data/:table_name` - Delete a row from a specific table
 
-### Categories
+### Database Seeding
 
-- GET `/api/categories` - List all categories
-- POST `/api/categories` - Create a new category
-- GET `/api/categories/:id` - Get a specific category
-- PUT `/api/categories/:id` - Update a category
-- DELETE `/api/categories/:id` - Delete a category
+- GET `/api/seed/` - Seed the database with initial data
+- GET `/api/seed/reset` - Reset and reseed the database (drops existing tables)
 
-### Inventory
+## Query Parameters
 
-- GET `/api/inventory` - List all inventory items
-- POST `/api/inventory` - Create a new inventory item
-- GET `/api/inventory/:id` - Get a specific inventory item
-- PUT `/api/inventory/:id` - Update an inventory item
-- DELETE `/api/inventory/:id` - Delete an inventory item
+### For GET `/api/v1/inventory/data/:table_name`
+
+- `page` (default: 1) - Page number for pagination
+- `limit` (default: 10) - Number of items per page
+- `filters` (optional) - JSON string of filter conditions
+- `pause` (optional) - Set to 'true' to pause data fetching
+
+## Request Body Examples
+
+### POST `/api/v1/inventory/data/:table_name`
+
+```json
+{
+	"id": "optional-custom-id",
+	"data": {
+		"field1": "value1",
+		"field2": "value2"
+	}
+}
+```
+
+### PUT `/api/v1/inventory/data/:table_name`
+
+```json
+{
+	"id": "row-id-to-update",
+	"data": {
+		"field1": "new-value1",
+		"field2": "new-value2"
+	}
+}
+```
+
+### DELETE `/api/v1/inventory/data/:table_name`
+
+```json
+{
+	"id": "row-id-to-delete"
+}
+```
 
 ## 🧪 Testing
 
@@ -145,103 +173,40 @@ docker-compose up
 ├── src/
 │   ├── controllers/   # Request handlers
 │   ├── routes/        # API routes
-│   ├── middleware/    # Custom middleware
-│   ├── db/           # Database related files
-│   ├── config.ts     # Configuration
-│   └── server.ts     # Main application file
-├── data/             # SQLite database
-├── .env              # Environment variables
-├── .env.example      # Example environment file
-├── package.json      # Dependencies and scripts
-├── tsconfig.json     # TypeScript configuration
-├── Dockerfile        # Docker configuration
+│   ├── db/            # Database related files
+│   ├── lib/           # Utility functions and helpers
+│   └── server.ts      # Main application file
+├── data/              # SQLite database
+├── .env               # Environment variables
+├── .env.example       # Example environment file
+├── package.json       # Dependencies and scripts
+├── tsconfig.json      # TypeScript configuration
+├── Dockerfile         # Docker configuration
 └── docker-compose.yml # Docker Compose configuration
 ```
 
-## Getting Started
+## Troubleshooting
 
-### Prerequisites
+### Common Issues
 
-- Docker and Docker Compose
+1. **"undefined is not an object (evaluating 'this.inventoryRepo')"**
 
-### Setup and Installation
+   - This error occurs when the `this` context is lost in route handlers. Make sure route handlers are wrapped in arrow functions to preserve the context.
 
-1. Clone this repository:
+2. **Database Connection Issues**
 
-   ```bash
-   git clone https://github.com/yourusername/inventory-api.git
-   cd inventory-api
-   ```
+   - Ensure the database file path is correct in the InventoryRepository constructor
+   - Check file permissions for the database file
 
-2. Create an `.env` file (you can copy from `.env.example`):
+3. **CORS Issues**
+   - Verify that your frontend origin is included in the ALLOWED_ORIGINS environment variable
+   - For development, you can set ALLOWED_ORIGINS=\* to allow all origins
 
-   ```bash
-   cp .env.example .env
-   ```
+## Development Notes
 
-3. Start the service:
-
-   ```bash
-   docker-compose up -d
-   ```
-
-4. The API will now be available at `http://localhost:8000/api`
-
-### Using with Multiple Frontend Apps
-
-This service supports CORS and can be accessed from multiple frontend applications.
-
-1. Configure allowed origins in your `.env` file:
-
-   ```
-   ALLOWED_ORIGINS=http://localhost:3001,https://yourdomain.com
-   ```
-
-2. Use the provided API client in your frontend applications.
-
-## Database Persistence
-
-The SQLite database is stored in the `./data` directory which is mounted as a volume in the Docker container. This ensures your data persists between container restarts and rebuilds.
-
-## Connecting from Frontend Applications
-
-You can use the provided API client or create your own. Here's an example using the provided client:
-
-```javascript
-import { InventoryApiClient } from './inventory-api-client'
-
-// Initialize the client
-const api = new InventoryApiClient('http://localhost:8000/api')
-
-// Example: Get all products
-async function getProducts() {
-	try {
-		const products = await api.getProducts()
-		console.log(products)
-	} catch (error) {
-		console.error('Error fetching products:', error)
-	}
-}
-```
-
-## Development
-
-### Running Locally (without Docker)
-
-If you want to run the API without Docker:
-
-1. Install Deno: https://deno.land/manual/getting_started/installation
-
-2. Run the server:
-   ```bash
-   deno run --allow-net --allow-read --allow-write --allow-env src/server.ts
-   ```
-
-### Environment Variables
-
-- `PORT`: API server port (default: 8000)
-- `NODE_ENV`: Environment mode (development/production)
-- `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins
+- The API uses a dynamic approach to handle any table in the SQLite database
+- Primary keys are expected to be named 'id' for update and delete operations
+- All database operations are performed using Bun's built-in SQLite support
 
 ## License
 

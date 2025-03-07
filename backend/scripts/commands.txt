@@ -1,0 +1,3 @@
+sqlite3 data/database.sqlite "SELECT * FROM qm_model_type;" | cat
+
+sqlite3 data/database.sqlite ".tables" | cat

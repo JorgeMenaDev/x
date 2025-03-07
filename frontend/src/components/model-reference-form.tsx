@@ -8,6 +8,7 @@ import { submitModelData } from '@/lib/actions'
 import { PlusCircle, Trash2 } from 'lucide-react'
 import { useSeparateModelReferenceData } from '@/hooks/useModelReferenceData'
 import { useAssetClassFilter } from '@/hooks/useAssetClassFilter'
+import { useUseFilter } from '@/hooks/useUseFilter'
 
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -79,24 +80,12 @@ export default function ModelReferenceForm() {
 	const purposeValue = form.watch('purpose')
 	console.log('Current purpose value:', purposeValue)
 
-	// Use the hook to filter asset classes based on the selected purpose
+	// Use the hooks to filter asset classes and uses based on the selected purpose
 	const filteredAssetClasses = useAssetClassFilter(modelReferenceData, purposeValue)
-	console.log('Filtered asset classes result:', filteredAssetClasses)
+	const filteredUses = useUseFilter(modelReferenceData, purposeValue)
+	console.log('Filtered uses result:', filteredUses)
 
 	// Helper functions to get filtered options based on relationships
-	const getFilteredUses = (purposeId: string) => {
-		if (!modelReferenceData || !purposeId) return []
-
-		const purposeToUseRelations = modelReferenceData.model_reference_data_level2.PurposeToUse.filter(
-			relation => relation.purpose_id.toString() === purposeId
-		)
-
-		const useIds = purposeToUseRelations.map(relation => relation.use_id.toString())
-
-		return modelReferenceData.Uses.filter(use => useIds.includes(use.use_id.toString()))
-	}
-
-	// Helper functions to get names for display
 	const getPurposeName = (id: string) => {
 		const purpose = modelReferenceData?.QModelPurpose.find(p => p.purpose_id.toString() === id)
 		return purpose ? purpose.purpose : id
@@ -382,11 +371,17 @@ export default function ModelReferenceForm() {
 																	</SelectTrigger>
 																</FormControl>
 																<SelectContent>
-																	{getFilteredUses(purposeValue).map(use => (
-																		<SelectItem key={use.use_id} value={use.use_id.toString()}>
-																			{use.use}
-																		</SelectItem>
-																	))}
+																	{Array.isArray(filteredUses) && filteredUses.length > 0
+																		? filteredUses.map((use: { use_id: number; use: string }) => (
+																				<SelectItem key={use.use_id} value={use.use_id.toString()}>
+																					{use.use}
+																				</SelectItem>
+																		  ))
+																		: modelReferenceData?.Uses?.map((use: { use_id: number; use: string }) => (
+																				<SelectItem key={use.use_id} value={use.use_id.toString()}>
+																					{use.use}
+																				</SelectItem>
+																		  ))}
 																</SelectContent>
 															</Select>
 															<FormMessage />
@@ -559,11 +554,29 @@ export default function ModelReferenceForm() {
 						</div>
 
 						<div className='space-y-2'>
+							<h4 className='font-medium'>Filtered Uses:</h4>
+							<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
+								<pre>{JSON.stringify(filteredUses, null, 2)}</pre>
+							</div>
+						</div>
+
+						<div className='space-y-2'>
 							<h4 className='font-medium'>Purpose to Asset Class Relations:</h4>
 							<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
 								<pre>
 									{modelReferenceData
 										? JSON.stringify(modelReferenceData.model_reference_data_level2.PurposeToAssetClass, null, 2)
+										: 'No data available'}
+								</pre>
+							</div>
+						</div>
+
+						<div className='space-y-2'>
+							<h4 className='font-medium'>Purpose to Use Relations:</h4>
+							<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
+								<pre>
+									{modelReferenceData
+										? JSON.stringify(modelReferenceData.model_reference_data_level2.PurposeToUse, null, 2)
 										: 'No data available'}
 								</pre>
 							</div>

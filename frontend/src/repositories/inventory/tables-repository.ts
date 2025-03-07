@@ -1,6 +1,11 @@
 import { TablesResponse, TableDataResponse, TableRecord } from '../../models/inventory/table'
 
 /**
+ * Type for filter values that can be sent to the API
+ */
+export type FilterValue = string | number | boolean | null
+
+/**
  * Repository interface for interacting with database tables
  */
 export interface TablesRepository {
@@ -12,30 +17,29 @@ export interface TablesRepository {
 	/**
 	 * Fetches records from any table
 	 * @param tableName The name of the table
-	 * @param page The page number to fetch
-	 * @param limit The number of records per page
+	 * @param params Optional parameters for pagination, filtering, and pausing
 	 */
-	getTableRecords<T = TableRecord>(tableName: string, page: number, limit: number): Promise<TableDataResponse<T>>
-
-	/**
-	 * Fetches records from the qm_purpose table
-	 * @param page The page number to fetch
-	 * @param limit The number of records per page
-	 */
-	getQmPurposeRecords(page: number, limit: number): Promise<TableDataResponse<TableRecord>>
+	getTableData<T = TableRecord>(
+		tableName: string,
+		params?: {
+			page?: number
+			limit?: number
+			filters?: Record<string, FilterValue>
+			pause?: boolean
+		}
+	): Promise<TableDataResponse<T>>
 
 	/**
 	 * Creates a new record in any table
 	 * @param tableName The name of the table
 	 * @param data The data for the new record
+	 * @param id Optional ID for the new record (auto-generated if omitted)
 	 */
-	createTableRecord<T = TableRecord>(tableName: string, data: Partial<T>): Promise<T>
-
-	/**
-	 * Creates a new record in the qm_purpose table
-	 * @param data The data for the new record
-	 */
-	createQmPurposeRecord<T = TableRecord>(data: Partial<T>): Promise<T>
+	createTableRow<T = TableRecord>(
+		tableName: string,
+		data: Record<string, FilterValue | unknown>,
+		id?: string
+	): Promise<T>
 
 	/**
 	 * Updates an existing record in any table
@@ -43,12 +47,16 @@ export interface TablesRepository {
 	 * @param id The ID of the record to update
 	 * @param data The updated data
 	 */
-	updateTableRecord<T = TableRecord>(tableName: string, id: string, data: Partial<T>): Promise<T>
+	updateTableRow<T = TableRecord>(
+		tableName: string,
+		id: string,
+		data: Record<string, FilterValue | unknown>
+	): Promise<T>
 
 	/**
 	 * Deletes a record from any table
 	 * @param tableName The name of the table
 	 * @param id The ID of the record to delete
 	 */
-	deleteTableRecord(tableName: string, id: string): Promise<void>
+	deleteTableRow(tableName: string, id: string): Promise<void>
 }

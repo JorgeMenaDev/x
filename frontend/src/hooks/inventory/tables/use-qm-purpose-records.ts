@@ -1,18 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
-import { createTablesRepository } from '../../../repositories'
-import { queryKeys } from '../../../lib/query-keys'
-import { QmPurposeResponse } from '../../../models/inventory/table'
+import { QmPurpose } from '../../../models/inventory/table'
+import { useTableData } from './use-table-data'
 
 /**
- * Hook for fetching qm_purpose records
- * @param page The page number to fetch
- * @param limit The number of records per page
+ * Hook for fetching QM purpose records with pagination
+ * @deprecated Use useQmPurposeData from use-qm-purpose.ts instead
  */
-export function useQmPurposeRecords(page: number = 1, limit: number = 100) {
-	const tablesRepository = createTablesRepository()
-
-	return useQuery<QmPurposeResponse>({
-		queryKey: queryKeys.inventory.tables.qmPurpose.list(page, limit),
-		queryFn: () => tablesRepository.getQmPurposeRecords(page, limit)
-	})
+export function useQmPurposeRecords(page: number = 1, limit: number = 10) {
+	return useTableData<QmPurpose>('qm_purpose', { page, limit })
 }

@@ -1,16 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { createTablesRepository } from '../../../repositories'
-import { queryKeys } from '../../../lib/query-keys'
-import { TablesResponse } from '../../../models/inventory/table'
 
 /**
- * Hook for fetching all available tables
+ * Hook for fetching all available tables with their metadata
  */
 export function useTables() {
 	const tablesRepository = createTablesRepository()
 
-	return useQuery<TablesResponse>({
-		queryKey: queryKeys.inventory.tables.list(),
+	return useQuery({
+		queryKey: ['tables'],
 		queryFn: () => tablesRepository.getTables()
 	})
 }

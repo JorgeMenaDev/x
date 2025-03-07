@@ -1,5 +1,5 @@
 import { TablesResponse, TableDataResponse, TableRecord } from '../../../models/inventory/table'
-import { TablesRepository } from '../../../repositories/inventory/tables-repository'
+import { FilterValue, TablesRepository } from '../../../repositories/inventory/tables-repository'
 import { BaseHttpRepository } from '../base-http-repository'
 
 /**
@@ -18,52 +18,76 @@ export class HttpTablesRepository extends BaseHttpRepository implements TablesRe
 	}
 
 	/**
-	 * Fetches records from any table
+	 * Fetches records from any table with support for pagination, filtering, and pausing
 	 */
-	async getTableRecords<T = TableRecord>(
+	async getTableData<T = TableRecord>(
 		tableName: string,
-		page: number,
-		limit: number
+		params?: {
+			page?: number
+			limit?: number
+			filters?: Record<string, FilterValue>
+			pause?: boolean
+		}
 	): Promise<TableDataResponse<T>> {
-		return this.get<TableDataResponse<T>>(`/api/v1/tables/${tableName}`, {
+		const { page = 1, limit = 10, filters = {}, pause = false } = params || {}
+
+		// Convert params to query string parameters
+		const queryParams: Record<string, string> = {
 			page: page.toString(),
 			limit: limit.toString()
-		})
-	}
+		}
 
-	/**
-	 * Fetches records from the qm_purpose table
-	 */
-	async getQmPurposeRecords(page: number, limit: number): Promise<TableDataResponse<TableRecord>> {
-		return this.getTableRecords('qm_purpose', page, limit)
+		// Add filters as JSON string if provided
+		if (Object.keys(filters).length > 0) {
+			queryParams.filters = JSON.stringify(filters)
+		}
+
+		// Add pause parameter if true
+		if (pause) {
+			queryParams.pause = 'true'
+		}
+
+		return this.get<TableDataResponse<T>>(`/api/v1/inventory/data/${tableName}`, queryParams)
 	}
 
 	/**
 	 * Creates a new record in any table
 	 */
-	async createTableRecord<T = TableRecord>(tableName: string, data: Partial<T>): Promise<T> {
-		console.log('Repository creating record:', { tableName, data })
-		return this.post<T>(`/api/v1/tables/${tableName}`, data)
-	}
+	async createTableRow<T = TableRecord>(
+		tableName: string,
+		data: Record<string, FilterValue | unknown>,
+		id?: string
+	): Promise<T> {
+		const payload = {
+			id,
+			data
+		}
 
-	/**
-	 * Creates a new record in the qm_purpose table
-	 */
-	async createQmPurposeRecord<T = TableRecord>(data: Partial<T>): Promise<T> {
-		return this.post<T>('/api/v1/qm/purpose', data)
+		return this.post<T>(`/api/v1/inventory/data/${tableName}`, payload)
 	}
 
 	/**
 	 * Updates an existing record in any table
 	 */
-	async updateTableRecord<T = TableRecord>(tableName: string, id: string, data: Partial<T>): Promise<T> {
-		return this.put<T>(`/api/v1/tables/${tableName}/${id}`, data)
+	async updateTableRow<T = TableRecord>(
+		tableName: string,
+		id: string,
+		data: Record<string, FilterValue | unknown>
+	): Promise<T> {
+		const payload = {
+			id,
+			data
+		}
+
+		return this.put<T>(`/api/v1/inventory/data/${tableName}`, payload)
 	}
 
 	/**
 	 * Deletes a record from any table
 	 */
-	async deleteTableRecord(tableName: string, id: string): Promise<void> {
-		return this.delete<void>(`/api/v1/tables/${tableName}/${id}`)
+	async deleteTableRow(tableName: string, id: string): Promise<void> {
+		const payload = { id }
+
+		return this.delete<void>(`/api/v1/inventory/data/${tableName}`, payload)
 	}
 }

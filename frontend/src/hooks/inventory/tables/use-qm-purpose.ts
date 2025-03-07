@@ -1,77 +1,61 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createTablesRepository } from '../../../repositories'
-import { queryKeys } from '../../../lib/query-keys'
-import { QmPurpose, QmPurposeResponse } from '../../../models/inventory/table'
+import { QmPurpose } from '../../../models/inventory/table'
+import { useTableData, useCreateTableRow, useUpdateTableRow, useDeleteTableRow } from './use-table-data'
+
+const TABLE_NAME = 'qm_purpose'
 
 /**
- * Hook for fetching qm_purpose records
+ * Hook for fetching QM purpose records with pagination
  */
-export function useQmPurposeRecords(page: number = 1, limit: number = 100) {
-	const tablesRepository = createTablesRepository()
-
-	return useQuery<QmPurposeResponse>({
-		queryKey: queryKeys.inventory.tables.qmPurpose.list(page, limit),
-		queryFn: () => tablesRepository.getQmPurposeRecords(page, limit)
-	})
+export function useQmPurposeData(params?: { page?: number; limit?: number; pause?: boolean }) {
+	return useTableData<QmPurpose>(TABLE_NAME, params)
 }
 
 /**
- * Hook for creating a new qm_purpose record
+ * Hook for creating a new QM purpose record
  */
-export function useCreateQmPurposeRecord() {
-	const queryClient = useQueryClient()
-	const tablesRepository = createTablesRepository()
+export function useCreateQmPurpose() {
+	const createRow = useCreateTableRow<QmPurpose>(TABLE_NAME, { showSuccessToast: true })
 
-	return useMutation({
-		mutationFn: (data: Omit<QmPurpose, 'id' | 'created_at' | 'updated_at'>) =>
-			tablesRepository.createQmPurposeRecord(data),
-		onSuccess: () => {
-			// Invalidate the qm_purpose list query to refetch the data
-			queryClient.invalidateQueries({
-				queryKey: queryKeys.inventory.tables.qmPurpose.all
+	return {
+		createQmPurpose: (text: string) => {
+			return createRow.mutate({
+				data: { text }
 			})
-		}
-	})
+		},
+		isLoading: createRow.isPending,
+		error: createRow.error
+	}
 }
 
 /**
- * Hook for updating an existing qm_purpose record
+ * Hook for updating a QM purpose record
  */
-export function useUpdateQmPurposeRecord() {
-	const queryClient = useQueryClient()
-	const tablesRepository = createTablesRepository()
+export function useUpdateQmPurpose() {
+	const updateRow = useUpdateTableRow<QmPurpose>(TABLE_NAME, { showSuccessToast: true })
 
-	return useMutation({
-		mutationFn: ({ id, data }: { id: string; data: Partial<Omit<QmPurpose, 'id' | 'created_at' | 'updated_at'>> }) =>
-			tablesRepository.updateQmPurposeRecord(id, data),
-		onSuccess: (_, variables) => {
-			// Invalidate the specific qm_purpose record query
-			queryClient.invalidateQueries({
-				queryKey: queryKeys.inventory.tables.qmPurpose.detail(variables.id)
+	return {
+		updateQmPurpose: (id: string, text: string) => {
+			return updateRow.mutate({
+				id,
+				data: { text }
 			})
-
-			// Invalidate the qm_purpose list query
-			queryClient.invalidateQueries({
-				queryKey: queryKeys.inventory.tables.qmPurpose.all
-			})
-		}
-	})
+		},
+		isLoading: updateRow.isPending,
+		error: updateRow.error
+	}
 }
 
 /**
- * Hook for deleting a qm_purpose record
+ * Hook for deleting a QM purpose record
  */
-export function useDeleteQmPurposeRecord() {
-	const queryClient = useQueryClient()
-	const tablesRepository = createTablesRepository()
+export function useDeleteQmPurpose() {
+	const deleteRow = useDeleteTableRow(TABLE_NAME, { showSuccessToast: true })
 
-	return useMutation({
-		mutationFn: (id: string) => tablesRepository.deleteQmPurposeRecord(id),
-		onSuccess: () => {
-			// Invalidate the qm_purpose list query
-			queryClient.invalidateQueries({
-				queryKey: queryKeys.inventory.tables.qmPurpose.all
-			})
-		}
-	})
+	return {
+		deleteQmPurpose: (id: string) => {
+			return deleteRow.mutate(id)
+		},
+		isLoading: deleteRow.isPending,
+		error: deleteRow.error
+	}
 }

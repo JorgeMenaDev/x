@@ -52,6 +52,7 @@ api.interceptors.response.use(
 export interface ApiConfig {
 	params?: Record<string, string>
 	headers?: Record<string, string>
+	data?: unknown // Add support for request body in DELETE requests
 }
 
 export type ApiInstance = {

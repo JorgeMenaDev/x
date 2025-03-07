@@ -1,12 +1,18 @@
-import { Elysia, t } from 'elysia'
-import { getLowInventory, getTables } from '../controllers/inventory_controller'
+import { Elysia } from 'elysia'
+import { InventoryController } from '../controllers/inventory_controller'
 
-const app = new Elysia({ prefix: '/v1/inventory' })
+const inventoryController = new InventoryController()
 
-// Inventory endpoints
-app.get('/low', getLowInventory)
+const inventoryRoutes = new Elysia().group('/v1/inventory', app =>
+	app
+		.get('/tables', () => inventoryController.getTables())
+		.group('/data', app =>
+			app
+				.get('/:table_name', context => inventoryController.getTableData(context))
+				.post('/:table_name', context => inventoryController.createTableRow(context))
+				.put('/:table_name', context => inventoryController.updateTableRow(context))
+				.delete('/:table_name', context => inventoryController.deleteTableRow(context))
+		)
+)
 
-// Tables endpoints
-app.get('/tables', getTables)
-
-export default app
+export default inventoryRoutes

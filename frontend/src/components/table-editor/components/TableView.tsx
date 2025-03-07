@@ -59,7 +59,13 @@ export function TableView({
 
 		// Notify parent component with the correct data structure
 		if (onUpdateRow) {
+			// Ensure data is not empty
 			const updateData = { [columnName]: value }
+			if (Object.keys(updateData).length === 0) {
+				toast.error('No data to update')
+				setEditingCell(null)
+				return
+			}
 			onUpdateRow(rowId, updateData)
 		}
 		setEditingCell(null)

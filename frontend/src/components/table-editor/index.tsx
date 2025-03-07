@@ -7,15 +7,14 @@ import { TableToolbar } from './components/TableToolbar'
 import { TablePagination } from './components/TablePagination'
 import { useTables } from '../../hooks/inventory/tables/use-tables'
 import {
-	useTableRecords,
-	useCreateTableRecord,
-	useUpdateTableRecord,
-	useDeleteTableRecord
+	useTableData,
+	useCreateTableRow,
+	useUpdateTableRow,
+	useDeleteTableRow
 } from '../../hooks/inventory/tables/use-table-data'
 import { TableRecord } from '../../models/inventory/table'
 import { TableColumn } from './types'
 import { handleAPIError } from '@/lib/errors'
-import { toast } from 'sonner'
 
 export function TableEditor() {
 	const [selectedSchema] = useState('public')
@@ -41,12 +40,12 @@ export function TableEditor() {
 		data: tableDataResponse,
 		isLoading: isLoadingTableData,
 		error: tableDataError
-	} = useTableRecords(selectedTable, currentPage, rowsPerPage)
+	} = useTableData(selectedTable, { page: currentPage, limit: rowsPerPage })
 
 	// Mutations for table operations
-	const createRecord = useCreateTableRecord(selectedTable, { showSuccessToast: true })
-	const updateRecord = useUpdateTableRecord(selectedTable)
-	const deleteRecord = useDeleteTableRecord(selectedTable)
+	const createRow = useCreateTableRow(selectedTable, { showSuccessToast: true })
+	const updateRow = useUpdateTableRow(selectedTable, { showSuccessToast: true })
+	const deleteRow = useDeleteTableRow(selectedTable, { showSuccessToast: true })
 
 	const [searchQuery, setSearchQuery] = useState('')
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
@@ -81,7 +80,7 @@ export function TableEditor() {
 
 	const handleInsertRow = async (data: TableRecord) => {
 		try {
-			await createRecord.mutateAsync(data)
+			await createRow.mutateAsync({ data })
 		} catch (error) {
 			handleAPIError(error)
 			throw error // Re-throw to prevent drawer from closing
@@ -91,8 +90,7 @@ export function TableEditor() {
 	const handleUpdateRow = async (id: string, data: TableRecord) => {
 		try {
 			// Skip data cleaning since we're already getting clean data
-			await updateRecord.mutateAsync({ id, data })
-			toast.success('Record updated successfully')
+			await updateRow.mutateAsync({ id, data })
 		} catch (error) {
 			console.error('Update error:', error)
 			handleAPIError(error)
@@ -101,10 +99,9 @@ export function TableEditor() {
 
 	const handleDeleteRows = async (ids: string[]) => {
 		try {
-			await Promise.all(ids.map(id => deleteRecord.mutateAsync(id)))
+			await Promise.all(ids.map(id => deleteRow.mutateAsync(id)))
 			setSelectedRows(new Set())
 			setSelectAll(false)
-			toast.success(`${ids.length} record(s) deleted successfully`)
 		} catch (error) {
 			handleAPIError(error)
 		}

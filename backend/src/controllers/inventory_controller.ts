@@ -1,79 +1,80 @@
-import { getDB } from '../db/database.ts'
-import db from '../db/database'
+import { Context } from 'elysia'
+import { InventoryRepository } from '../db/inventory_repository'
 
-interface TableInfo {
-	name: string
-	schema: string
-	columns: ColumnInfo[]
-	endpoints: TableEndpoints
-}
+export class InventoryController {
+	private inventoryRepo: InventoryRepository
 
-interface ColumnInfo {
-	name: string
-	type: string
-	nullable: boolean
-	isPrimary: boolean
-}
-
-interface TableEndpoints {
-	get: string
-	create: string
-	update: string
-	delete: string
-}
-
-interface PragmaResult {
-	name: string
-	type: string
-	notnull: number
-	pk: number
-}
-
-// Get low inventory products
-export const getLowInventory = () => {
-	// TODO: Implement low inventory check
-	return {
-		success: true,
-		data: []
+	constructor() {
+		this.inventoryRepo = new InventoryRepository()
 	}
-}
 
-// Get all tables with their metadata
-export const getTables = () => {
-	try {
-		// Get all table names from the SQLite master table
-		const tables = db.query('SELECT name FROM sqlite_master WHERE type="table" AND name NOT LIKE "sqlite_%"').all() as {
-			name: string
-		}[]
-
-		// Get column information for each table
-		const tablesWithMetadata = tables.map(table => {
-			const columns = db.query(`PRAGMA table_info(${table.name})`).all() as PragmaResult[]
-
-			return {
-				name: table.name,
-				schema: 'public',
-				columns: columns.map(col => ({
-					name: col.name,
-					type: col.type.toLowerCase(),
-					nullable: !col.notnull,
-					isPrimary: !!col.pk
-				})),
-				endpoints: {
-					get: `/api/v1/tables/${table.name}`,
-					create: `/api/v1/tables/${table.name}`,
-					update: `/api/v1/tables/${table.name}/:id`,
-					delete: `/api/v1/tables/${table.name}/:id`
-				}
-			}
-		})
-
-		return {
-			success: true,
-			tables: tablesWithMetadata
+	async getTables() {
+		try {
+			return await this.inventoryRepo.getTables()
+		} catch (error) {
+			return new Response(JSON.stringify({ error: (error as Error).message }), { status: 500 })
 		}
-	} catch (error) {
-		console.error('Error fetching tables:', error)
-		throw new Error('Failed to fetch tables')
+	}
+
+	async getTableData({ params, query }: Context) {
+		const { table_name } = params
+		const { page = '1', limit = '10', filters, pause } = query as Record<string, string>
+
+		try {
+			const parsedFilters = filters ? JSON.parse(filters) : {}
+			const data = await this.inventoryRepo.fetchTableData(
+				table_name,
+				Number(page),
+				Number(limit),
+				parsedFilters,
+				pause === 'true'
+			)
+			return data
+		} catch (error) {
+			return new Response(JSON.stringify({ error: (error as Error).message }), { status: 500 })
+		}
+	}
+
+	async createTableRow({ params, body }: Context) {
+		const { table_name } = params
+		const { id, data } = body as { id?: string; data: Record<string, any> }
+
+		try {
+			const rowId = await this.inventoryRepo.createRow(table_name, { id, ...data })
+			return new Response(JSON.stringify({ id: rowId }), { status: 201 })
+		} catch (error) {
+			return new Response(JSON.stringify({ error: (error as Error).message }), { status: 400 })
+		}
+	}
+
+	async updateTableRow({ params, body }: Context) {
+		const { table_name } = params
+		const { id, data } = body as { id: string; data: Record<string, any> }
+
+		if (!id) return new Response(JSON.stringify({ error: 'ID is required for update' }), { status: 400 })
+		if (!data || Object.keys(data).length === 0) {
+			return new Response(JSON.stringify({ error: 'No data provided for update' }), { status: 400 })
+		}
+
+		try {
+			await this.inventoryRepo.updateRow(table_name, id, data)
+			return new Response(JSON.stringify({ message: 'Row updated' }), { status: 200 })
+		} catch (error) {
+			return new Response(JSON.stringify({ error: (error as Error).message }), { status: 400 })
+		}
+	}
+
+	async deleteTableRow({ params, body }: Context) {
+		const { table_name } = params
+		const { id } = body as { id: string }
+
+		if (!id) return new Response(JSON.stringify({ error: 'ID is required for deletion' }), { status: 400 })
+
+		try {
+			await this.inventoryRepo.deleteRow(table_name, id)
+			return new Response(null, { status: 204 })
+		} catch (error) {
+			return new Response(JSON.stringify({ error: (error as Error).message }), { status: 400 })
+		}
 	}
 }

@@ -3,8 +3,6 @@ import { cors } from '@elysiajs/cors'
 import { StatusCodes } from 'http-status-codes'
 import inventoryRoutes from './routes/inventory'
 import seedRoutes from './routes/seed'
-import qmPurposeRoutes from './domains/qm/routes/purpose.routes'
-import tableRoutes from './routes/tables'
 import { APIError, ErrorResponse } from './lib/errors'
 import './db/init'
 
@@ -93,7 +91,7 @@ const app = new Elysia()
 		timestamp: new Date().toISOString()
 	}))
 	// Mount routes
-	.group('/api', app => app.use(inventoryRoutes).use(seedRoutes).use(qmPurposeRoutes).use(tableRoutes))
+	.group('/api', app => app.use(inventoryRoutes).use(seedRoutes))
 
 // Start the server
 app.listen(port, () => {

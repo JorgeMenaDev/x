@@ -1,84 +1,49 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createTablesRepository } from '../../../repositories'
-import { queryKeys } from '../../../lib/query-keys'
-import { TablesRepository } from '../../../repositories/inventory/tables-repository'
+import { FilterValue } from '../../../repositories/inventory/tables-repository'
 import { TableRecord } from '../../../models/inventory/table'
 import { toast } from 'sonner'
 
 /**
- * Hook for fetching data from a specific table
+ * Hook for fetching data from a specific table with support for pagination, filtering, and pausing
  * @param tableName The name of the table to fetch data from
- * @param page The page number to fetch
- * @param limit The number of records per page
+ * @param params Optional parameters for pagination, filtering, and pausing
  */
-export function useTableData(tableName: string, page: number = 1, limit: number = 100) {
+export function useTableData<T = TableRecord>(
+	tableName: string,
+	params?: {
+		page?: number
+		limit?: number
+		filters?: Record<string, FilterValue>
+		pause?: boolean
+	}
+) {
 	const tablesRepository = createTablesRepository()
+	const { page = 1, limit = 10, filters = {}, pause = false } = params || {}
 
 	return useQuery({
-		queryKey: getQueryKey(tableName, page, limit),
-		queryFn: () => fetchTableData(tablesRepository, tableName, page, limit),
-		enabled: !!tableName
+		queryKey: ['tableData', tableName, page, limit, filters, pause],
+		queryFn: () => tablesRepository.getTableData<T>(tableName, { page, limit, filters, pause }),
+		enabled: !!tableName && !pause,
+		staleTime: 60 * 1000 // 1 minute
 	})
 }
 
 /**
- * Helper function to get the appropriate query key based on the table name
+ * Hook for creating a new table row
  */
-function getQueryKey(tableName: string, page: number, limit: number) {
-	if (tableName === 'qm_purpose') {
-		return queryKeys.inventory.tables.qmPurpose.list(page, limit)
-	}
-
-	return ['tableData', tableName, page, limit]
-}
-
-/**
- * Helper function to fetch data from the appropriate endpoint based on the table name
- */
-async function fetchTableData(repository: TablesRepository, tableName: string, page: number, limit: number) {
-	if (tableName === 'qm_purpose') {
-		return repository.getQmPurposeRecords(page, limit)
-	}
-
-	// For other tables, we'll need to implement generic table data fetching
-	// This would be expanded as more table-specific endpoints are added
-	throw new Error(`Fetching data for table ${tableName} is not yet implemented`)
-}
-
-/**
- * Hook for fetching table records
- */
-export function useTableRecords<T = TableRecord>(tableName: string, page: number = 1, limit: number = 100) {
-	const tablesRepository = createTablesRepository()
-
-	return useQuery({
-		queryKey: queryKeys.tables.records(tableName, page, limit),
-		queryFn: () => tablesRepository.getTableRecords<T>(tableName, page, limit),
-		enabled: !!tableName
-	})
-}
-
-/**
- * Hook for creating a new table record
- */
-export function useCreateTableRecord<T = TableRecord>(tableName: string, options?: { showSuccessToast?: boolean }) {
+export function useCreateTableRow<T = TableRecord>(tableName: string, options?: { showSuccessToast?: boolean }) {
 	const queryClient = useQueryClient()
 	const tablesRepository = createTablesRepository()
 
 	return useMutation({
-		mutationFn: async (data: Partial<T>) => {
-			console.log('Mutation received data:', data)
-			// Use the specific endpoint for qm_purpose table
-			const result = await (tableName === 'qm_purpose'
-				? tablesRepository.createQmPurposeRecord(data)
-				: tablesRepository.createTableRecord<T>(tableName, data))
-			console.log('Mutation result:', result)
-			return result
+		mutationFn: async ({ data, id }: { data: Record<string, FilterValue | unknown>; id?: string }) => {
+			return tablesRepository.createTableRow<T>(tableName, data, id)
 		},
 		onSuccess: () => {
 			// Invalidate queries
 			queryClient.invalidateQueries({
-				queryKey: queryKeys.tables.all(tableName)
+				queryKey: ['tableData', tableName]
 			})
 
 			// Show success toast if enabled
@@ -90,41 +55,47 @@ export function useCreateTableRecord<T = TableRecord>(tableName: string, options
 }
 
 /**
- * Hook for updating an existing table record
+ * Hook for updating an existing table row
  */
-export function useUpdateTableRecord<T = TableRecord>(tableName: string) {
+export function useUpdateTableRow<T = TableRecord>(tableName: string, options?: { showSuccessToast?: boolean }) {
 	const queryClient = useQueryClient()
 	const tablesRepository = createTablesRepository()
 
 	return useMutation({
-		mutationFn: ({ id, data }: { id: string; data: Partial<T> }) => {
-			// Send the data directly without nesting
-			return tablesRepository.updateTableRecord<T>(tableName, id, data)
+		mutationFn: ({ id, data }: { id: string; data: Record<string, FilterValue | unknown> }) => {
+			return tablesRepository.updateTableRow<T>(tableName, id, data)
 		},
-		onSuccess: (_, variables) => {
+		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: queryKeys.tables.record(tableName, variables.id)
+				queryKey: ['tableData', tableName]
 			})
-			queryClient.invalidateQueries({
-				queryKey: queryKeys.tables.all(tableName)
-			})
+
+			// Show success toast if enabled
+			if (options?.showSuccessToast) {
+				toast.success('Row updated successfully')
+			}
 		}
 	})
 }
 
 /**
- * Hook for deleting a table record
+ * Hook for deleting a table row
  */
-export function useDeleteTableRecord(tableName: string) {
+export function useDeleteTableRow(tableName: string, options?: { showSuccessToast?: boolean }) {
 	const queryClient = useQueryClient()
 	const tablesRepository = createTablesRepository()
 
 	return useMutation({
-		mutationFn: (id: string) => tablesRepository.deleteTableRecord(tableName, id),
+		mutationFn: (id: string) => tablesRepository.deleteTableRow(tableName, id),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
-				queryKey: queryKeys.tables.all(tableName)
+				queryKey: ['tableData', tableName]
 			})
+
+			// Show success toast if enabled
+			if (options?.showSuccessToast) {
+				toast.success('Row deleted successfully')
+			}
 		}
 	})
 }

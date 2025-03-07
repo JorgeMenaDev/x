@@ -30,7 +30,7 @@ export class BaseHttpRepository {
 	/**
 	 * Makes a DELETE request to the specified endpoint
 	 */
-	protected async delete<T>(path: string): Promise<T> {
-		return typedApi.delete<T>(new URL(path, this.baseUrl).toString())
+	protected async delete<T>(path: string, body?: unknown): Promise<T> {
+		return typedApi.delete<T>(new URL(path, this.baseUrl).toString(), { data: body })
 	}
 }

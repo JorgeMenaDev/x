@@ -7,6 +7,7 @@ import * as z from 'zod'
 import { submitModelData } from '@/lib/actions'
 import { PlusCircle, Trash2 } from 'lucide-react'
 import { useSeparateModelReferenceData } from '@/hooks/useModelReferenceData'
+import { useAssetClassFilter } from '@/hooks/useAssetClassFilter'
 
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -74,6 +75,14 @@ export default function ModelReferenceForm() {
 		name: 'modelUses'
 	})
 
+	// Get the current purpose value for filtering
+	const purposeValue = form.watch('purpose')
+	console.log('Current purpose value:', purposeValue)
+
+	// Use the hook to filter asset classes based on the selected purpose
+	const filteredAssetClasses = useAssetClassFilter(modelReferenceData, purposeValue)
+	console.log('Filtered asset classes result:', filteredAssetClasses)
+
 	// Helper functions to get filtered options based on relationships
 	const getFilteredUses = (purposeId: string) => {
 		if (!modelReferenceData || !purposeId) return []
@@ -85,20 +94,6 @@ export default function ModelReferenceForm() {
 		const useIds = purposeToUseRelations.map(relation => relation.use_id.toString())
 
 		return modelReferenceData.Uses.filter(use => useIds.includes(use.use_id.toString()))
-	}
-
-	const getFilteredAssetClasses = (purposeId: string) => {
-		if (!modelReferenceData || !purposeId) return []
-
-		const purposeToAssetClassRelations = modelReferenceData.model_reference_data_level2.PurposeToAssetClass.filter(
-			relation => relation.purpose_id.toString() === purposeId
-		)
-
-		const assetClassIds = purposeToAssetClassRelations.map(relation => relation.assetclass_id.toString())
-
-		return modelReferenceData.AssetClass.filter(assetClass =>
-			assetClassIds.includes(assetClass.assetclass_id.toString())
-		)
 	}
 
 	// Helper functions to get names for display
@@ -189,14 +184,12 @@ export default function ModelReferenceForm() {
 		)
 	}
 
-	// Get the current purpose value for filtering
-	const purposeValue = form.watch('purpose')
-
 	return (
 		<Tabs defaultValue='entry' className='w-full'>
-			<TabsList className='grid w-full grid-cols-2'>
+			<TabsList className='grid w-full grid-cols-3'>
 				<TabsTrigger value='entry'>Model Entry</TabsTrigger>
 				<TabsTrigger value='preview'>Preview</TabsTrigger>
+				<TabsTrigger value='debug'>Debug</TabsTrigger>
 			</TabsList>
 			<TabsContent value='entry'>
 				<Card>
@@ -414,11 +407,21 @@ export default function ModelReferenceForm() {
 																	</SelectTrigger>
 																</FormControl>
 																<SelectContent>
-																	{getFilteredAssetClasses(purposeValue).map(asset => (
-																		<SelectItem key={asset.assetclass_id} value={asset.assetclass_id.toString()}>
-																			{asset.assetclass}
-																		</SelectItem>
-																	))}
+																	{Array.isArray(filteredAssetClasses) && filteredAssetClasses.length > 0
+																		? filteredAssetClasses.map(
+																				(asset: { assetclass_id: number; assetclass: string }) => (
+																					<SelectItem key={asset.assetclass_id} value={asset.assetclass_id.toString()}>
+																						{asset.assetclass}
+																					</SelectItem>
+																				)
+																		  )
+																		: modelReferenceData?.AssetClass?.map(
+																				(asset: { assetclass_id: number; assetclass: string }) => (
+																					<SelectItem key={asset.assetclass_id} value={asset.assetclass_id.toString()}>
+																						{asset.assetclass}
+																					</SelectItem>
+																				)
+																		  )}
 																</SelectContent>
 															</Select>
 															<FormMessage />
@@ -532,6 +535,37 @@ export default function ModelReferenceForm() {
 										))}
 									</TableBody>
 								</Table>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+			</TabsContent>
+
+			<TabsContent value='debug'>
+				<Card>
+					<CardContent className='pt-6 space-y-4'>
+						<h3 className='text-lg font-medium'>Debug Information</h3>
+
+						<div className='space-y-2'>
+							<h4 className='font-medium'>Selected Purpose:</h4>
+							<div className='bg-gray-100 p-2 rounded'>{purposeValue || 'None'}</div>
+						</div>
+
+						<div className='space-y-2'>
+							<h4 className='font-medium'>Filtered Asset Classes:</h4>
+							<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
+								<pre>{JSON.stringify(filteredAssetClasses, null, 2)}</pre>
+							</div>
+						</div>
+
+						<div className='space-y-2'>
+							<h4 className='font-medium'>Purpose to Asset Class Relations:</h4>
+							<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
+								<pre>
+									{modelReferenceData
+										? JSON.stringify(modelReferenceData.model_reference_data_level2.PurposeToAssetClass, null, 2)
+										: 'No data available'}
+								</pre>
 							</div>
 						</div>
 					</CardContent>

@@ -25,7 +25,19 @@ export function useTableData<T = TableRecord>(
 		queryKey: ['tableData', tableName, page, limit, filters, pause],
 		queryFn: () => tablesRepository.getTableData<T>(tableName, { page, limit, filters, pause }),
 		enabled: !!tableName && !pause,
-		staleTime: 60 * 1000 // 1 minute
+		staleTime: 60 * 1000, // 1 minute,
+
+		select: data => {
+			return {
+				...data,
+				data: data.data.map(row => {
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
+					const { created_at, updated_at, ...rest } = row as Record<string, unknown>
+
+					return { ...rest }
+				})
+			}
+		}
 	})
 }
 

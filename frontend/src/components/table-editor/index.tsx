@@ -29,12 +29,14 @@ export function TableEditor() {
 	const selectedTableMetadata = tablesResponse?.tables.find(t => t.name === selectedTable)
 
 	// Add UI-specific column properties
-	const tableColumns: TableColumn[] =
-		selectedTableMetadata?.columns.map(col => ({
-			...col,
-			sortable: true // Make all columns sortable by default
-		})) || []
-
+	const tableColumns: TableColumn[] = selectedTableMetadata?.columns
+		.map(col => {
+			if (col.name === 'created_at' || col.name === 'updated_at') {
+				return null
+			}
+			return col
+		})
+		.filter(Boolean) as TableColumn[]
 	// Fetch data for the selected table
 	const {
 		data: tableDataResponse,

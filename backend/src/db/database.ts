@@ -13,7 +13,7 @@ export function initDatabase() {
 		// Create qm_purpose table if it doesn't exist
 		db.run(`
 			CREATE TABLE IF NOT EXISTS qm_purpose (
-				id TEXT PRIMARY KEY,
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				text TEXT NOT NULL,
 				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 				updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -75,7 +75,7 @@ export function initDatabase() {
 		// Purpose to Use relationship table
 		db.run(`
 			CREATE TABLE IF NOT EXISTS qm_purpose_to_use (
-				id TEXT PRIMARY KEY,
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				purpose_id INTEGER NOT NULL,
 				use_id INTEGER NOT NULL,
 				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -89,7 +89,7 @@ export function initDatabase() {
 		// Subgroup to Use relationship table
 		db.run(`
 			CREATE TABLE IF NOT EXISTS qm_subgroup_to_use (
-				id TEXT PRIMARY KEY,
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				subgroup_id INTEGER NOT NULL,
 				use_id INTEGER NOT NULL,
 				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -103,7 +103,7 @@ export function initDatabase() {
 		// Purpose to AssetClass relationship table
 		db.run(`
 			CREATE TABLE IF NOT EXISTS qm_purpose_to_asset_class (
-				id TEXT PRIMARY KEY,
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				purpose_id INTEGER NOT NULL,
 				assetclass_id INTEGER NOT NULL,
 				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -219,35 +219,31 @@ export function seedDatabase(force = false) {
 			const now = new Date().toISOString()
 			const seedData = [
 				{
-					id: generateUUID(),
 					text: 'Risk Management',
 					created_at: now,
 					updated_at: now
 				},
 				{
-					id: generateUUID(),
 					text: 'Portfolio Optimization',
 					created_at: now,
 					updated_at: now
 				},
 				{
-					id: generateUUID(),
 					text: 'Compliance',
 					created_at: now,
 					updated_at: now
 				},
 				{
-					id: generateUUID(),
 					text: 'Market Analysis',
 					created_at: now,
 					updated_at: now
 				}
 			]
 
-			const stmt = db.prepare('INSERT INTO qm_purpose (id, text, created_at, updated_at) VALUES (?, ?, ?, ?)')
+			const stmt = db.prepare('INSERT INTO qm_purpose (text, created_at, updated_at) VALUES (?, ?, ?)')
 
 			for (const item of seedData) {
-				stmt.run(item.id, item.text, item.created_at, item.updated_at)
+				stmt.run(item.text, item.created_at, item.updated_at)
 			}
 			console.log('Seeded qm_purpose data')
 		}
@@ -263,7 +259,7 @@ export function seedDatabase(force = false) {
 
 			if (purposeCount?.count > 0 && usesCount?.count > 0) {
 				// Seed PurposeToUse relationships
-				const purposeToUseStmt = db.prepare('INSERT INTO qm_purpose_to_use (id, purpose_id, use_id) VALUES (?, ?, ?)')
+				const purposeToUseStmt = db.prepare('INSERT INTO qm_purpose_to_use (purpose_id, use_id) VALUES (?, ?)')
 
 				// Track inserted combinations to avoid duplicates
 				const insertedCombinations = new Set<string>()
@@ -282,7 +278,7 @@ export function seedDatabase(force = false) {
 
 					// Only insert if IDs exist and combination hasn't been inserted yet
 					if (purposeExists?.count > 0 && useExists?.count > 0 && !insertedCombinations.has(combinationKey)) {
-						purposeToUseStmt.run(generateUUID(), item.purpose_id, item.use_id)
+						purposeToUseStmt.run(item.purpose_id, item.use_id)
 						insertedCombinations.add(combinationKey)
 					} else if (!purposeExists?.count || !useExists?.count) {
 						console.warn(
@@ -299,9 +295,7 @@ export function seedDatabase(force = false) {
 
 			if (subgroupCount?.count > 0 && usesCount?.count > 0) {
 				// Seed SubgroupToUse relationships
-				const subgroupToUseStmt = db.prepare(
-					'INSERT INTO qm_subgroup_to_use (id, subgroup_id, use_id) VALUES (?, ?, ?)'
-				)
+				const subgroupToUseStmt = db.prepare('INSERT INTO qm_subgroup_to_use (subgroup_id, use_id) VALUES (?, ?)')
 
 				// Track inserted combinations to avoid duplicates
 				const insertedCombinations = new Set<string>()
@@ -320,7 +314,7 @@ export function seedDatabase(force = false) {
 
 					// Only insert if IDs exist and combination hasn't been inserted yet
 					if (subgroupExists?.count > 0 && useExists?.count > 0 && !insertedCombinations.has(combinationKey)) {
-						subgroupToUseStmt.run(generateUUID(), item.subgroup_id, item.use_id)
+						subgroupToUseStmt.run(item.subgroup_id, item.use_id)
 						insertedCombinations.add(combinationKey)
 					} else if (!subgroupExists?.count || !useExists?.count) {
 						console.warn(
@@ -338,7 +332,7 @@ export function seedDatabase(force = false) {
 			if (purposeCount?.count > 0 && assetClassCount?.count > 0) {
 				// Seed PurposeToAssetClass relationships
 				const purposeToAssetClassStmt = db.prepare(
-					'INSERT INTO qm_purpose_to_asset_class (id, purpose_id, assetclass_id) VALUES (?, ?, ?)'
+					'INSERT INTO qm_purpose_to_asset_class (purpose_id, assetclass_id) VALUES (?, ?)'
 				)
 
 				// Track inserted combinations to avoid duplicates
@@ -358,7 +352,7 @@ export function seedDatabase(force = false) {
 
 					// Only insert if IDs exist and combination hasn't been inserted yet
 					if (purposeExists?.count > 0 && assetClassExists?.count > 0 && !insertedCombinations.has(combinationKey)) {
-						purposeToAssetClassStmt.run(generateUUID(), item.purpose_id, item.assetclass_id)
+						purposeToAssetClassStmt.run(item.purpose_id, item.assetclass_id)
 						insertedCombinations.add(combinationKey)
 					} else if (!purposeExists?.count || !assetClassExists?.count) {
 						console.warn(

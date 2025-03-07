@@ -96,9 +96,19 @@ export class InventoryRepository {
 	}
 
 	async createRow(tableName: string, data: Record<string, any>) {
-		// Generate a UUID for "id" if not provided
-		if (!data.id) {
+		// Check if the table has an INTEGER PRIMARY KEY (auto-increment)
+		const tableInfo = this.db.query(`PRAGMA table_info(${tableName})`).all() as PragmaResult[]
+		const primaryKeyColumn = tableInfo.find(col => col.pk === 1)
+		const isAutoIncrement = primaryKeyColumn && primaryKeyColumn.type.toUpperCase() === 'INTEGER'
+
+		// Only generate a UUID for "id" if not provided and not auto-increment
+		if (!data.id && !isAutoIncrement) {
 			data.id = uuidv4()
+		}
+
+		// Remove id from data if it's null/undefined and the table has auto-increment
+		if (data.id === undefined && isAutoIncrement) {
+			delete data.id
 		}
 
 		// Set timestamps to current time if not provided
@@ -110,6 +120,11 @@ export class InventoryRepository {
 			data.updated_at = now
 		}
 
+		// Skip if no columns left after filtering
+		if (Object.keys(data).length === 0) {
+			throw new Error('No valid columns to insert')
+		}
+
 		const columns = Object.keys(data).join(', ')
 		const placeholders = Object.keys(data)
 			.map(() => '?')
@@ -117,7 +132,9 @@ export class InventoryRepository {
 		const query = `INSERT INTO ${tableName} (${columns}) VALUES (${placeholders})`
 		const statement = this.db.prepare(query)
 		const result = statement.run(...Object.values(data))
-		return data.id || result.lastInsertRowid?.toString() // Fallback to provided ID or last inserted ID
+
+		// Return the ID (either provided, or the auto-generated one)
+		return data.id || result.lastInsertRowid?.toString()
 	}
 
 	async updateRow(tableName: string, id: string, data: Record<string, any>) {

@@ -11,7 +11,7 @@ export function useServerHealth(interval = 30000) {
 	return useQuery({
 		queryKey: ['serverHealth'],
 		queryFn: async () => {
-			const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/health`)
+			const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/health`)
 
 			if (!response.ok) {
 				throw new Error('Server health check failed')

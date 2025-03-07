@@ -1,4 +1,4 @@
-import { TableColumn as BaseTableColumn, TableRecord } from '../../models/inventory/table'
+import { TableColumn as BaseTableColumn, TableRecord } from '../../db/models/inventory/table'
 
 /**
  * Extends the base table column with UI-specific properties

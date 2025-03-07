@@ -9,7 +9,7 @@ import { APIError, ErrorResponse } from './lib/errors'
 import './db/init'
 
 // Load environment variables - Bun has built-in support for .env files
-const port = Number(Bun.env.PORT) || 3000
+const port = Number(Bun.env.PORT) || 8000
 const allowedOrigins = Bun.env.ALLOWED_ORIGINS?.split(',') || ['*']
 
 console.log('Allowed origins:', allowedOrigins)

@@ -17,7 +17,7 @@ COPY . .
 ENV NODE_ENV=production
 
 # Expose the port
-EXPOSE 3000
+EXPOSE 8000
 
 # Start the server
 CMD ["bun", "run", "start"]

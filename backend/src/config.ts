@@ -1,6 +1,6 @@
 // Bun automatically loads .env files
 const config = {
-	port: Number(Bun.env.PORT) || 3000,
+	port: Number(Bun.env.PORT) || 8000,
 	dbPath: Bun.env.DB_PATH || 'data/database.sqlite',
 	allowedOrigins: Bun.env.ALLOWED_ORIGINS?.split(',') || ['*'],
 	environment: Bun.env.NODE_ENV || 'development',

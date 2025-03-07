@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { createTablesRepository } from '../../../repositories'
+import { getTablesRepository } from '@/db'
 import { queryKeys } from '../../../lib/query-keys'
-import { QmPurposeResponse } from '../../../models/inventory/table'
+import { QmPurposeResponse } from '../../../db/models/inventory/table'
 
 /**
  * Hook for fetching qm_purpose records
@@ -9,7 +9,7 @@ import { QmPurposeResponse } from '../../../models/inventory/table'
  * @param limit The number of records per page
  */
 export function useQmPurposeRecords(page: number = 1, limit: number = 100) {
-	const tablesRepository = createTablesRepository()
+	const tablesRepository = getTablesRepository()
 
 	return useQuery<QmPurposeResponse>({
 		queryKey: queryKeys.inventory.tables.qmPurpose.list(page, limit),

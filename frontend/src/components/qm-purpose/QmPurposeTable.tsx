@@ -1,15 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { useQmPurposeRecords } from '../../hooks/inventory/tables/use-qm-purpose-records'
 import {
-	useCreateQmPurposeRecord,
-	useDeleteQmPurposeRecord,
-	useUpdateQmPurposeRecord
-} from '../../hooks/inventory/tables/use-qm-purpose'
+	useTableData,
+	useCreateTableRow,
+	useUpdateTableRow,
+	useDeleteTableRow
+} from '../../hooks/inventory/tables/use-table-data'
+import { QmPurpose } from '../../models/inventory/table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Loader2, Plus, Trash2, Edit, Save, X } from 'lucide-react'
+
+const TABLE_NAME = 'qm_purpose'
 
 export function QmPurposeTable() {
 	const [page, setPage] = useState(1)
@@ -19,17 +22,17 @@ export function QmPurposeTable() {
 	const [editText, setEditText] = useState('')
 
 	// Fetch qm_purpose records
-	const { data, isLoading, isError } = useQmPurposeRecords(page, limit)
+	const { data, isLoading, isError } = useTableData<QmPurpose>(TABLE_NAME, { page, limit })
 
 	// Mutations
-	const createMutation = useCreateQmPurposeRecord()
-	const updateMutation = useUpdateQmPurposeRecord()
-	const deleteMutation = useDeleteQmPurposeRecord()
+	const createRow = useCreateTableRow<QmPurpose>(TABLE_NAME, { showSuccessToast: true })
+	const updateRow = useUpdateTableRow<QmPurpose>(TABLE_NAME, { showSuccessToast: true })
+	const deleteRow = useDeleteTableRow(TABLE_NAME, { showSuccessToast: true })
 
 	// Handle create
 	const handleCreate = () => {
 		if (newText.trim()) {
-			createMutation.mutate({ text: newText.trim() })
+			createRow.mutate({ data: { text: newText.trim() } })
 			setNewText('')
 		}
 	}
@@ -37,7 +40,7 @@ export function QmPurposeTable() {
 	// Handle update
 	const handleUpdate = (id: string) => {
 		if (editText.trim()) {
-			updateMutation.mutate({ id, data: { text: editText.trim() } })
+			updateRow.mutate({ id, data: { text: editText.trim() } })
 			setEditingId(null)
 			setEditText('')
 		}
@@ -46,7 +49,7 @@ export function QmPurposeTable() {
 	// Handle delete
 	const handleDelete = (id: string) => {
 		if (confirm('Are you sure you want to delete this record?')) {
-			deleteMutation.mutate(id)
+			deleteRow.mutate(id)
 		}
 	}
 
@@ -87,12 +90,8 @@ export function QmPurposeTable() {
 					onChange={e => setNewText(e.target.value)}
 					className='flex-1'
 				/>
-				<Button onClick={handleCreate} disabled={!newText.trim() || createMutation.isPending}>
-					{createMutation.isPending ? (
-						<Loader2 className='h-4 w-4 animate-spin mr-2' />
-					) : (
-						<Plus className='h-4 w-4 mr-2' />
-					)}
+				<Button onClick={handleCreate} disabled={!newText.trim() || createRow.isPending}>
+					{createRow.isPending ? <Loader2 className='h-4 w-4 animate-spin mr-2' /> : <Plus className='h-4 w-4 mr-2' />}
 					Add
 				</Button>
 			</div>
@@ -129,9 +128,9 @@ export function QmPurposeTable() {
 												size='sm'
 												variant='ghost'
 												onClick={() => handleUpdate(record.id)}
-												disabled={updateMutation.isPending}
+												disabled={updateRow.isPending}
 											>
-												{updateMutation.isPending ? (
+												{updateRow.isPending ? (
 													<Loader2 className='h-4 w-4 animate-spin' />
 												) : (
 													<Save className='h-4 w-4' />
@@ -151,9 +150,9 @@ export function QmPurposeTable() {
 												variant='ghost'
 												className='text-red-500 hover:text-red-700'
 												onClick={() => handleDelete(record.id)}
-												disabled={deleteMutation.isPending}
+												disabled={deleteRow.isPending}
 											>
-												{deleteMutation.isPending && deleteMutation.variables === record.id ? (
+												{deleteRow.isPending && deleteRow.variables === record.id ? (
 													<Loader2 className='h-4 w-4 animate-spin' />
 												) : (
 													<Trash2 className='h-4 w-4' />

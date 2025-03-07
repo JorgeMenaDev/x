@@ -84,7 +84,7 @@ export interface ModelReferenceData {
  * @returns The data from the table
  */
 export async function fetchTableData<T>(tableName: string, limit: number = 100): Promise<T[]> {
-	const response = await fetch(`${API_BASE_URL}/v1/inventory/data/${tableName}?limit=${limit}`)
+	const response = await fetch(`${API_BASE_URL}/api/v1/inventory/data/${tableName}?limit=${limit}`)
 
 	if (!response.ok) {
 		throw new Error(`Failed to fetch data from ${tableName}: ${response.statusText}`)

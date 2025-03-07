@@ -11,14 +11,14 @@ db.run('PRAGMA foreign_keys = ON')
 export function initDatabase() {
 	try {
 		// Create qm_purpose table if it doesn't exist
-		db.run(`
-			CREATE TABLE IF NOT EXISTS qm_purpose (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				text TEXT NOT NULL,
-				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-				updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-			)
-		`)
+		// db.run(`
+		// 	CREATE TABLE IF NOT EXISTS qm_purpose (
+		// 		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		// 		text TEXT NOT NULL,
+		// 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		// 		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		// 	)
+		// `)
 
 		// Create qm_model_type table
 		db.run(`
@@ -137,7 +137,7 @@ export function resetAndSeedDatabase() {
 export function seedDatabase(force = false) {
 	try {
 		// Import reference data
-		const modelReferenceData = require('../../data/modelReferenceData.json')
+		const modelReferenceData = require('../../scripts/modelReferenceData.json')
 
 		// Clear existing data if force is true
 		if (force) {
@@ -152,11 +152,10 @@ export function seedDatabase(force = false) {
 			db.run('DELETE FROM qm_uses')
 			db.run('DELETE FROM qm_asset_class')
 			db.run('DELETE FROM qm_subgroup')
-			db.run('DELETE FROM qm_purpose')
 		}
 
 		// Check if tables are empty
-		const qmPurposeCount = db.prepare('SELECT COUNT(*) as count FROM qm_purpose').get() as { count: number }
+		// const qmPurposeCount = db.prepare('SELECT COUNT(*) as count FROM qm_purpose').get() as { count: number }
 		const qmModelTypeCount = db.prepare('SELECT COUNT(*) as count FROM qm_model_type').get() as { count: number }
 		const qmModelPurposeCount = db.prepare('SELECT COUNT(*) as count FROM qm_model_purpose').get() as { count: number }
 		const qmUsesCount = db.prepare('SELECT COUNT(*) as count FROM qm_uses').get() as { count: number }
@@ -213,40 +212,39 @@ export function seedDatabase(force = false) {
 			console.log('Seeded Subgroup data')
 		}
 
-		// Seed qm_purpose data
-		if (qmPurposeCount?.count === 0 || force) {
-			// Add seed data for qm_purpose
-			const now = new Date().toISOString()
-			const seedData = [
-				{
-					text: 'Risk Management',
-					created_at: now,
-					updated_at: now
-				},
-				{
-					text: 'Portfolio Optimization',
-					created_at: now,
-					updated_at: now
-				},
-				{
-					text: 'Compliance',
-					created_at: now,
-					updated_at: now
-				},
-				{
-					text: 'Market Analysis',
-					created_at: now,
-					updated_at: now
-				}
-			]
+		// // Seed qm_purpose data
+		// if (qmPurposeCount?.count === 0 || force) {
+		// 	// Add seed data for qm_purpose
+		// 	const now = new Date().toISOString()
+		// 	const seedData = [
+		// 		{
+		// 			text: 'Risk Management',
+		// 			created_at: now,
+		// 			updated_at: now
+		// 		},
+		// 		{
+		// 			text: 'Portfolio Optimization',
+		// 			created_at: now,
+		// 			updated_at: now
+		// 		},
+		// 		{
+		// 			text: 'Compliance',
+		// 			created_at: now,
+		// 			updated_at: now
+		// 		},
+		// 		{
+		// 			text: 'Market Analysis',
+		// 			created_at: now,
+		// 			updated_at: now
+		// 		}
+		// 	]
 
-			const stmt = db.prepare('INSERT INTO qm_purpose (text, created_at, updated_at) VALUES (?, ?, ?)')
+		// 	// const stmt = db.prepare('INSERT INTO qm_purpose (text, created_at, updated_at) VALUES (?, ?, ?)')
 
-			for (const item of seedData) {
-				stmt.run(item.text, item.created_at, item.updated_at)
-			}
-			console.log('Seeded qm_purpose data')
-		}
+		// 	for (const item of seedData) {
+		// 		stmt.run(item.text, item.created_at, item.updated_at)
+		// 	}
+		// }
 
 		// Now seed relationship tables after all main tables are populated
 		// Seed PurposeToUse relationships
@@ -372,7 +370,7 @@ export function seedDatabase(force = false) {
 			success: true,
 			message: 'Database seeded successfully',
 			counts: {
-				qm_purpose: qmPurposeCount?.count || 0,
+				// qm_purpose: qmPurposeCount?.count || 0,
 				qm_model_type: qmModelTypeCount?.count || 0,
 				qm_model_purpose: qmModelPurposeCount?.count || 0,
 				qm_uses: qmUsesCount?.count || 0,

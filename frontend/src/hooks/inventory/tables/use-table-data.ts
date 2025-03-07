@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createTablesRepository } from '../../../db/repositories'
+import { getTablesRepository } from '@/db'
 import { queryKeys } from '../../../lib/query-keys'
-import { TablesRepository } from '../../../db/repositories/inventory/tables-repository'
+import { TablesRepository } from '@/db'
 import { TableRecord } from '../../../db/models/inventory/table'
 import { toast } from 'sonner'
 
@@ -12,7 +12,7 @@ import { toast } from 'sonner'
  * @param limit The number of records per page
  */
 export function useTableData(tableName: string, page: number = 1, limit: number = 100) {
-	const tablesRepository = createTablesRepository()
+	const tablesRepository = getTablesRepository()
 
 	return useQuery({
 		queryKey: getQueryKey(tableName, page, limit),
@@ -49,7 +49,7 @@ async function fetchTableData(repository: TablesRepository, tableName: string, p
  * Hook for fetching table records
  */
 export function useTableRecords<T = TableRecord>(tableName: string, page: number = 1, limit: number = 100) {
-	const tablesRepository = createTablesRepository()
+	const tablesRepository = getTablesRepository()
 
 	return useQuery({
 		queryKey: queryKeys.tables.records(tableName, page, limit),
@@ -63,7 +63,7 @@ export function useTableRecords<T = TableRecord>(tableName: string, page: number
  */
 export function useCreateTableRecord<T = TableRecord>(tableName: string, options?: { showSuccessToast?: boolean }) {
 	const queryClient = useQueryClient()
-	const tablesRepository = createTablesRepository()
+	const tablesRepository = getTablesRepository()
 
 	return useMutation({
 		mutationFn: async (data: Partial<T>) => {
@@ -94,7 +94,7 @@ export function useCreateTableRecord<T = TableRecord>(tableName: string, options
  */
 export function useUpdateTableRecord<T = TableRecord>(tableName: string) {
 	const queryClient = useQueryClient()
-	const tablesRepository = createTablesRepository()
+	const tablesRepository = getTablesRepository()
 
 	return useMutation({
 		mutationFn: ({ id, data }: { id: string; data: Partial<T> }) => {
@@ -117,7 +117,7 @@ export function useUpdateTableRecord<T = TableRecord>(tableName: string) {
  */
 export function useDeleteTableRecord(tableName: string) {
 	const queryClient = useQueryClient()
-	const tablesRepository = createTablesRepository()
+	const tablesRepository = getTablesRepository()
 
 	return useMutation({
 		mutationFn: (id: string) => tablesRepository.deleteTableRecord(tableName, id),

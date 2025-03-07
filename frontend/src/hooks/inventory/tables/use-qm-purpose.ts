@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createTablesRepository } from '../../../db/repositories'
+import { getTablesRepository } from '@/db'
 import { queryKeys } from '../../../lib/query-keys'
 import { QmPurpose, QmPurposeResponse } from '../../../db/models/inventory/table'
 
@@ -7,7 +7,7 @@ import { QmPurpose, QmPurposeResponse } from '../../../db/models/inventory/table
  * Hook for fetching qm_purpose records
  */
 export function useQmPurposeRecords(page: number = 1, limit: number = 100) {
-	const tablesRepository = createTablesRepository()
+	const tablesRepository = getTablesRepository()
 
 	return useQuery<QmPurposeResponse>({
 		queryKey: queryKeys.inventory.tables.qmPurpose.list(page, limit),
@@ -20,7 +20,7 @@ export function useQmPurposeRecords(page: number = 1, limit: number = 100) {
  */
 export function useCreateQmPurposeRecord() {
 	const queryClient = useQueryClient()
-	const tablesRepository = createTablesRepository()
+	const tablesRepository = getTablesRepository()
 
 	return useMutation({
 		mutationFn: (data: Omit<QmPurpose, 'id' | 'created_at' | 'updated_at'>) =>
@@ -39,7 +39,7 @@ export function useCreateQmPurposeRecord() {
  */
 export function useUpdateQmPurposeRecord() {
 	const queryClient = useQueryClient()
-	const tablesRepository = createTablesRepository()
+	const tablesRepository = getTablesRepository()
 
 	return useMutation({
 		mutationFn: ({ id, data }: { id: string; data: Partial<Omit<QmPurpose, 'id' | 'created_at' | 'updated_at'>> }) =>
@@ -63,7 +63,7 @@ export function useUpdateQmPurposeRecord() {
  */
 export function useDeleteQmPurposeRecord() {
 	const queryClient = useQueryClient()
-	const tablesRepository = createTablesRepository()
+	const tablesRepository = getTablesRepository()
 
 	return useMutation({
 		mutationFn: (id: string) => tablesRepository.deleteQmPurposeRecord(id),

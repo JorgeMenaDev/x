@@ -1,5 +1,5 @@
 import { TablesResponse, TableDataResponse, TableRecord } from '../../../models/inventory/table'
-import { TablesRepository } from '../../../repositories/inventory/tables-repository'
+import { TablesRepository } from '@/db'
 import { BaseHttpRepository } from '../base-http-repository'
 
 /**

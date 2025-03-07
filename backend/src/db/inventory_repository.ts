@@ -1,4 +1,5 @@
 import { Database } from 'bun:sqlite'
+import { v4 as uuidv4 } from 'uuid'
 import config from '../config'
 
 interface TableInfo {
@@ -95,6 +96,20 @@ export class InventoryRepository {
 	}
 
 	async createRow(tableName: string, data: Record<string, any>) {
+		// Generate a UUID for "id" if not provided
+		if (!data.id) {
+			data.id = uuidv4()
+		}
+
+		// Set timestamps to current time if not provided
+		const now = new Date().toISOString()
+		if (!data.created_at) {
+			data.created_at = now
+		}
+		if (!data.updated_at) {
+			data.updated_at = now
+		}
+
 		const columns = Object.keys(data).join(', ')
 		const placeholders = Object.keys(data)
 			.map(() => '?')

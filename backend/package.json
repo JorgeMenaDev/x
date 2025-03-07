@@ -10,7 +10,8 @@
 	"dependencies": {
 		"@elysiajs/cors": "latest",
 		"elysia": "latest",
-		"http-status-codes": "latest"
+		"http-status-codes": "latest",
+		"uuid": "^11.1.0"
 	},
 	"devDependencies": {
 		"bun-types": "latest"

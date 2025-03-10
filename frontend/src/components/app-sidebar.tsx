@@ -33,6 +33,10 @@ const data = {
 				{
 					title: 'Create Model',
 					url: '/dashboard/models/new'
+				},
+				{
+					title: 'Model Explorer',
+					url: '/dashboard/models/explorer'
 				}
 			]
 		},

@@ -37,6 +37,10 @@ const data = {
 				{
 					title: 'Model Explorer',
 					url: '/dashboard/models/explorer'
+				},
+				{
+					title: 'Model Lifecycle',
+					url: '/dashboard/models/lifecycle'
 				}
 			]
 		},

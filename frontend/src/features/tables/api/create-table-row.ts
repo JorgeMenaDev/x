@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api-client'
 import { MutationConfig } from '@/lib/react-query'
-import { TableRecord } from '../types'
+import { TableRecord } from '../components/table-editor/types'
 import { getTableDataQueryOptions } from './get-table-data'
 
 export interface CreateTableRowData {

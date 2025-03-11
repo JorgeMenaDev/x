@@ -41,19 +41,6 @@ export function TableEditor() {
 		pause: !selectedTable
 	})
 
-	// Debug logs
-	console.log('Table Editor State:', {
-		selectedTable,
-		selectedSchema,
-		hasTableMetadata: !!selectedTableMetadata,
-		isLoadingTableData,
-		hasTableData: !!tableDataResponse,
-		columnsCount: tableColumns.length,
-		tableColumns,
-		error: tableDataError,
-		data: tableDataResponse?.data
-	})
-
 	// Mutations for table operations
 	const createRow = useCreateTableRow({
 		tableName: selectedTable

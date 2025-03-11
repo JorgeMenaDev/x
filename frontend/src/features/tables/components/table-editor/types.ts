@@ -1,7 +1,5 @@
 // import { TableColumn as BaseTableColumn, TableRecord } from '../../db/models/inventory/table'
 
-import { Table } from '../../types'
-
 interface BaseTableColumn {
 	name: string
 	type: string

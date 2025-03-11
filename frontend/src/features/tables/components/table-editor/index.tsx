@@ -109,21 +109,8 @@ export function TableEditor() {
 
 	const handleUpdateRow = async (id: string, data: Record<string, unknown>) => {
 		try {
-			console.log('TableEditor - handleUpdateRow received:', {
-				id,
-				data,
-				selectedTable,
-				tableColumns
-			})
-
 			// Convert unknown values to strings
 			const stringData = Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)]))
-
-			console.log('TableEditor - Calling mutateAsync with:', {
-				tableName: selectedTable,
-				id,
-				stringData
-			})
 
 			await updateRow.mutateAsync({
 				tableName: selectedTable,
@@ -132,6 +119,7 @@ export function TableEditor() {
 			})
 		} catch (error) {
 			console.error('Update error:', error)
+			// TODO: in theory api-client.ts should handle this
 			handleAPIError(error)
 		}
 	}

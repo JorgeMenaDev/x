@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Filter, SortAsc, Plus, ChevronDownIcon, Rows, FileText, Trash2, ChevronDown, FileOutput } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { InsertRowDrawer } from './InsertRowDrawer'
+import { InsertRowDrawer } from './insert-row-drawer'
 import type { TableToolbarProps } from '../types'
 
 export function TableToolbar({ selectedTable, columns, onInsertRow, selectedRows, onDeleteRows }: TableToolbarProps) {

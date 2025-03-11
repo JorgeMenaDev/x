@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
-import type { TableColumn } from '../types'
-import { TableRecord } from '@/features/tables/types'
+import type { TableColumn } from '../../../types'
+import { TableRecord } from '../types'
 import { useState } from 'react'
 
 interface InsertRowDrawerProps {

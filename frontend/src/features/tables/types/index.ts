@@ -47,13 +47,3 @@ export interface TableViewProps {
 	onSelectAll: (checked: boolean) => void
 	onUpdateRow?: (id: string, data: Record<string, unknown>) => void
 }
-
-export interface SidebarProps {
-	selectedSchema: string
-	selectedTable: string
-	tables: Table[]
-	onTableSelect: (tableName: string) => void
-	searchQuery: string
-	onSearchChange: (query: string) => void
-	isLoading?: boolean
-}

@@ -11,7 +11,6 @@ import { useCreateTableRow } from '../api/create-table-row'
 import { useUpdateTableRow } from '../api/update-table-row'
 import { useDeleteTableRow } from '../api/delete-table-row'
 import { handleAPIError } from '@/lib/errors'
-import type { TableColumn, TableRecord } from '../types'
 
 export function TableEditor() {
 	const [selectedSchema] = useState('public')
@@ -23,18 +22,12 @@ export function TableEditor() {
 	const { data: tablesResponse, isLoading: isLoadingTables } = useTables({})
 
 	// Get the selected table's metadata
-	const selectedTableMetadata = tablesResponse?.tables?.find(t => t === selectedTable)
+	const selectedTableMetadata = tablesResponse?.tables?.find(
+		t => t.schema === selectedSchema && t.name === selectedTable
+	)
 
-	// Add UI-specific column properties
-	const tableColumns: TableColumn[] = selectedTableMetadata
-		? [
-				{
-					name: 'id',
-					type: 'string',
-					isPrimary: true
-				}
-		  ]
-		: []
+	// Get columns from the table metadata
+	const tableColumns = selectedTableMetadata?.columns || []
 
 	// Fetch data for the selected table
 	const {
@@ -46,6 +39,19 @@ export function TableEditor() {
 		page: currentPage,
 		limit: rowsPerPage,
 		pause: !selectedTable
+	})
+
+	// Debug logs
+	console.log('Table Editor State:', {
+		selectedTable,
+		selectedSchema,
+		hasTableMetadata: !!selectedTableMetadata,
+		isLoadingTableData,
+		hasTableData: !!tableDataResponse,
+		columnsCount: tableColumns.length,
+		tableColumns,
+		error: tableDataError,
+		data: tableDataResponse?.data
 	})
 
 	// Mutations for table operations
@@ -75,7 +81,9 @@ export function TableEditor() {
 		if (selectAll) {
 			setSelectedRows(new Set())
 		} else {
-			const allIds = (tableDataResponse?.data || []).map(row => row.id)
+			// Find the primary key column
+			const primaryKeyColumn = tableColumns.find(col => col.isPrimary)?.name || 'id'
+			const allIds = (tableDataResponse?.data || []).map(row => String(row[primaryKeyColumn]))
 			setSelectedRows(new Set(allIds))
 		}
 		setSelectAll(!selectAll)

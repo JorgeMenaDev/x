@@ -6,19 +6,30 @@ export interface TableColumn {
 	isPrimary?: boolean
 }
 
-export interface TableRecord {
-	id: string
-	[key: string]: unknown
+export interface TableEndpoints {
+	get: string
+	create: string
+	update: string
+	delete: string
+}
+
+export interface Table {
+	name: string
+	schema: string
+	columns: TableColumn[]
+	endpoints: TableEndpoints
 }
 
 export interface TablesResponse {
-	tables: string[]
+	success: boolean
+	tables: Table[]
 }
 
 export interface TableDataResponse {
-	data: TableRecord[]
+	data: Record<string, unknown>[]
+	page: number
+	limit: number
 	total: number
-	columns: TableColumn[]
 }
 
 export interface FilterValue {
@@ -29,10 +40,20 @@ export interface FilterValue {
 
 export interface TableViewProps {
 	columns: TableColumn[]
-	data: TableRecord[]
+	data: Record<string, unknown>[]
 	selectedRows: Set<string>
 	onSelectRow: (id: string) => void
 	selectAll: boolean
 	onSelectAll: (checked: boolean) => void
 	onUpdateRow?: (id: string, data: Record<string, unknown>) => void
+}
+
+export interface SidebarProps {
+	selectedSchema: string
+	selectedTable: string
+	tables: Table[]
+	onTableSelect: (tableName: string) => void
+	searchQuery: string
+	onSearchChange: (query: string) => void
+	isLoading?: boolean
 }

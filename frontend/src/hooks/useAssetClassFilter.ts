@@ -1,4 +1,4 @@
-import { ModelReferenceData } from '@/lib/api'
+import { ModelReferenceData } from '@/lib/api-client'
 
 /**
  * Hook to filter asset classes based on the selected purpose

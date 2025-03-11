@@ -193,10 +193,6 @@ export default function ModelReferenceForm() {
 				<TabsList className='grid w-full grid-cols-2'>
 					<TabsTrigger value='entry'>Model Entry</TabsTrigger>
 					<TabsTrigger value='preview'>Preview</TabsTrigger>
-					{/* <TabsTrigger value='debug'>Debug</TabsTrigger> */}
-					{/* test
-					 */}
-					{/* test2 */}
 				</TabsList>
 				<TabsContent value='entry'>
 					<Card>
@@ -327,6 +323,7 @@ export default function ModelReferenceForm() {
 														user: ''
 													})
 												}
+												className='text-primary'
 											>
 												<PlusCircle className='mr-2 h-4 w-4' />
 												Add Use
@@ -334,7 +331,7 @@ export default function ModelReferenceForm() {
 										</div>
 
 										{fields.map((field, index) => (
-											<div key={field.id} className='p-4 border rounded-md mb-4'>
+											<div key={field.id} className='p-4 border rounded-md mb-4 bg-gray-50'>
 												<div className='flex justify-between items-center mb-4'>
 													<h4 className='font-medium'>Use Configuration {index + 1}</h4>
 													{index > 0 && (
@@ -350,7 +347,7 @@ export default function ModelReferenceForm() {
 													)}
 												</div>
 
-												<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+												<div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-4'>
 													<FormField
 														control={form.control}
 														name={`modelUses.${index}.subgroup`}
@@ -447,7 +444,8 @@ export default function ModelReferenceForm() {
 															</FormItem>
 														)}
 													/>
-
+												</div>
+												<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
 													<FormField
 														control={form.control}
 														name={`modelUses.${index}.execUsage`}
@@ -558,55 +556,6 @@ export default function ModelReferenceForm() {
 											))}
 										</TableBody>
 									</Table>
-								</div>
-							</div>
-						</CardContent>
-					</Card>
-				</TabsContent>
-
-				<TabsContent value='debug'>
-					<Card>
-						<CardContent className='pt-6 space-y-4'>
-							<h3 className='text-lg font-medium'>Debug Information</h3>
-
-							<div className='space-y-2'>
-								<h4 className='font-medium'>Selected Purpose:</h4>
-								<div className='bg-gray-100 p-2 rounded'>{purposeValue || 'None'}</div>
-							</div>
-
-							<div className='space-y-2'>
-								<h4 className='font-medium'>Filtered Asset Classes:</h4>
-								<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
-									<pre>{JSON.stringify(filteredAssetClasses, null, 2)}</pre>
-								</div>
-							</div>
-
-							<div className='space-y-2'>
-								<h4 className='font-medium'>Filtered Uses:</h4>
-								<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
-									<pre>{JSON.stringify(filteredUses, null, 2)}</pre>
-								</div>
-							</div>
-
-							<div className='space-y-2'>
-								<h4 className='font-medium'>Purpose to Asset Class Relations:</h4>
-								<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
-									<pre>
-										{modelReferenceData
-											? JSON.stringify(modelReferenceData.model_reference_data_level2.PurposeToAssetClass, null, 2)
-											: 'No data available'}
-									</pre>
-								</div>
-							</div>
-
-							<div className='space-y-2'>
-								<h4 className='font-medium'>Purpose to Use Relations:</h4>
-								<div className='bg-gray-100 p-2 rounded overflow-auto max-h-40'>
-									<pre>
-										{modelReferenceData
-											? JSON.stringify(modelReferenceData.model_reference_data_level2.PurposeToUse, null, 2)
-											: 'No data available'}
-									</pre>
 								</div>
 							</div>
 						</CardContent>

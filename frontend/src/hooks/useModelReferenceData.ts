@@ -10,7 +10,7 @@ import {
 	fetchSubgroupToUse,
 	fetchPurposeToAssetClass,
 	type ModelReferenceData
-} from '@/lib/api'
+} from '@/lib/api-client'
 
 /**
  * Hook for fetching all model reference data in a single query

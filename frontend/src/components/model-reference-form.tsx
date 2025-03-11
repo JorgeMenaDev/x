@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useFieldArray } from 'react-hook-form'
 import * as z from 'zod'
-import { PlusCircle, Trash2, Loader2 } from 'lucide-react'
+import { PlusCircle, Trash2, Loader2, Code as CodeIcon, X } from 'lucide-react'
 import { useSeparateModelReferenceData } from '@/hooks/useModelReferenceData'
 import { useAssetClassFilter } from '@/hooks/useAssetClassFilter'
 import { useUseFilter } from '@/hooks/useUseFilter'
@@ -17,6 +17,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Badge } from '@/components/ui/badge'
 
 // Define the form schema
 const formSchema = z.object({
@@ -48,6 +49,7 @@ export default function ModelReferenceForm() {
 	const { data: modelReferenceData, isLoading, isError, error } = useSeparateModelReferenceData()
 	const [submitting, setSubmitting] = useState(false)
 	const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+	const [showJsonModal, setShowJsonModal] = useState(false)
 
 	// Initialize the form
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -147,6 +149,26 @@ export default function ModelReferenceForm() {
 			alert(`Error: ${errorMessage}`)
 		} finally {
 			setSubmitting(false)
+		}
+	}
+
+	// Format data for JSON display
+	function getFormattedJsonData(values: z.infer<typeof formSchema>) {
+		// Convert string IDs back to numbers for the API
+		return {
+			uniqueReference: values.uniqueReference,
+			modelName: values.modelName,
+			modelType: Number.parseInt(values.modelType),
+			purpose: Number.parseInt(values.purpose),
+			owner: values.owner,
+			accountableExec: values.accountableExec,
+			modelUses: values.modelUses.map(use => ({
+				subgroup: Number.parseInt(use.subgroup),
+				use: Number.parseInt(use.use),
+				assetClass: Number.parseInt(use.assetClass),
+				execUsage: use.execUsage,
+				user: use.user
+			}))
 		}
 	}
 
@@ -570,18 +592,27 @@ export default function ModelReferenceForm() {
 						<h3 className='text-lg font-semibold mb-2 text-primary'>Confirm Submission</h3>
 						<p className='mb-4'>Are you sure you want to submit this model information?</p>
 						<div className='flex justify-end space-x-2'>
-							<button
-								className='px-4 py-2 border rounded-md hover:bg-gray-100'
-								onClick={() => setShowConfirmDialog(false)}
-								type='button'
-							>
+							<Button variant='outline' onClick={() => setShowConfirmDialog(false)} type='button'>
 								Cancel
-							</button>
-							<button
-								className='px-4 py-2 bg-primary	 text-white rounded-md hover:bg-primary/80 flex items-center'
+							</Button>
+							<Button
+								variant='outline'
+								onClick={() => setShowJsonModal(true)}
+								type='button'
+								className='flex items-center'
+							>
+								<CodeIcon className='mr-2 h-4 w-4' />
+								<span>View JSON</span>
+								<Badge variant='outline' className='ml-2 bg-blue-100 text-blue-800 hover:bg-blue-200'>
+									Tech
+								</Badge>
+							</Button>
+							<Button
+								variant='default'
 								onClick={() => handleSubmit(form.getValues())}
 								disabled={submitting}
 								type='button'
+								className='flex items-center'
 							>
 								{submitting ? (
 									<>
@@ -610,7 +641,50 @@ export default function ModelReferenceForm() {
 								) : (
 									'Confirm'
 								)}
-							</button>
+							</Button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* JSON Data Modal */}
+			{showJsonModal && (
+				<div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
+					<div className='bg-white p-6 rounded-lg shadow-lg max-w-4xl w-full max-h-[80vh] overflow-auto'>
+						<div className='flex justify-between items-center mb-4'>
+							<div className='flex items-center'>
+								<h3 className='text-lg font-semibold text-primary'>Raw JSON Payload</h3>
+								<Badge className='ml-3 bg-blue-100 text-blue-800'>Technical Data</Badge>
+							</div>
+							<Button
+								variant='ghost'
+								size='icon'
+								onClick={() => setShowJsonModal(false)}
+								className='text-gray-500 hover:text-gray-700'
+							>
+								<X className='h-5 w-5' />
+							</Button>
+						</div>
+
+						<div className='bg-gray-900 text-gray-100 p-4 rounded-md overflow-auto font-mono text-sm'>
+							<pre>{JSON.stringify(getFormattedJsonData(form.getValues()), null, 2)}</pre>
+						</div>
+
+						<div className='mt-4 flex justify-end'>
+							<Button variant='outline' onClick={() => setShowJsonModal(false)} className='mr-2'>
+								Close
+							</Button>
+							<Button
+								variant='default'
+								onClick={() => {
+									navigator.clipboard.writeText(JSON.stringify(getFormattedJsonData(form.getValues()), null, 2))
+									alert('JSON copied to clipboard!')
+								}}
+								className='flex items-center'
+							>
+								<CodeIcon className='mr-2 h-4 w-4' />
+								Copy JSON
+							</Button>
 						</div>
 					</div>
 				</div>

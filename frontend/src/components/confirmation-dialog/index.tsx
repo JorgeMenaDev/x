@@ -13,7 +13,7 @@ export type ConfirmationDialogProps = {
 	triggerButton: React.ReactElement
 	confirmButton: React.ReactElement
 	title: string
-	body?: string
+	body?: string | React.ReactNode
 	cancelButtonText?: string
 	icon?: 'danger' | 'info'
 	isDone?: boolean

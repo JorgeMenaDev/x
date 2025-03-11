@@ -2,12 +2,13 @@ export interface TableColumn {
 	name: string
 	type: string
 	nullable?: boolean
-	defaultValue?: any
+	defaultValue?: unknown
+	isPrimary?: boolean
 }
 
 export interface TableRecord {
-	id: number
-	[key: string]: any
+	id: string
+	[key: string]: unknown
 }
 
 export interface TablesResponse {
@@ -15,12 +16,23 @@ export interface TablesResponse {
 }
 
 export interface TableDataResponse {
+	data: TableRecord[]
+	total: number
 	columns: TableColumn[]
-	records: TableRecord[]
 }
 
 export interface FilterValue {
 	column: string
 	operator: string
-	value: any
+	value: unknown
+}
+
+export interface TableViewProps {
+	columns: TableColumn[]
+	data: TableRecord[]
+	selectedRows: Set<string>
+	onSelectRow: (id: string) => void
+	selectAll: boolean
+	onSelectAll: (checked: boolean) => void
+	onUpdateRow?: (id: string, data: Record<string, unknown>) => void
 }

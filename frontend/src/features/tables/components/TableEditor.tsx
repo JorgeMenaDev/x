@@ -1,20 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Sidebar } from './components/Sidebar'
-import { TableView } from './components/TableView'
-import { TableToolbar } from './components/TableToolbar'
-import { TablePagination } from './components/TablePagination'
-import { useTables } from '../../hooks/inventory/tables/use-tables'
-import {
-	useTableData,
-	useCreateTableRow,
-	useUpdateTableRow,
-	useDeleteTableRow
-} from '../../hooks/inventory/tables/use-table-data'
-import { TableRecord } from '../../db/models/inventory/table'
-import { TableColumn } from './types'
+import { Sidebar } from './Sidebar'
+import { TableView } from './TableView'
+import { TableToolbar } from './TableToolbar'
+import { TablePagination } from './TablePagination'
+import { useTables } from '../api/get-tables'
+import { useTableData } from '../api/get-table-data'
+import { useCreateTableRow } from '../api/create-table-row'
+import { useUpdateTableRow } from '../api/update-table-row'
+import { useDeleteTableRow } from '../api/delete-table-row'
 import { handleAPIError } from '@/lib/errors'
+import type { TableColumn, TableRecord } from '../types'
 
 export function TableEditor() {
 	const [selectedSchema] = useState('public')
@@ -23,31 +20,46 @@ export function TableEditor() {
 	const [rowsPerPage] = useState(10)
 
 	// Fetch tables metadata from the API
-	const { data: tablesResponse, isLoading: isLoadingTables } = useTables()
+	const { data: tablesResponse, isLoading: isLoadingTables } = useTables({})
 
 	// Get the selected table's metadata
-	const selectedTableMetadata = tablesResponse?.tables.find(t => t.name === selectedTable)
+	const selectedTableMetadata = tablesResponse?.tables?.find(t => t === selectedTable)
 
 	// Add UI-specific column properties
-	const tableColumns: TableColumn[] = selectedTableMetadata?.columns
-		.map(col => {
-			if (col.name === 'created_at' || col.name === 'updated_at') {
-				return null
-			}
-			return col
-		})
-		.filter(Boolean) as TableColumn[]
+	const tableColumns: TableColumn[] = selectedTableMetadata
+		? [
+				{
+					name: 'id',
+					type: 'string',
+					isPrimary: true
+				}
+		  ]
+		: []
+
 	// Fetch data for the selected table
 	const {
 		data: tableDataResponse,
 		isLoading: isLoadingTableData,
 		error: tableDataError
-	} = useTableData(selectedTable, { page: currentPage, limit: rowsPerPage })
+	} = useTableData({
+		tableName: selectedTable,
+		page: currentPage,
+		limit: rowsPerPage,
+		pause: !selectedTable
+	})
 
 	// Mutations for table operations
-	const createRow = useCreateTableRow(selectedTable, { showSuccessToast: true })
-	const updateRow = useUpdateTableRow(selectedTable, { showSuccessToast: true })
-	const deleteRow = useDeleteTableRow(selectedTable, { showSuccessToast: true })
+	const createRow = useCreateTableRow({
+		tableName: selectedTable
+	})
+
+	const updateRow = useUpdateTableRow({
+		tableName: selectedTable
+	})
+
+	const deleteRow = useDeleteTableRow({
+		tableName: selectedTable
+	})
 
 	const [searchQuery, setSearchQuery] = useState('')
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
@@ -63,7 +75,7 @@ export function TableEditor() {
 		if (selectAll) {
 			setSelectedRows(new Set())
 		} else {
-			const allIds = (tableDataResponse?.data || []).map(row => row.id as string)
+			const allIds = (tableDataResponse?.data || []).map(row => row.id)
 			setSelectedRows(new Set(allIds))
 		}
 		setSelectAll(!selectAll)
@@ -80,19 +92,22 @@ export function TableEditor() {
 		setSelectAll(newSelectedRows.size === (tableDataResponse?.data || []).length)
 	}
 
-	const handleInsertRow = async (data: TableRecord) => {
+	const handleInsertRow = async (data: Record<string, unknown>) => {
 		try {
-			await createRow.mutateAsync({ data })
+			// Convert unknown values to strings
+			const stringData = Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)]))
+			await createRow.mutateAsync({ tableName: selectedTable, data: stringData })
 		} catch (error) {
 			handleAPIError(error)
 			throw error // Re-throw to prevent drawer from closing
 		}
 	}
 
-	const handleUpdateRow = async (id: string, data: TableRecord) => {
+	const handleUpdateRow = async (id: string, data: Record<string, unknown>) => {
 		try {
-			// Skip data cleaning since we're already getting clean data
-			await updateRow.mutateAsync({ id, data })
+			// Convert unknown values to strings
+			const stringData = Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)]))
+			await updateRow.mutateAsync({ tableName: selectedTable, id, data: stringData })
 		} catch (error) {
 			console.error('Update error:', error)
 			handleAPIError(error)
@@ -101,7 +116,7 @@ export function TableEditor() {
 
 	const handleDeleteRows = async (ids: string[]) => {
 		try {
-			await Promise.all(ids.map(id => deleteRow.mutateAsync(id)))
+			await Promise.all(ids.map(id => deleteRow.mutateAsync({ tableName: selectedTable, id })))
 			setSelectedRows(new Set())
 			setSelectAll(false)
 		} catch (error) {

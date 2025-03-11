@@ -18,20 +18,6 @@ export const createTableRow = async ({
 	return api.post(`/api/v1/inventory/data/${tableName}`, data)
 }
 
-// export const updateTableRow = async ({ tableName, id, data }: UpdateTableRowParams): Promise<TableRecord> => {
-// 	if (!data || Object.keys(data).length === 0) {
-// 		throw new Error('No data provided for update')
-// 	}
-
-// 	// Send both id and data at the top level as the backend expects
-// 	const requestBody = {
-// 		id, // ID at top level
-// 		data // Data object separate from ID
-// 	}
-
-// 	return api.put(`/api/v1/inventory/data/${tableName}`, requestBody)
-// }
-
 type UseCreateTableRowOptions = {
 	tableName: string
 	mutationConfig?: MutationConfig<typeof createTableRow>

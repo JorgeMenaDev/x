@@ -3,6 +3,7 @@ import { api } from '@/lib/api-client'
 import { MutationConfig } from '@/lib/react-query'
 import { TableRecord } from '../components/table-editor/types'
 import { getTableDataQueryOptions } from './get-table-data'
+import { toast } from 'sonner'
 
 export type UpdateTableRowData = {
 	id: string
@@ -16,12 +17,6 @@ type UpdateTableRowParams = {
 }
 
 export const updateTableRow = async ({ tableName, id, data }: UpdateTableRowParams): Promise<TableRecord> => {
-	console.log('updateTableRow - Starting with:', {
-		tableName,
-		id,
-		data
-	})
-
 	if (!data || Object.keys(data).length === 0) {
 		throw new Error('No data provided for update')
 	}
@@ -31,11 +26,6 @@ export const updateTableRow = async ({ tableName, id, data }: UpdateTableRowPara
 		id, // ID at top level
 		data // Data object separate from ID
 	}
-
-	console.log('updateTableRow - Sending request:', {
-		url: `/api/v1/inventory/data/${tableName}`,
-		body: requestBody
-	})
 
 	return api.put(`/api/v1/inventory/data/${tableName}`, requestBody)
 }
@@ -55,6 +45,11 @@ export const useUpdateTableRow = ({ tableName, mutationConfig }: UseUpdateTableR
 			queryClient.invalidateQueries({
 				queryKey: getTableDataQueryOptions({ tableName, page: 1, limit: 10 }).queryKey
 			})
+
+			toast.success('Success', {
+				description: 'Row updated successfully'
+			})
+
 			onSuccess?.(...args)
 		},
 		...restConfig,

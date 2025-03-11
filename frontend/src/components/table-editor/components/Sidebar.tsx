@@ -2,21 +2,7 @@
 
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import {
-	Filter,
-	Plus,
-	Lock,
-	Eye,
-	ChevronDown,
-	Database,
-	MoreVertical,
-	Copy,
-	Edit,
-	Clipboard,
-	FileOutput,
-	Trash2,
-	Loader2
-} from 'lucide-react'
+import { Filter, Lock, Eye, ChevronDown, Database, MoreVertical, Copy, FileOutput, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
 	DropdownMenu,
@@ -51,20 +37,13 @@ export function Sidebar({
 	}
 
 	return (
-		<div className='w-56 border-r overflow-y-auto flex flex-col'>
+		<div className='w-64 border-r overflow-y-auto flex flex-col'>
 			<div className='p-4 border-b'>
 				<div className='flex items-center space-x-1'>
 					<span className='text-sm'>schema</span>
 					<span className='text-sm font-medium'>{selectedSchema}</span>
 					<ChevronDown className='h-4 w-4 ml-auto' />
 				</div>
-			</div>
-
-			<div className='p-4 border-b'>
-				<Button variant='outline' size='sm' className='w-full justify-start'>
-					<Plus className='h-4 w-4 mr-2' />
-					New table
-				</Button>
 			</div>
 
 			<div className='p-2'>
@@ -125,29 +104,15 @@ export function Sidebar({
 											<Copy className='h-4 w-4 mr-2' />
 											Copy name
 										</DropdownMenuItem>
-										<DropdownMenuItem className='cursor-pointer' onClick={e => e.stopPropagation()}>
-											<Edit className='h-4 w-4 mr-2' />
-											Edit table
-										</DropdownMenuItem>
-										<DropdownMenuItem className='cursor-pointer' onClick={e => e.stopPropagation()}>
-											<Clipboard className='h-4 w-4 mr-2' />
-											Duplicate table
-										</DropdownMenuItem>
-										<DropdownMenuItem className='cursor-pointer' onClick={e => e.stopPropagation()}>
-											<Eye className='h-4 w-4 mr-2' />
-											View policies
-										</DropdownMenuItem>
+
 										<DropdownMenuItem className='cursor-pointer' onClick={e => e.stopPropagation()}>
 											<FileOutput className='h-4 w-4 mr-2' />
 											Export data
 										</DropdownMenuItem>
 										<DropdownMenuSeparator />
-										<DropdownMenuItem
-											className='cursor-pointer text-destructive focus:text-destructive'
-											onClick={e => e.stopPropagation()}
-										>
-											<Trash2 className='h-4 w-4 mr-2' />
-											Delete table
+										<DropdownMenuItem className='cursor-pointer' onClick={e => e.stopPropagation()}>
+											<Eye className='h-4 w-4 mr-2' />
+											View policies
 										</DropdownMenuItem>
 									</DropdownMenuContent>
 								</DropdownMenu>

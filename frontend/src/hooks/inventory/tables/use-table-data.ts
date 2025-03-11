@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createTablesRepository } from '../../../repositories'
-import { FilterValue } from '../../../repositories/inventory/tables-repository'
-import { TableRecord } from '../../../models/inventory/table'
+import { createTablesRepository } from '../../../db/repositories'
+import { FilterValue } from '../../../db/repositories/inventory/tables-repository'
+import { TableRecord } from '../../../db/models/inventory/table'
 import { toast } from 'sonner'
 
 /**
@@ -25,7 +25,19 @@ export function useTableData<T = TableRecord>(
 		queryKey: ['tableData', tableName, page, limit, filters, pause],
 		queryFn: () => tablesRepository.getTableData<T>(tableName, { page, limit, filters, pause }),
 		enabled: !!tableName && !pause,
-		staleTime: 60 * 1000 // 1 minute
+		staleTime: 60 * 1000, // 1 minute,
+
+		select: data => {
+			return {
+				...data,
+				data: data.data.map(row => {
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
+					const { created_at, updated_at, ...rest } = row as Record<string, unknown>
+
+					return { ...rest }
+				})
+			}
+		}
 	})
 }
 

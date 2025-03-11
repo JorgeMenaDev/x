@@ -1,4 +1,4 @@
-import { TablesResponse, TableDataResponse, TableRecord } from '../../models/inventory/table'
+import { TablesResponse, TableDataResponse, TableRecord } from '@/db/models/inventory/table'
 
 /**
  * Type for filter values that can be sent to the API

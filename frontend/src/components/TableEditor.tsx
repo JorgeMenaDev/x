@@ -7,8 +7,8 @@ import {
 	useUpdateTableRow,
 	useDeleteTableRow
 } from '@/hooks/inventory/tables/use-table-data'
-import { TableRecord } from '@/models/inventory/table'
-import { FilterValue } from '@/repositories/inventory/tables-repository'
+import { TableRecord } from '@/db/models/inventory/table'
+import { FilterValue } from '@/db/repositories/inventory/tables-repository'
 
 interface TableEditorProps {
 	tableName: string

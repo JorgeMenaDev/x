@@ -2,19 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import {
-	Filter,
-	SortAsc,
-	Plus,
-	ChevronDownIcon,
-	Rows,
-	Columns,
-	FileText,
-	Trash2,
-	ChevronDown,
-	FileOutput
-} from 'lucide-react'
+import { Filter, SortAsc, Plus, ChevronDownIcon, Rows, FileText, Trash2, ChevronDown, FileOutput } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { InsertRowDrawer } from './InsertRowDrawer'
 import type { TableToolbarProps } from '../types'
@@ -81,13 +69,7 @@ export function TableToolbar({ selectedTable, columns, onInsertRow, selectedRows
 										<span className='text-xs text-muted-foreground'>Insert a new row into {selectedTable}</span>
 									</div>
 								</DropdownMenuItem>
-								<DropdownMenuItem className='py-3 cursor-pointer'>
-									<Columns className='h-5 w-5 mr-3 text-muted-foreground' />
-									<div className='flex flex-col'>
-										<span className='font-medium'>Insert column</span>
-										<span className='text-xs text-muted-foreground'>Insert a new column into {selectedTable}</span>
-									</div>
-								</DropdownMenuItem>
+
 								<DropdownMenuItem className='py-3 cursor-pointer'>
 									<FileText className='h-5 w-5 mr-3 text-muted-foreground' />
 									<div className='flex flex-col'>
@@ -99,24 +81,6 @@ export function TableToolbar({ selectedTable, columns, onInsertRow, selectedRows
 						</DropdownMenu>
 					</>
 				)}
-
-				<div className='ml-auto flex items-center gap-2'>
-					<Badge variant='outline' className='rounded-md'>
-						Auth policies
-					</Badge>
-
-					<Badge variant='outline' className='rounded-md'>
-						Role: postgres
-					</Badge>
-
-					<Badge variant='outline' className='rounded-md'>
-						Realtime off
-					</Badge>
-
-					<Badge variant='outline' className='rounded-md'>
-						API Docs
-					</Badge>
-				</div>
 			</div>
 
 			<InsertRowDrawer

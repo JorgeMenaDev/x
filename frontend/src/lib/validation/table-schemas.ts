@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { TableColumn } from '@/models/inventory/table'
+import type { TableColumn } from '@/db/models/inventory/table'
 
 // Helper function to create a Zod schema based on column type
 export function createColumnSchema(column: TableColumn) {

@@ -83,8 +83,8 @@ const data = {
 			icon: ShieldUser,
 			items: [
 				{
-					title: 'Table Editor',
-					url: '/dashboard/admin/table-editor'
+					title: 'Reference Data',
+					url: '/dashboard/admin/reference-data'
 				}
 			]
 		}

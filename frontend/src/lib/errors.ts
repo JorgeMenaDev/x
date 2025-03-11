@@ -70,26 +70,18 @@ function getErrorTypeFromStatus(status: number): ErrorType {
 /**
  * Function to handle API errors and show appropriate toast messages
  */
-export function handleAPIError(error: unknown) {
-	console.error('API Error:', error)
-
+export const handleAPIError = (error: unknown) => {
 	if (error instanceof AxiosError) {
-		const apiError = error.response?.data as APIErrorResponse | undefined
-		const statusCode = error.response?.status
-
-		if (apiError) {
-			const errorMessage = `${apiError.message}${
-				apiError.details ? ` (Details: ${JSON.stringify(apiError.details)})` : ''
-			}`
-			toast.error(`Error [${apiError.code}]: ${errorMessage}`)
-			return
-		}
-
-		toast.error(`Error ${statusCode}: ${error.message}`)
+		const errorMessage = error.response?.data?.error || error.message || 'An error occurred'
+		toast.error('Error', {
+			description: errorMessage
+		})
 		return
 	}
 
-	// Fallback for non-Axios errors
-	const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
-	toast.error(errorMessage)
+	// Handle other types of errors
+	const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+	toast.error('Error', {
+		description: message
+	})
 }

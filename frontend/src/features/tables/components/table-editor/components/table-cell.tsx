@@ -29,8 +29,6 @@ export function TableCell({
 		e.stopPropagation()
 		e.preventDefault()
 
-		console.log('Double click on cell:', columnName, 'Row ID type:', typeof rowId, 'Row ID value:', rowId)
-
 		if (!isEditing) {
 			onStartEdit()
 		}

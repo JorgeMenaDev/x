@@ -16,7 +16,27 @@ type UpdateTableRowParams = {
 }
 
 export const updateTableRow = async ({ tableName, id, data }: UpdateTableRowParams): Promise<TableRecord> => {
-	return api.patch(`/api/v1/inventory/data/${tableName}/rows/${id}`, data)
+	console.log('updateTableRow - Starting with:', {
+		tableName,
+		id,
+		data
+	})
+
+	if (!data || Object.keys(data).length === 0) {
+		throw new Error('No data provided for update')
+	}
+
+	const requestBody = {
+		id,
+		data
+	}
+
+	console.log('updateTableRow - Sending request:', {
+		url: `/api/v1/inventory/data/${tableName}`,
+		body: requestBody
+	})
+
+	return api.put(`/api/v1/inventory/data/${tableName}`, requestBody)
 }
 
 type UseUpdateTableRowOptions = {

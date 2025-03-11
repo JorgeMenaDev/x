@@ -40,6 +40,14 @@ export function TableView({
 		const column = columns.find(col => col.name === columnName)
 		if (!column) return
 
+		console.log('TableView - Starting cell update with:', {
+			rowId,
+			columnName,
+			value,
+			primaryKeyColumn,
+			column
+		})
+
 		// Check if the field is editable
 		if (!isFieldEditable(column)) {
 			toast.error('This field cannot be edited')
@@ -67,12 +75,13 @@ export function TableView({
 		// Notify parent component with the correct data structure
 		if (onUpdateRow) {
 			// Ensure data is not empty
-			const updateData = { [columnName]: value }
-			if (Object.keys(updateData).length === 0) {
-				toast.error('No data to update')
-				setEditingCellKey(null)
-				return
+			const updateData = {
+				[columnName]: value === null ? null : value
 			}
+			console.log('TableView - Calling onUpdateRow with:', {
+				rowId,
+				updateData
+			})
 			onUpdateRow(rowId, updateData)
 		}
 		setEditingCellKey(null)
@@ -91,12 +100,10 @@ export function TableView({
 
 		// Create a unique key for this cell
 		const cellKey = `${rowId}:${columnName}`
-		console.log('Starting edit for cell:', cellKey, 'Row ID type:', typeof rowId, 'Row ID value:', rowId)
 		setEditingCellKey(cellKey)
 	}
 
 	const cancelEditing = () => {
-		console.log('Canceling edit')
 		setEditingCellKey(null)
 	}
 
@@ -104,9 +111,7 @@ export function TableView({
 		// Create the same key format for comparison
 		const cellKey = `${rowId}:${columnName}`
 		const result = editingCellKey === cellKey
-		if (result) {
-			console.log('Cell is in edit mode:', cellKey, 'Row ID type:', typeof rowId)
-		}
+
 		return result
 	}
 

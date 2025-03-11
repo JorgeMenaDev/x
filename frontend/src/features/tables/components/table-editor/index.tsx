@@ -12,6 +12,7 @@ import { useUpdateTableRow } from '../../api/update-table-row'
 import { useDeleteTableRow } from '../../api/delete-table-row'
 import { handleAPIError } from '@/lib/errors'
 import { TableColumn } from './types'
+import { useNotifications } from '@/components/notifications/notifications-store'
 
 export function TableEditor() {
 	const [selectedSchema] = useState('public')
@@ -52,7 +53,16 @@ export function TableEditor() {
 
 	// Mutations for table operations
 	const createRow = useCreateTableRow({
-		tableName: selectedTable
+		tableName: selectedTable,
+		mutationConfig: {
+			onSuccess: () => {
+				useNotifications.getState().addNotification({
+					title: 'Row created successfully',
+					type: 'success',
+					message: 'The row has been created successfully'
+				})
+			}
+		}
 	})
 
 	const updateRow = useUpdateTableRow({
@@ -98,9 +108,10 @@ export function TableEditor() {
 
 	const handleInsertRow = async (data: Record<string, unknown>) => {
 		try {
-			// Convert unknown values to strings
-			const stringData = Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)]))
-			await createRow.mutateAsync({ tableName: selectedTable, data: stringData })
+			// FIXME: I don't think we need this -> Convert unknown values to strings
+			// const stringData = Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)]))
+
+			await createRow.mutateAsync({ tableName: selectedTable, data })
 		} catch (error) {
 			handleAPIError(error)
 			throw error // Re-throw to prevent drawer from closing
@@ -125,6 +136,7 @@ export function TableEditor() {
 	}
 
 	const handleDeleteRows = async (ids: string[]) => {
+		console.log('Deleting rows:', ids)
 		try {
 			await Promise.all(ids.map(id => deleteRow.mutateAsync({ tableName: selectedTable, id })))
 			setSelectedRows(new Set())

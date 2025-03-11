@@ -38,7 +38,6 @@ export class InventoryController {
 	async createTableRow({ params, body }: Context) {
 		const { table_name } = params
 		const { id, data } = body as { id?: string; data: Record<string, any> }
-
 		try {
 			const rowId = await this.inventoryRepo.createRow(table_name, { id, ...data })
 			return new Response(JSON.stringify({ id: rowId }), { status: 201 })

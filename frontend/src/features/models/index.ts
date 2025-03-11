@@ -1,9 +1,9 @@
 // Export components
-export { default as ModelReferenceForm } from './components/ModelReferenceForm'
-export { ModelReferenceFormSkeleton } from './components/ModelReferenceFormSkeleton'
+export { default as ModelReferenceForm } from './components/model-reference-form'
+export { ModelReferenceFormSkeleton } from './components/model-reference-form-skeleton'
 
 // Export hooks
-export { useAllModelReferenceData, useSeparateModelReferenceData } from './hooks/useModelReferenceData'
+export { useModelReferenceData, useSeparateModelReferenceData } from './hooks/useModelReferenceData'
 export { useAssetClassFilter } from './hooks/useAssetClassFilter'
 export { useUseFilter } from './hooks/useUseFilter'
 

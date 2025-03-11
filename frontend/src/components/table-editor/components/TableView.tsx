@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { TableCell } from '@/components/table-editor/components/table-cell'
 import type { TableViewProps } from '../types'
-import { TableRecord } from '@/db/models/inventory/table'
+import { TableRecord } from '@/features/tables/types'
 import { validateField, isFieldEditable } from '@/lib/validation/table-schemas'
 import { toast } from 'sonner'
 

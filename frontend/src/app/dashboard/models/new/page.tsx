@@ -3,7 +3,7 @@
 import { Suspense, useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ModelReferenceForm, ModelReferenceFormSkeleton } from '@/features/models'
-import ErrorBoundary from '@/features/models/components/ErrorBoundary'
+import ErrorBoundary from '@/components/error-boundary'
 
 // Create a client
 const queryClient = new QueryClient({

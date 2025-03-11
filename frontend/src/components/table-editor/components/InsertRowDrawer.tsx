@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
 import type { TableColumn } from '../types'
-import { TableRecord } from '@/db/models/inventory/table'
+import { TableRecord } from '@/features/tables/types'
 import { useState } from 'react'
 
 interface InsertRowDrawerProps {

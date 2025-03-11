@@ -4,10 +4,12 @@ import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useFieldArray } from 'react-hook-form'
 import * as z from 'zod'
-import { PlusCircle, Trash2, Loader2 } from 'lucide-react'
+import { PlusCircle, Trash2 } from 'lucide-react'
 import { useSeparateModelReferenceData } from '../hooks/use-model-reference-data'
 import { useAssetClassFilter } from '../hooks/use-asset-class-filter'
 import { useUseFilter } from '../hooks/use-use-filter'
+import { type CreateModelPayload } from '../types'
+import { CreateNewModelConfirmationDialog } from './create-new-model-confirmation-dialog'
 
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -44,10 +46,8 @@ const formSchema = z.object({
 })
 
 export default function ModelReferenceForm() {
-	// Use the hook to fetch data from the API
 	const { data: modelReferenceData, isLoading, isError, error } = useSeparateModelReferenceData()
-	const [submitting, setSubmitting] = useState(false)
-	const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+	const [formattedData, setFormattedData] = useState<CreateModelPayload | null>(null)
 
 	// Initialize the form
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -107,53 +107,25 @@ export default function ModelReferenceForm() {
 	}
 
 	// Handle form submission
-	async function handleSubmit(values: z.infer<typeof formSchema>) {
-		try {
-			setSubmitting(true)
-
-			// Convert string IDs back to numbers for the API
-			const formattedData = {
-				uniqueReference: values.uniqueReference,
-				modelName: values.modelName,
-				modelType: Number.parseInt(values.modelType),
-				purpose: Number.parseInt(values.purpose),
-				owner: values.owner,
-				accountableExec: values.accountableExec,
-				modelUses: values.modelUses.map(use => ({
-					subgroup: Number.parseInt(use.subgroup),
-					use: Number.parseInt(use.use),
-					assetClass: Number.parseInt(use.assetClass),
-					execUsage: use.execUsage,
-					user: use.user
-				}))
-			}
-
-			console.log('Submitting data:', formattedData)
-
-			// Simulate API call with timeout
-			await new Promise(resolve => setTimeout(resolve, 1500))
-
-			// Close the dialog after successful submission
-			setShowConfirmDialog(false)
-
-			// Show success message
-			alert('Success! Model has been successfully recorded.')
-
-			// Reset form
-			form.reset()
-		} catch (error: unknown) {
-			console.error('Submission error:', error)
-			const errorMessage = error instanceof Error ? error.message : 'Something went wrong. Please try again.'
-			alert(`Error: ${errorMessage}`)
-		} finally {
-			setSubmitting(false)
+	const onSubmit = (values: z.infer<typeof formSchema>) => {
+		// Convert string IDs back to numbers for the API
+		const data: CreateModelPayload = {
+			uniqueReference: values.uniqueReference,
+			modelName: values.modelName,
+			modelType: Number.parseInt(values.modelType),
+			purpose: Number.parseInt(values.purpose),
+			owner: values.owner,
+			accountableExec: values.accountableExec,
+			modelUses: values.modelUses.map(use => ({
+				subgroup: Number.parseInt(use.subgroup),
+				use: Number.parseInt(use.use),
+				assetClass: Number.parseInt(use.assetClass),
+				execUsage: use.execUsage,
+				user: use.user
+			}))
 		}
-	}
 
-	// Replace the onSubmit function to show the confirmation dialog
-	function onSubmit(values: z.infer<typeof formSchema>) {
-		console.log('Form values:', values)
-		setShowConfirmDialog(true)
+		setFormattedData(data)
 	}
 
 	// If data is loading, show loading skeleton
@@ -479,16 +451,16 @@ export default function ModelReferenceForm() {
 									</div>
 
 									<div className='flex justify-end'>
-										<Button type='submit' disabled={submitting}>
-											{submitting ? (
-												<>
-													<Loader2 className='mr-2 h-4 w-4 animate-spin' />
-													Submitting...
-												</>
-											) : (
-												'Record Model'
-											)}
-										</Button>
+										{formattedData && (
+											<CreateNewModelConfirmationDialog
+												formData={formattedData}
+												onSuccess={() => {
+													form.reset()
+													setFormattedData(null)
+												}}
+											/>
+										)}
+										{!formattedData && <Button type='submit'>Record Model</Button>}
 									</div>
 								</form>
 							</Form>
@@ -562,59 +534,6 @@ export default function ModelReferenceForm() {
 					</Card>
 				</TabsContent>
 			</Tabs>
-
-			{/* Simple confirmation dialog */}
-			{showConfirmDialog && (
-				<div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
-					<div className='bg-white p-6 rounded-lg shadow-lg max-w-md w-full'>
-						<h3 className='text-lg font-semibold mb-2 text-primary'>Confirm Submission</h3>
-						<p className='mb-4'>Are you sure you want to submit this model information?</p>
-						<div className='flex justify-end space-x-2'>
-							<button
-								className='px-4 py-2 border rounded-md hover:bg-gray-100'
-								onClick={() => setShowConfirmDialog(false)}
-								type='button'
-							>
-								Cancel
-							</button>
-							<button
-								className='px-4 py-2 bg-primary	 text-white rounded-md hover:bg-primary/80 flex items-center'
-								onClick={() => handleSubmit(form.getValues())}
-								disabled={submitting}
-								type='button'
-							>
-								{submitting ? (
-									<>
-										<svg
-											className='animate-spin -ml-1 mr-2 h-4 w-4 text-white'
-											xmlns='http://www.w3.org/2000/svg'
-											fill='none'
-											viewBox='0 0 24 24'
-										>
-											<circle
-												className='opacity-25'
-												cx='12'
-												cy='12'
-												r='10'
-												stroke='currentColor'
-												strokeWidth='4'
-											></circle>
-											<path
-												className='opacity-75'
-												fill='currentColor'
-												d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-											></path>
-										</svg>
-										Submitting...
-									</>
-								) : (
-									'Confirm'
-								)}
-							</button>
-						</div>
-					</div>
-				</div>
-			)}
 		</>
 	)
 }

@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Toaster } from 'sonner'
 import { Providers } from '@/components/providers'
+import { Notifications } from '@/components/notifications/notifications'
 
 const geistSans = Geist({
 	variable: '--font-geist-sans',
@@ -31,6 +32,7 @@ export default function RootLayout({
 			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
 				<ThemeProvider attribute='class' defaultTheme='system' enableSystem disableTransitionOnChange>
 					<Providers>
+						<Notifications />
 						<div className='flex-1'>{children}</div>
 						<div className='fixed bottom-4 right-4'>
 							<ThemeToggle />

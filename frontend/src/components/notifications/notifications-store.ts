@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import { create } from 'zustand'
+// @ts-expect-error - SetState is not exported from zustand
 import { SetState } from 'zustand'
 
 export type Notification = {

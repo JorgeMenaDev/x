@@ -4,6 +4,7 @@ import { MutationConfig } from '@/lib/react-query'
 import { TableRecord } from '../components/table-editor/types'
 import { getTableDataQueryOptions } from './get-table-data'
 import { toast } from 'sonner'
+import { useNotifications } from '@/components/notifications/notifications-store'
 
 export type UpdateTableRowData = {
 	id: string
@@ -46,8 +47,11 @@ export const useUpdateTableRow = ({ tableName, mutationConfig }: UseUpdateTableR
 				queryKey: getTableDataQueryOptions({ tableName, page: 1, limit: 10 }).queryKey
 			})
 
-			toast.success('Success', {
-				description: 'Row updated successfully'
+			// use global notification system
+			useNotifications.getState().addNotification({
+				type: 'success',
+				title: 'Success',
+				message: 'Row updated successfully'
 			})
 
 			onSuccess?.(...args)

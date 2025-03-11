@@ -26,9 +26,10 @@ export const updateTableRow = async ({ tableName, id, data }: UpdateTableRowPara
 		throw new Error('No data provided for update')
 	}
 
+	// Send both id and data at the top level as the backend expects
 	const requestBody = {
-		id,
-		data
+		id, // ID at top level
+		data // Data object separate from ID
 	}
 
 	console.log('updateTableRow - Sending request:', {

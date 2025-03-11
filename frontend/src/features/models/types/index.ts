@@ -35,27 +35,18 @@ export interface Subgroup {
 }
 
 export interface PurposeToUse {
-	id?: number
 	purpose_id: number
 	use_id: number
-	created_at?: string
-	updated_at?: string
 }
 
 export interface SubgroupToUse {
-	id?: number
 	subgroup_id: number
 	use_id: number
-	created_at?: string
-	updated_at?: string
 }
 
 export interface PurposeToAssetClass {
-	id?: number
 	purpose_id: number
 	assetclass_id: number
-	created_at?: string
-	updated_at?: string
 }
 
 export interface ModelReferenceData {

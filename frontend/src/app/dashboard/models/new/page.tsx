@@ -1,11 +1,9 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import ModelReferenceForm from '@/components/model-reference-form'
-// Note: We're keeping ModelReferenceFormProgressive component in the codebase
-// but not importing it here as requested by the user
-import { ModelReferenceFormSkeleton } from '@/components/model-reference-form-skeleton'
+import { ModelReferenceForm, ModelReferenceFormSkeleton } from '@/features/models'
+import ErrorBoundary from '@/features/models/components/ErrorBoundary'
 
 // Create a client
 const queryClient = new QueryClient({
@@ -18,6 +16,22 @@ const queryClient = new QueryClient({
 })
 
 export default function NewModelPage() {
+	// Add debug logging
+	useEffect(() => {
+		console.log('NewModelPage mounted')
+
+		// Log any unhandled errors
+		const errorHandler = (event: ErrorEvent) => {
+			console.error('Unhandled error:', event.error)
+		}
+
+		window.addEventListener('error', errorHandler)
+
+		return () => {
+			window.removeEventListener('error', errorHandler)
+		}
+	}, [])
+
 	return (
 		<QueryClientProvider client={queryClient}>
 			<main className='min-h-screen p-8'>
@@ -26,10 +40,11 @@ export default function NewModelPage() {
 					<p className='text-muted-foreground'>Record a model in the inventory with multiple uses</p>
 				</div>
 
-				{/* Use only the ModelReferenceForm with a loading state */}
-				<Suspense fallback={<ModelReferenceFormSkeleton />}>
-					<ModelReferenceForm />
-				</Suspense>
+				<ErrorBoundary>
+					<Suspense fallback={<ModelReferenceFormSkeleton />}>
+						<ModelReferenceForm />
+					</Suspense>
+				</ErrorBoundary>
 			</main>
 		</QueryClientProvider>
 	)

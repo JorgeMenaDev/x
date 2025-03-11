@@ -40,6 +40,12 @@ export function EditCell({ initialValue, columnName, onSave, onCancel, className
 	}
 
 	const handleSave = useCallback(() => {
+		// If value hasn't changed from initial, just cancel
+		if (value === initialValue) {
+			onCancel()
+			return
+		}
+
 		if (value === '') {
 			onSave(null, columnName)
 			return
@@ -49,7 +55,7 @@ export function EditCell({ initialValue, columnName, onSave, onCancel, className
 			return // Don't save if validation fails
 		}
 		onSave(value, columnName)
-	}, [onSave, value, columnName, type])
+	}, [onSave, value, columnName, type, initialValue, onCancel])
 
 	// Focus the textarea when the component mounts
 	useEffect(() => {

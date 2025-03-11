@@ -9,11 +9,6 @@ import { TableRecord, TableViewProps } from '../types'
 import { validateField, isFieldEditable } from '@/lib/validation/table-schemas'
 import { toast } from 'sonner'
 
-interface EditingCell {
-	rowId: string
-	columnName: string
-}
-
 export function TableView({
 	columns,
 	data,
@@ -23,12 +18,21 @@ export function TableView({
 	onSelectAll,
 	onUpdateRow
 }: TableViewProps) {
-	const [editingCell, setEditingCell] = useState<EditingCell | null>(null)
+	// Use a string key instead of an object for more reliable comparison
+	const [editingCellKey, setEditingCellKey] = useState<string | null>(null)
 	const [localData, setLocalData] = useState<TableRecord[]>(data)
+
+	// Find the primary key column
+	const primaryKeyColumn = columns.find(col => col.isPrimary)?.name || 'id'
 
 	// Update local data when prop changes
 	useEffect(() => {
 		setLocalData(data)
+	}, [data])
+
+	// Reset editing cell when data changes to prevent stale state
+	useEffect(() => {
+		setEditingCellKey(null)
 	}, [data])
 
 	const handleCellUpdate = (rowId: string, columnName: string, value: string | null) => {
@@ -39,7 +43,7 @@ export function TableView({
 		// Check if the field is editable
 		if (!isFieldEditable(column)) {
 			toast.error('This field cannot be edited')
-			setEditingCell(null)
+			setEditingCellKey(null)
 			return
 		}
 
@@ -47,13 +51,17 @@ export function TableView({
 		const validation = validateField(value, column)
 		if (!validation.success) {
 			toast.error(validation.error || 'Invalid value for this field type')
-			setEditingCell(null)
+			setEditingCellKey(null)
 			return
 		}
 
 		// Update local state immediately for UI responsiveness
 		setLocalData(prevData =>
-			prevData.map(row => (row.id === rowId ? { ...row, [columnName]: value === null ? null : value } : row))
+			prevData.map(row => {
+				// Get the row ID using the primary key
+				const currentRowId = String(row[primaryKeyColumn] || '')
+				return currentRowId === rowId ? { ...row, [columnName]: value === null ? null : value } : row
+			})
 		)
 
 		// Notify parent component with the correct data structure
@@ -62,12 +70,12 @@ export function TableView({
 			const updateData = { [columnName]: value }
 			if (Object.keys(updateData).length === 0) {
 				toast.error('No data to update')
-				setEditingCell(null)
+				setEditingCellKey(null)
 				return
 			}
 			onUpdateRow(rowId, updateData)
 		}
-		setEditingCell(null)
+		setEditingCellKey(null)
 	}
 
 	const startEditing = (rowId: string, columnName: string) => {
@@ -81,15 +89,25 @@ export function TableView({
 			return
 		}
 
-		setEditingCell({ rowId, columnName })
+		// Create a unique key for this cell
+		const cellKey = `${rowId}:${columnName}`
+		console.log('Starting edit for cell:', cellKey, 'Row ID type:', typeof rowId, 'Row ID value:', rowId)
+		setEditingCellKey(cellKey)
 	}
 
 	const cancelEditing = () => {
-		setEditingCell(null)
+		console.log('Canceling edit')
+		setEditingCellKey(null)
 	}
 
 	const isEditing = (rowId: string, columnName: string) => {
-		return editingCell?.rowId === rowId && editingCell?.columnName === columnName
+		// Create the same key format for comparison
+		const cellKey = `${rowId}:${columnName}`
+		const result = editingCellKey === cellKey
+		if (result) {
+			console.log('Cell is in edit mode:', cellKey, 'Row ID type:', typeof rowId)
+		}
+		return result
 	}
 
 	return (
@@ -112,42 +130,45 @@ export function TableView({
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{localData.map(row => (
-						<TableRow key={row.id as string} className='h-8'>
-							<BaseTableCell className='p-2'>
-								<Checkbox
-									checked={selectedRows.has(row.id as string)}
-									onCheckedChange={() => onSelectRow(row.id as string)}
-									className=''
-								/>
-							</BaseTableCell>
-							{columns.map(column => (
-								<BaseTableCell
-									key={`${row.id}-${column.name}`}
-									className={`p-0 ${!isFieldEditable(column) ? 'cursor-not-allowed bg-muted/30' : ''}`}
-								>
-									<ContextMenu>
-										<ContextMenuTrigger className='h-full w-full'>
-											<TableCell
-												value={row[column.name] === null ? null : String(row[column.name])}
-												columnName={column.name}
-												onChange={value => handleCellUpdate(row.id as string, column.name, value)}
-												onStartEdit={() => startEditing(row.id as string, column.name)}
-												onCancelEdit={cancelEditing}
-												isEditing={isEditing(row.id as string, column.name)}
-												type={column.type}
-											/>
-										</ContextMenuTrigger>
-										<ContextMenuContent>
-											<ContextMenuItem onClick={() => navigator.clipboard.writeText(String(row[column.name]))}>
-												Copy cell content
-											</ContextMenuItem>
-										</ContextMenuContent>
-									</ContextMenu>
+					{localData.map((row, rowIndex) => {
+						// Get the row ID using the primary key
+						const rowId = String(row[primaryKeyColumn] || `row-${rowIndex}`)
+
+						return (
+							<TableRow key={rowId} className='h-8'>
+								<BaseTableCell className='p-2'>
+									<Checkbox checked={selectedRows.has(rowId)} onCheckedChange={() => onSelectRow(rowId)} className='' />
 								</BaseTableCell>
-							))}
-						</TableRow>
-					))}
+								{columns.map(column => (
+									<BaseTableCell
+										key={`${rowId}-${column.name}`}
+										className={`p-0 ${!isFieldEditable(column) ? 'cursor-not-allowed bg-muted/30' : ''}`}
+									>
+										<ContextMenu>
+											<ContextMenuTrigger className='h-full w-full'>
+												<TableCell
+													key={`cell-${rowId}-${column.name}`}
+													value={row[column.name] === null ? null : String(row[column.name])}
+													columnName={column.name}
+													onChange={value => handleCellUpdate(rowId, column.name, value)}
+													onStartEdit={() => startEditing(rowId, column.name)}
+													onCancelEdit={cancelEditing}
+													isEditing={isEditing(rowId, column.name)}
+													type={column.type}
+													rowId={rowId}
+												/>
+											</ContextMenuTrigger>
+											<ContextMenuContent>
+												<ContextMenuItem onClick={() => navigator.clipboard.writeText(String(row[column.name]))}>
+													Copy cell content
+												</ContextMenuItem>
+											</ContextMenuContent>
+										</ContextMenu>
+									</BaseTableCell>
+								))}
+							</TableRow>
+						)
+					})}
 				</TableBody>
 			</Table>
 		</div>

@@ -63,6 +63,9 @@ export function EditCell({ initialValue, columnName, onSave, onCancel, className
 	useEffect(() => {
 		function handleClickOutside(event: MouseEvent) {
 			if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+				// Prevent event propagation
+				event.stopPropagation()
+				event.preventDefault()
 				handleSave()
 			}
 		}
@@ -74,10 +77,14 @@ export function EditCell({ initialValue, columnName, onSave, onCancel, className
 	}, [handleSave])
 
 	const handleSetNull = () => {
+		// Prevent any potential event propagation
 		onSave(null, columnName)
 	}
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
+		// Prevent event propagation for key events
+		e.stopPropagation()
+
 		if (e.key === 'Escape') {
 			e.preventDefault()
 			onCancel()

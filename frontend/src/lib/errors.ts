@@ -1,4 +1,3 @@
-import { toast } from 'sonner'
 import { AxiosError } from 'axios'
 
 export type ErrorType = 'ValidationError' | 'AuthenticationError' | 'NotFoundError' | 'ServerError' | 'NetworkError'
@@ -35,7 +34,7 @@ export class APIError extends Error {
 		let data: APIErrorResponse
 		try {
 			data = await response.json()
-		} catch (e) {
+		} catch {
 			// If we can't parse the error response, create a generic one
 			return new APIError(
 				response.statusText || 'An unknown error occurred',
@@ -68,28 +67,19 @@ function getErrorTypeFromStatus(status: number): ErrorType {
 }
 
 /**
- * Function to handle API errors and show appropriate toast messages
+ * Function to handle API errors
+ * Note: Toast notifications have been removed as they were duplicating the notifications
+ * from the useNotifications store in api-client.ts
  */
-export function handleAPIError(error: unknown) {
-	console.error('API Error:', error)
-
+export const handleAPIError = (error: unknown) => {
+	// Log the error for debugging purposes
 	if (error instanceof AxiosError) {
-		const apiError = error.response?.data as APIErrorResponse | undefined
-		const statusCode = error.response?.status
-
-		if (apiError) {
-			const errorMessage = `${apiError.message}${
-				apiError.details ? ` (Details: ${JSON.stringify(apiError.details)})` : ''
-			}`
-			toast.error(`Error [${apiError.code}]: ${errorMessage}`)
-			return
-		}
-
-		toast.error(`Error ${statusCode}: ${error.message}`)
+		const errorMessage = error.response?.data?.error || error.message || 'An error occurred'
+		console.error('API Error:', errorMessage)
 		return
 	}
 
-	// Fallback for non-Axios errors
-	const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
-	toast.error(errorMessage)
+	// Handle other types of errors
+	const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+	console.error('Unexpected error:', message)
 }

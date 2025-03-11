@@ -26,12 +26,33 @@ export const api = axios.create({
 	}
 })
 
-api.interceptors.request.use(authRequestInterceptor)
+// Add logging for debugging
+console.log('API client initialized with baseURL:', api.defaults.baseURL)
+
+api.interceptors.request.use(
+	config => {
+		console.log(`API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`)
+		return authRequestInterceptor(config)
+	},
+	error => {
+		console.error('API Request Error:', error)
+		return Promise.reject(error)
+	}
+)
+
 api.interceptors.response.use(
 	response => {
+		console.log(`API Response: ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`)
 		return response.data
 	},
 	(error: AxiosError<APIErrorResponse>) => {
+		console.error('API Response Error:', {
+			status: error.response?.status,
+			url: error.config?.url,
+			method: error.config?.method?.toUpperCase(),
+			data: error.response?.data
+		})
+
 		const apiError = error.response?.data
 		const statusCode = error.response?.status
 		const errorMessage = apiError

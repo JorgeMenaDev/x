@@ -143,11 +143,20 @@ export class InventoryRepository {
 			throw new Error('No columns to update')
 		}
 
+		// Get table info to find the primary key column
+		const tableInfo = this.db.query(`PRAGMA table_info(${tableName})`).all() as PragmaResult[]
+		const primaryKeyColumn = tableInfo.find(col => col.pk === 1)?.name || 'id'
+
 		const updates = Object.entries(data)
 			.map(([key]) => `${key} = ?`)
 			.join(', ')
-		const query = `UPDATE ${tableName} SET ${updates} WHERE id = ?`
-		this.db.query(query).run(...[...Object.values(data), id])
+		const query = `UPDATE ${tableName} SET ${updates} WHERE ${primaryKeyColumn} = ?`
+		try {
+			this.db.query(query).run(...[...Object.values(data), id])
+		} catch (error) {
+			console.error('Update error:', error)
+			throw error // Re-throw the error to be handled by the controller
+		}
 	}
 
 	async deleteRow(tableName: string, id: string) {

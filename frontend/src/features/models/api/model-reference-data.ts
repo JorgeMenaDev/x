@@ -20,19 +20,9 @@ import {
 export async function fetchTableData<T>(tableName: string, limit: number = 100): Promise<T[]> {
 	try {
 		const url = `/api/v1/inventory/data/${tableName}?limit=${limit}`
-		console.log(`Fetching data from: ${url}`)
 
 		const response = await api.get(url)
 
-		// Log the response structure for debugging
-		console.log(`Response structure from ${tableName}:`, {
-			hasData: !!response.data,
-			isPaginated: response.data && typeof response.data === 'object' && 'data' in response.data,
-			dataType: response.data && response.data.data ? typeof response.data.data : 'N/A',
-			isArray: response.data && response.data.data ? Array.isArray(response.data.data) : false
-		})
-
-		// Handle paginated response (format: { data: T[], page: number, limit: number, total: number })
 		if (
 			response.data &&
 			typeof response.data === 'object' &&

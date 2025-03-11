@@ -21,7 +21,7 @@ export type NotificationProps = {
 
 export const Notification = ({ notification: { id, type, title, message }, onDismiss }: NotificationProps) => {
 	return (
-		<div className='flex w-full flex-col items-end space-y-4'>
+		<div className='flex w-full flex-col items-end space-y-4 z-50'>
 			<div className='pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black/5'>
 				<div className='p-4' role='alert' aria-label={title}>
 					<div className='flex items-start'>

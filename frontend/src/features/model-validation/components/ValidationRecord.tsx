@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlertCircle, CheckCircle2, FileText, Upload, X, AlertTriangle } from 'lucide-react'
 import { ValidationStatusBadge } from './common/ValidationStatusBadge'
 import { ModelRiskTierBadge } from './common/ModelRiskTierBadge'
+import { ValidationConditions } from './ValidationConditions'
 
 // Mock data for the selected model
 const mockModels = {
@@ -354,39 +355,11 @@ export const ValidationRecord: React.FC<ValidationRecordProps> = ({ modelId, onC
 
 					{/* Use conditions tab */}
 					<TabsContent value='conditions'>
-						<Card>
-							<CardHeader>
-								<CardTitle>Model Use Conditions</CardTitle>
-								<CardDescription>Specify conditions for each model use</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<div className='space-y-6'>
-									{model.modelUses.map(use => (
-										<div key={use.id} className='border rounded-md p-4'>
-											<div className='flex justify-between items-start mb-4'>
-												<div>
-													<h3 className='font-medium'>{use.name}</h3>
-													<p className='text-sm text-muted-foreground'>
-														{use.legalEntity} • {use.assetClass} • {use.subGroup}
-													</p>
-												</div>
-											</div>
-
-											<div className='space-y-2'>
-												<Label htmlFor={`condition-${use.id}`}>Conditions for this use</Label>
-												<Textarea
-													id={`condition-${use.id}`}
-													value={useConditions[use.id] || ''}
-													onChange={e => handleUseConditionChange(use.id, e.target.value)}
-													placeholder='Specify any conditions or limitations for this model use'
-													rows={3}
-												/>
-											</div>
-										</div>
-									))}
-								</div>
-							</CardContent>
-						</Card>
+						<ValidationConditions
+							modelUses={model.modelUses}
+							conditions={useConditions}
+							onConditionChange={handleUseConditionChange}
+						/>
 					</TabsContent>
 				</Tabs>
 

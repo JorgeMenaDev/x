@@ -41,6 +41,10 @@ const data = {
 				{
 					title: 'Model Lifecycle',
 					url: '/dashboard/models/lifecycle'
+				},
+				{
+					title: 'Model Validation and Attestation',
+					url: '/dashboard/models/validation'
 				}
 			]
 		},
@@ -68,7 +72,7 @@ const data = {
 		},
 		{
 			title: 'Settings',
-			url: '/dashboard/settings',
+			url: '',
 			icon: Settings2,
 			items: [
 				{

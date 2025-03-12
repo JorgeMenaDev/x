@@ -22,7 +22,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 // Define the form schema
 const formSchema = z.object({
-	uniqueReference: z.string().min(1, 'Unique reference is required'),
+	uniqueReference: z.string().optional(),
 	modelName: z.string().min(1, 'Model name is required'),
 	modelType: z.string({
 		required_error: 'Please select a model type'

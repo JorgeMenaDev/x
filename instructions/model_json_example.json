@@ -1,0 +1,39 @@
+{
+	"uniqueReference": "",
+	"modelName": "21",
+	"modelType": 2,
+	"purpose": 2,
+	"owner": "dsds",
+	"accountableExec": "sdd",
+	"riskTier": 2,
+	"lastValidationDate": "2024-01-01",
+	"nextValidationDate": "2025-01-01",
+	"validationStatus": 2,
+	"validationComments": [
+		{
+			"comment": "sd",
+			"commentDate": "2024-01-01",
+			"commentBy": "dsds"
+		}
+	],
+	"leadReviewer": "dsds",
+	"dateOfReview": "2024-01-01",
+	"typeOfReview": 2,
+	"reviewReport": [
+		{
+			"report": "sd",
+			"reportDate": "2024-01-01",
+			"reportBy": "dsds",
+			"linkToDocument": "sd"
+		}
+	],
+	"modelUses": [
+		{
+			"subgroup": 2,
+			"use": 2,
+			"assetClass": 1,
+			"execUsage": "sd",
+			"user": "dssd"
+		}
+	]
+}

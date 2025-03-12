@@ -179,8 +179,11 @@ export default function ModelReferenceForm() {
 												<FormItem>
 													<FormLabel>Unique Reference</FormLabel>
 													<FormControl>
-														<Input {...field} placeholder='Enter unique reference' />
+														<Input {...field} placeholder='Enter unique reference' disabled />
 													</FormControl>
+													<p className='text-xs text-muted-foreground mt-1'>
+														The ID will be automatically generated on the server
+													</p>
 													<FormMessage />
 												</FormItem>
 											)}

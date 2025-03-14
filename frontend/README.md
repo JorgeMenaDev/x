@@ -22,7 +22,9 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-### Docker Compose Setup
+### Docker Setup
+
+#### Running Full Stack (Frontend + Backend)
 
 To run both frontend and backend services using Docker Compose:
 
@@ -34,6 +36,25 @@ docker-compose up --build
 # Frontend: http://localhost:3000
 # Backend: http://localhost:8000
 ```
+
+#### Running Backend Only
+
+To run only the backend service:
+
+```bash
+# Using docker-compose (recommended)
+docker-compose up backend --build
+
+# Or using Docker directly
+cd backend
+docker build -t my-backend .
+docker run -p 8000:8000 -v $(pwd)/data:/app/data my-backend
+
+# Access the backend API at:
+# http://localhost:8000
+```
+
+Note: When running backend only, make sure to update your frontend's API URL to point to the correct backend address.
 
 #### Useful Commands
 

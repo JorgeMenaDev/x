@@ -19,6 +19,7 @@ const app = new Elysia({ prefix: '/seed' })
 		db.run('DROP TABLE IF EXISTS qm_uses')
 		db.run('DROP TABLE IF EXISTS qm_asset_class')
 		db.run('DROP TABLE IF EXISTS qm_subgroup')
+		db.run('DROP TABLE IF EXISTS model_risk_tiers')
 
 		return resetAndSeedDatabase()
 	})

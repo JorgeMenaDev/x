@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,8 @@ import { ModelRiskTierBadge } from './common/ModelRiskTierBadge'
 import { ValidationStatusBadge, ValidationStatus } from './common/ValidationStatusBadge'
 import { ValidationDateDisplay } from './common/ValidationDateDisplay'
 import { User, Search, Filter } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { fetchModelRiskTiers, ModelRiskTier } from '@/features/tables/risk-tiers-api'
 
 // Define the model interface based on the provided JSON example
 interface ValidationComment {
@@ -172,6 +174,18 @@ export const ModelValidationStatus: React.FC<ModelValidationStatusProps> = ({ on
 	const [statusFilter, setStatusFilter] = useState<string>('all')
 	const [riskTierFilter, setRiskTierFilter] = useState<string>('all')
 
+	// Fetch risk tier configurations
+	const { data: riskTiers, isLoading: isLoadingRiskTiers } = useQuery({
+		queryKey: ['riskTiers'],
+		queryFn: fetchModelRiskTiers
+	})
+
+	// Create a map of risk tier configurations for easy lookup
+	const riskTierConfigMap = useMemo(() => {
+		if (!riskTiers) return new Map<string, ModelRiskTier>()
+		return new Map(riskTiers.map(tier => [tier.tier, tier]))
+	}, [riskTiers])
+
 	// Filter models based on search and filters
 	const filteredModels = mockModels.filter(model => {
 		// Search filter
@@ -188,6 +202,10 @@ export const ModelValidationStatus: React.FC<ModelValidationStatusProps> = ({ on
 
 		return matchesSearch && matchesStatus && matchesRiskTier
 	})
+
+	if (isLoadingRiskTiers) {
+		return <div>Loading...</div>
+	}
 
 	return (
 		<Card>
@@ -258,39 +276,49 @@ export const ModelValidationStatus: React.FC<ModelValidationStatusProps> = ({ on
 						</TableHeader>
 						<TableBody>
 							{filteredModels.length > 0 ? (
-								filteredModels.map(model => (
-									<TableRow key={model.id}>
-										<TableCell className='font-medium'>{model.uniqueReference}</TableCell>
-										<TableCell>{model.modelName}</TableCell>
-										<TableCell>
-											<ModelRiskTierBadge tier={mapRiskTier(model.riskTier)} />
-										</TableCell>
-										<TableCell>
-											<div className='flex items-center gap-2'>
-												<User className='h-4 w-4 text-muted-foreground' />
-												{model.owner}
-											</div>
-										</TableCell>
-										<TableCell>
-											<ValidationDateDisplay date={model.lastValidationDate} type='last' />
-										</TableCell>
-										<TableCell>
-											<ValidationDateDisplay date={model.nextValidationDate} type='due' />
-										</TableCell>
-										<TableCell>
-											<ValidationStatusBadge status={mapValidationStatus(model.validationStatus)} />
-										</TableCell>
-										<TableCell className='text-right'>
-											<Button
-												onClick={() => onModelSelect(model.id)}
-												variant={mapValidationStatus(model.validationStatus) === 'due' ? 'default' : 'outline'}
-												size='sm'
-											>
-												{mapValidationStatus(model.validationStatus) === 'due' ? 'Start Validation' : 'View Details'}
-											</Button>
-										</TableCell>
-									</TableRow>
-								))
+								filteredModels.map(model => {
+									const riskTier = mapRiskTier(model.riskTier)
+									const riskTierConfig = riskTierConfigMap.get(riskTier)
+
+									return (
+										<TableRow key={model.id}>
+											<TableCell className='font-medium'>{model.uniqueReference}</TableCell>
+											<TableCell>{model.modelName}</TableCell>
+											<TableCell>
+												<ModelRiskTierBadge tier={riskTier} />
+											</TableCell>
+											<TableCell>
+												<div className='flex items-center gap-2'>
+													<User className='h-4 w-4 text-muted-foreground' />
+													{model.owner}
+												</div>
+											</TableCell>
+											<TableCell>
+												<ValidationDateDisplay date={model.lastValidationDate} type='last' />
+											</TableCell>
+											<TableCell>
+												<ValidationDateDisplay
+													date={model.nextValidationDate}
+													type='due'
+													riskTierConfig={riskTierConfig}
+													lastValidationDate={model.lastValidationDate}
+												/>
+											</TableCell>
+											<TableCell>
+												<ValidationStatusBadge status={mapValidationStatus(model.validationStatus)} />
+											</TableCell>
+											<TableCell className='text-right'>
+												<Button
+													onClick={() => onModelSelect(model.id)}
+													variant={mapValidationStatus(model.validationStatus) === 'due' ? 'default' : 'outline'}
+													size='sm'
+												>
+													{mapValidationStatus(model.validationStatus) === 'due' ? 'Start Validation' : 'View Details'}
+												</Button>
+											</TableCell>
+										</TableRow>
+									)
+								})
 							) : (
 								<TableRow>
 									<TableCell colSpan={8} className='h-24 text-center'>

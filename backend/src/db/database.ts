@@ -70,6 +70,18 @@ export function initDatabase() {
 			)
 		`)
 
+		// Create model_risk_tiers table
+		db.run(`
+			CREATE TABLE IF NOT EXISTS model_risk_tiers (
+				tier TEXT PRIMARY KEY,
+				validation_frequency INTEGER NOT NULL,
+				description TEXT NOT NULL,
+				alert_threshold INTEGER NOT NULL DEFAULT 3,
+				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+				updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			)
+		`)
+
 		// Create relationship tables for level2 data
 
 		// Purpose to Use relationship table
@@ -145,6 +157,7 @@ export function seedDatabase(force = false) {
 			db.run('DELETE FROM qm_purpose_to_use')
 			db.run('DELETE FROM qm_subgroup_to_use')
 			db.run('DELETE FROM qm_purpose_to_asset_class')
+			db.run('DELETE FROM model_risk_tiers')
 
 			// Then clear main tables
 			db.run('DELETE FROM qm_model_type')
@@ -161,6 +174,7 @@ export function seedDatabase(force = false) {
 		const qmUsesCount = db.prepare('SELECT COUNT(*) as count FROM qm_uses').get() as { count: number }
 		const qmAssetClassCount = db.prepare('SELECT COUNT(*) as count FROM qm_asset_class').get() as { count: number }
 		const qmSubgroupCount = db.prepare('SELECT COUNT(*) as count FROM qm_subgroup').get() as { count: number }
+		const modelRiskTiersCount = db.prepare('SELECT COUNT(*) as count FROM model_risk_tiers').get() as { count: number }
 
 		// Seed QModelType data
 		if (qmModelTypeCount?.count === 0 || force) {
@@ -210,6 +224,51 @@ export function seedDatabase(force = false) {
 				stmt.run(item.subgroup_id, item.subgroup)
 			}
 			console.log('Seeded Subgroup data')
+		}
+
+		// Seed Model Risk Tiers data
+		if (modelRiskTiersCount?.count === 0 || force) {
+			const stmt = db.prepare(
+				'INSERT OR REPLACE INTO model_risk_tiers (tier, validation_frequency, description, alert_threshold) VALUES (?, ?, ?, ?)'
+			)
+
+			const modelRiskTiers = [
+				{
+					tier: 'T1',
+					validation_frequency: 1,
+					description: 'Highest risk tier - Critical models',
+					alert_threshold: 3
+				},
+				{
+					tier: 'T2',
+					validation_frequency: 1,
+					description: 'High risk tier',
+					alert_threshold: 3
+				},
+				{
+					tier: 'T3',
+					validation_frequency: 2,
+					description: 'Medium risk tier',
+					alert_threshold: 3
+				},
+				{
+					tier: 'T4',
+					validation_frequency: 3,
+					description: 'Low risk tier',
+					alert_threshold: 3
+				},
+				{
+					tier: 'T5',
+					validation_frequency: 3,
+					description: 'Lowest risk tier',
+					alert_threshold: 3
+				}
+			]
+
+			for (const item of modelRiskTiers) {
+				stmt.run(item.tier, item.validation_frequency, item.description, item.alert_threshold)
+			}
+			console.log('Seeded Model Risk Tiers data')
 		}
 
 		// // Seed qm_purpose data

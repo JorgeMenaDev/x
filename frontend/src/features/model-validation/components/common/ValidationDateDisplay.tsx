@@ -1,71 +1,47 @@
 import React from 'react'
-import { format, isAfter, isBefore, addMonths } from 'date-fns'
-import { Calendar } from 'lucide-react'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { format, parseISO } from 'date-fns'
+import { cn } from '@/lib/utils'
+import { ModelRiskTier } from '@/features/tables/risk-tiers-api'
+import { calculateValidationStatus } from '../../utils/validation-status'
 
 interface ValidationDateDisplayProps {
-	date: Date | string | null
-	type: 'last' | 'next' | 'due'
-	showIcon?: boolean
-	className?: string
+	date: string
+	type: 'last' | 'due'
+	riskTierConfig?: ModelRiskTier
+	lastValidationDate?: string
 }
 
 export const ValidationDateDisplay: React.FC<ValidationDateDisplayProps> = ({
 	date,
 	type,
-	showIcon = true,
-	className = ''
+	riskTierConfig,
+	lastValidationDate
 }) => {
-	if (!date) {
-		return <span className='text-muted-foreground'>Not available</span>
+	const formattedDate = format(parseISO(date), 'dd/MM/yyyy')
+
+	if (type === 'last') {
+		return <span>{formattedDate}</span>
 	}
 
-	const dateObj = typeof date === 'string' ? new Date(date) : date
-	const formattedDate = format(dateObj, 'dd/MM/yyyy')
-	const today = new Date()
+	// Only calculate status for 'due' dates and if we have the risk tier config
+	if (type === 'due' && riskTierConfig && lastValidationDate) {
+		const status = calculateValidationStatus(lastValidationDate, date, riskTierConfig)
 
-	// Determine status for coloring
-	let statusColor = 'text-foreground'
-	let statusText = ''
-
-	if (type === 'due' || type === 'next') {
-		// If due date is within 3 months, show warning
-		const warningThreshold = addMonths(today, 3)
-
-		if (isBefore(dateObj, today)) {
-			statusColor = 'text-red-500 font-medium'
-			statusText = 'Overdue'
-		} else if (isBefore(dateObj, warningThreshold)) {
-			statusColor = 'text-amber-500 font-medium'
-			statusText = 'Due soon'
-		}
-	}
-
-	const displayElement = (
-		<div className={`flex items-center gap-1.5 ${statusColor} ${className}`}>
-			{showIcon && <Calendar className='h-4 w-4' />}
-			<span>{formattedDate}</span>
-			{statusText && <span className='ml-1.5'>({statusText})</span>}
-		</div>
-	)
-
-	// Add tooltip for due dates
-	if (type === 'due' && statusText) {
 		return (
-			<TooltipProvider>
-				<Tooltip>
-					<TooltipTrigger asChild>{displayElement}</TooltipTrigger>
-					<TooltipContent>
-						<p>
-							{statusText === 'Overdue'
-								? 'Validation is overdue and needs immediate attention'
-								: 'Validation will be due soon'}
-						</p>
-					</TooltipContent>
-				</Tooltip>
-			</TooltipProvider>
+			<div className='flex items-center gap-2'>
+				<span>{formattedDate}</span>
+				<span
+					className={cn(
+						'text-sm font-medium',
+						status.type === 'overdue' && 'text-red-500',
+						status.type === 'coming' && 'text-amber-500'
+					)}
+				>
+					{status.message}
+				</span>
+			</div>
 		)
 	}
 
-	return displayElement
+	return <span>{formattedDate}</span>
 }

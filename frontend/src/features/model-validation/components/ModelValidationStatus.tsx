@@ -90,24 +90,16 @@ const mockModels: Model[] = [
 		purpose: 2,
 		owner: 'John Smith',
 		accountableExec: 'Sarah Johnson',
-		riskTier: 1, // T1
+		riskTier: 1, // T1 (1 year frequency)
 		lastValidationDate: '2024-04-15',
-		nextValidationDate: '2025-04-15', // Coming soon (within 3 months)
-		validationStatus: 1, // Due
+		nextValidationDate: '2025-04-15', // Correct: 1 year from last validation
+		validationStatus: 1,
 		validationComments: [],
 		leadReviewer: '',
 		dateOfReview: '',
 		typeOfReview: 0,
 		reviewReport: [],
-		modelUses: [
-			{
-				subgroup: 1,
-				use: 1,
-				assetClass: 1,
-				execUsage: 'Pricing',
-				user: 'Trading Desk'
-			}
-		]
+		modelUses: [{ subgroup: 1, use: 1, assetClass: 1, execUsage: 'Pricing', user: 'Trading Desk' }]
 	},
 	{
 		id: 'model-2',
@@ -117,24 +109,16 @@ const mockModels: Model[] = [
 		purpose: 1,
 		owner: 'Emily Chen',
 		accountableExec: 'Michael Wong',
-		riskTier: 2, // T2
+		riskTier: 2, // T2 (1 year frequency)
 		lastValidationDate: '2024-06-10',
-		nextValidationDate: '2025-06-10', // Normal (beyond 3 months)
-		validationStatus: 2, // In Progress
+		nextValidationDate: '2025-06-10', // Correct: 1 year from last validation
+		validationStatus: 2,
 		validationComments: [],
 		leadReviewer: 'David Wilson',
 		dateOfReview: '',
 		typeOfReview: 2,
 		reviewReport: [],
-		modelUses: [
-			{
-				subgroup: 2,
-				use: 2,
-				assetClass: 2,
-				execUsage: 'Risk Assessment',
-				user: 'Risk Management'
-			}
-		]
+		modelUses: [{ subgroup: 2, use: 2, assetClass: 2, execUsage: 'Risk Assessment', user: 'Risk Management' }]
 	},
 	{
 		id: 'model-3',
@@ -144,24 +128,16 @@ const mockModels: Model[] = [
 		purpose: 3,
 		owner: 'Robert Lee',
 		accountableExec: 'Jennifer Park',
-		riskTier: 1, // T1
+		riskTier: 1, // T1 (1 year frequency)
 		lastValidationDate: '2024-01-20',
-		nextValidationDate: '2025-01-20', // Overdue
-		validationStatus: 1, // Due
+		nextValidationDate: '2025-01-20', // Correct: 1 year from last validation
+		validationStatus: 1,
 		validationComments: [],
 		leadReviewer: '',
 		dateOfReview: '',
 		typeOfReview: 0,
 		reviewReport: [],
-		modelUses: [
-			{
-				subgroup: 3,
-				use: 3,
-				assetClass: 3,
-				execUsage: 'Credit Assessment',
-				user: 'Credit Department'
-			}
-		]
+		modelUses: [{ subgroup: 3, use: 3, assetClass: 3, execUsage: 'Credit Assessment', user: 'Credit Department' }]
 	},
 	{
 		id: 'model-4',
@@ -171,24 +147,16 @@ const mockModels: Model[] = [
 		purpose: 2,
 		owner: 'Alice Johnson',
 		accountableExec: 'Tom Wilson',
-		riskTier: 3, // T3
+		riskTier: 3, // T3 (2 year frequency)
 		lastValidationDate: '2023-03-15',
-		nextValidationDate: '2025-03-15', // Just passed (Overdue)
-		validationStatus: 1, // Due
+		nextValidationDate: '2025-03-15', // Correct: 2 years from last validation
+		validationStatus: 1,
 		validationComments: [],
 		leadReviewer: '',
 		dateOfReview: '',
 		typeOfReview: 0,
 		reviewReport: [],
-		modelUses: [
-			{
-				subgroup: 1,
-				use: 2,
-				assetClass: 2,
-				execUsage: 'Portfolio Management',
-				user: 'Investment Team'
-			}
-		]
+		modelUses: [{ subgroup: 1, use: 2, assetClass: 2, execUsage: 'Portfolio Management', user: 'Investment Team' }]
 	},
 	{
 		id: 'model-5',
@@ -198,24 +166,35 @@ const mockModels: Model[] = [
 		purpose: 1,
 		owner: 'David Chang',
 		accountableExec: 'Maria Garcia',
-		riskTier: 5, // T5
+		riskTier: 5, // T5 (3 year frequency)
 		lastValidationDate: '2022-03-20',
-		nextValidationDate: '2025-08-20', // Normal (beyond 3 months)
-		validationStatus: 1, // Due
+		nextValidationDate: '2025-03-20', // Correct: 3 years from last validation
+		validationStatus: 1,
 		validationComments: [],
 		leadReviewer: '',
 		dateOfReview: '',
 		typeOfReview: 0,
 		reviewReport: [],
-		modelUses: [
-			{
-				subgroup: 4,
-				use: 1,
-				assetClass: 1,
-				execUsage: 'Regulatory Reporting',
-				user: 'Risk Team'
-			}
-		]
+		modelUses: [{ subgroup: 4, use: 1, assetClass: 1, execUsage: 'Regulatory Reporting', user: 'Risk Team' }]
+	},
+	{
+		id: 'model-6',
+		uniqueReference: 'MOD-006',
+		modelName: 'Trading Analytics Model',
+		modelType: 1,
+		purpose: 1,
+		owner: 'Sophie Wilson',
+		accountableExec: 'James Brown',
+		riskTier: 4, // T4 (3 year frequency)
+		lastValidationDate: '2022-05-15',
+		nextValidationDate: '2025-05-15', // Correct: 3 years from last validation
+		validationStatus: 1,
+		validationComments: [],
+		leadReviewer: '',
+		dateOfReview: '',
+		typeOfReview: 0,
+		reviewReport: [],
+		modelUses: [{ subgroup: 2, use: 1, assetClass: 1, execUsage: 'Trading Analytics', user: 'Trading Team' }]
 	}
 ]
 

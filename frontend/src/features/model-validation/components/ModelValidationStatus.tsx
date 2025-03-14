@@ -91,8 +91,8 @@ const mockModels: Model[] = [
 		owner: 'John Smith',
 		accountableExec: 'Sarah Johnson',
 		riskTier: 1, // T1
-		lastValidationDate: '2023-04-15',
-		nextValidationDate: '2024-04-15', // Due soon
+		lastValidationDate: '2024-04-15',
+		nextValidationDate: '2025-04-15', // Coming soon (within 3 months)
 		validationStatus: 1, // Due
 		validationComments: [],
 		leadReviewer: '',
@@ -118,8 +118,8 @@ const mockModels: Model[] = [
 		owner: 'Emily Chen',
 		accountableExec: 'Michael Wong',
 		riskTier: 2, // T2
-		lastValidationDate: '2023-06-10',
-		nextValidationDate: '2024-06-10',
+		lastValidationDate: '2024-06-10',
+		nextValidationDate: '2025-06-10', // Normal (beyond 3 months)
 		validationStatus: 2, // In Progress
 		validationComments: [],
 		leadReviewer: 'David Wilson',
@@ -145,8 +145,8 @@ const mockModels: Model[] = [
 		owner: 'Robert Lee',
 		accountableExec: 'Jennifer Park',
 		riskTier: 1, // T1
-		lastValidationDate: '2023-01-20',
-		nextValidationDate: '2024-01-20', // Overdue
+		lastValidationDate: '2024-01-20',
+		nextValidationDate: '2025-01-20', // Overdue
 		validationStatus: 1, // Due
 		validationComments: [],
 		leadReviewer: '',
@@ -160,6 +160,60 @@ const mockModels: Model[] = [
 				assetClass: 3,
 				execUsage: 'Credit Assessment',
 				user: 'Credit Department'
+			}
+		]
+	},
+	{
+		id: 'model-4',
+		uniqueReference: 'MOD-004',
+		modelName: 'Portfolio Optimization Model',
+		modelType: 2,
+		purpose: 2,
+		owner: 'Alice Johnson',
+		accountableExec: 'Tom Wilson',
+		riskTier: 3, // T3
+		lastValidationDate: '2023-03-15',
+		nextValidationDate: '2025-03-15', // Just passed (Overdue)
+		validationStatus: 1, // Due
+		validationComments: [],
+		leadReviewer: '',
+		dateOfReview: '',
+		typeOfReview: 0,
+		reviewReport: [],
+		modelUses: [
+			{
+				subgroup: 1,
+				use: 2,
+				assetClass: 2,
+				execUsage: 'Portfolio Management',
+				user: 'Investment Team'
+			}
+		]
+	},
+	{
+		id: 'model-5',
+		uniqueReference: 'MOD-005',
+		modelName: 'Regulatory Capital Model',
+		modelType: 1,
+		purpose: 1,
+		owner: 'David Chang',
+		accountableExec: 'Maria Garcia',
+		riskTier: 5, // T5
+		lastValidationDate: '2022-03-20',
+		nextValidationDate: '2025-08-20', // Normal (beyond 3 months)
+		validationStatus: 1, // Due
+		validationComments: [],
+		leadReviewer: '',
+		dateOfReview: '',
+		typeOfReview: 0,
+		reviewReport: [],
+		modelUses: [
+			{
+				subgroup: 4,
+				use: 1,
+				assetClass: 1,
+				execUsage: 'Regulatory Reporting',
+				user: 'Risk Team'
 			}
 		]
 	}

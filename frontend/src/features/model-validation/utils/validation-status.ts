@@ -22,7 +22,7 @@ export function calculateValidationStatus(
 	if (isBefore(nextValidation, CURRENT_DATE)) {
 		return {
 			type: 'overdue',
-			message: '(Overdue)'
+			message: 'Overdue'
 		}
 	}
 
@@ -33,7 +33,7 @@ export function calculateValidationStatus(
 	if (monthsUntilValidation <= riskTierConfig.alert_threshold) {
 		return {
 			type: 'coming',
-			message: '(Coming)'
+			message: 'Coming Soon'
 		}
 	}
 

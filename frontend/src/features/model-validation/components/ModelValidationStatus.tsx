@@ -12,6 +12,7 @@ import { ValidationDateDisplay } from './common/ValidationDateDisplay'
 import { User, Search, Filter } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchModelRiskTiers, ModelRiskTier } from '@/features/tables/risk-tiers-api'
+import { isBefore, parseISO, addMonths, differenceInMonths } from 'date-fns'
 
 // Define the model interface based on the provided JSON example
 interface ValidationComment {
@@ -78,6 +79,32 @@ const mapValidationStatus = (status: number): ValidationStatus => {
 		6: 'pending'
 	}
 	return statusMap[status] || 'pending' // Default to pending if unknown
+}
+
+// Check if a model is overdue for validation
+const isModelOverdue = (nextValidationDate: string): boolean => {
+	// For testing purposes, we're using a fixed date (same as in validation-status.ts)
+	const CURRENT_DATE = new Date('2025-03-14')
+	const nextValidation = parseISO(nextValidationDate)
+	return isBefore(nextValidation, CURRENT_DATE)
+}
+
+// Check if a model is due for validation based on the alert threshold
+const isModelDueForValidation = (nextValidationDate: string, alertThreshold: number): boolean => {
+	// For testing purposes, we're using a fixed date (same as in validation-status.ts)
+	const CURRENT_DATE = new Date('2025-03-14')
+	const nextValidation = parseISO(nextValidationDate)
+
+	// If the model is already overdue, it's definitely due for validation
+	if (isBefore(nextValidation, CURRENT_DATE)) {
+		return true
+	}
+
+	// Calculate months until next validation
+	const monthsUntilValidation = differenceInMonths(nextValidation, CURRENT_DATE)
+
+	// If months until validation is less than or equal to alert threshold, it's due for validation
+	return monthsUntilValidation <= alertThreshold
 }
 
 // Mock data for models
@@ -227,11 +254,34 @@ export const ModelValidationStatus: React.FC<ModelValidationStatusProps> = ({ on
 			model.uniqueReference.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			model.owner.toLowerCase().includes(searchTerm.toLowerCase())
 
+		// Get risk tier and config
+		const riskTier = mapRiskTier(model.riskTier)
+		const riskTierConfig = riskTierConfigMap.get(riskTier)
+		const alertThreshold = riskTierConfig?.alert_threshold || 3
+
+		// Check if model is overdue
+		const isOverdue = isModelOverdue(model.nextValidationDate)
+
+		// Check if model is due for validation based on alert threshold
+		const isDue = isModelDueForValidation(model.nextValidationDate, alertThreshold)
+
+		// Determine the model status
+		let effectiveStatus: ValidationStatus
+		if (isOverdue) {
+			effectiveStatus = 'overdue'
+		} else if (isDue) {
+			effectiveStatus = 'due'
+		} else if (mapValidationStatus(model.validationStatus) === 'due') {
+			effectiveStatus = 'scheduled'
+		} else {
+			effectiveStatus = mapValidationStatus(model.validationStatus)
+		}
+
 		// Status filter
-		const matchesStatus = statusFilter === 'all' || mapValidationStatus(model.validationStatus) === statusFilter
+		const matchesStatus = statusFilter === 'all' || effectiveStatus === statusFilter
 
 		// Risk tier filter
-		const matchesRiskTier = riskTierFilter === 'all' || mapRiskTier(model.riskTier) === riskTierFilter
+		const matchesRiskTier = riskTierFilter === 'all' || riskTier === riskTierFilter
 
 		return matchesSearch && matchesStatus && matchesRiskTier
 	})
@@ -268,7 +318,9 @@ export const ModelValidationStatus: React.FC<ModelValidationStatusProps> = ({ on
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value='all'>All Statuses</SelectItem>
+								<SelectItem value='overdue'>Overdue</SelectItem>
 								<SelectItem value='due'>Validation Due</SelectItem>
+								<SelectItem value='scheduled'>Scheduled</SelectItem>
 								<SelectItem value='in-progress'>In Progress</SelectItem>
 								<SelectItem value='approved'>Approved</SelectItem>
 								<SelectItem value='approved-with-conditions'>Approved with Conditions</SelectItem>
@@ -313,6 +365,29 @@ export const ModelValidationStatus: React.FC<ModelValidationStatusProps> = ({ on
 									const riskTier = mapRiskTier(model.riskTier)
 									const riskTierConfig = riskTierConfigMap.get(riskTier)
 
+									// Default alert threshold if config is not available
+									const alertThreshold = riskTierConfig?.alert_threshold || 3
+
+									// Determine if the model is overdue
+									const isOverdue = isModelOverdue(model.nextValidationDate)
+
+									// Determine if the model is due for validation based on alert threshold
+									const isDue = isModelDueForValidation(model.nextValidationDate, alertThreshold)
+
+									// Determine the model status
+									let modelStatus: ValidationStatus
+									if (isOverdue) {
+										modelStatus = 'overdue'
+									} else if (isDue) {
+										modelStatus = 'due'
+									} else if (mapValidationStatus(model.validationStatus) === 'due') {
+										// If the model's status is 'due' but it's not actually due yet based on the alert threshold,
+										// change it to 'scheduled'
+										modelStatus = 'scheduled'
+									} else {
+										modelStatus = mapValidationStatus(model.validationStatus)
+									}
+
 									return (
 										<TableRow key={model.id}>
 											<TableCell className='font-medium'>{model.uniqueReference}</TableCell>
@@ -338,15 +413,23 @@ export const ModelValidationStatus: React.FC<ModelValidationStatusProps> = ({ on
 												/>
 											</TableCell>
 											<TableCell>
-												<ValidationStatusBadge status={mapValidationStatus(model.validationStatus)} />
+												<ValidationStatusBadge status={modelStatus} />
 											</TableCell>
 											<TableCell className='text-right'>
 												<Button
 													onClick={() => onModelSelect(model.id)}
-													variant={mapValidationStatus(model.validationStatus) === 'due' ? 'default' : 'outline'}
+													variant={
+														modelStatus === 'due'
+															? 'outline'
+															: modelStatus === 'overdue'
+															? 'outline'
+															: modelStatus === 'scheduled'
+															? 'outline'
+															: 'outline'
+													}
 													size='sm'
 												>
-													{mapValidationStatus(model.validationStatus) === 'due' ? 'Start Validation' : 'View Details'}
+													{modelStatus === 'due' || modelStatus === 'overdue' ? 'Start Validation' : 'View Details'}
 												</Button>
 											</TableCell>
 										</TableRow>

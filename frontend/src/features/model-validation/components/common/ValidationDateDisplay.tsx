@@ -1,6 +1,5 @@
 import React from 'react'
 import { format, parseISO } from 'date-fns'
-import { cn } from '@/lib/utils'
 import { ModelRiskTier } from '@/features/tables/risk-tiers-api'
 import { calculateValidationStatus } from '../../utils/validation-status'
 
@@ -30,15 +29,6 @@ export const ValidationDateDisplay: React.FC<ValidationDateDisplayProps> = ({
 		return (
 			<div className='flex items-center gap-2'>
 				<span>{formattedDate}</span>
-				<span
-					className={cn(
-						'text-sm font-medium',
-						status.type === 'overdue' && 'text-red-500',
-						status.type === 'coming' && 'text-amber-500'
-					)}
-				>
-					{status.message}
-				</span>
 			</div>
 		)
 	}

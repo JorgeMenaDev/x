@@ -132,6 +132,7 @@ export class InventoryRepository {
 		const query = `INSERT INTO ${tableName} (${columns}) VALUES (${placeholders})`
 		const statement = this.db.prepare(query)
 		const result = statement.run(...Object.values(data))
+		console.log(result)
 
 		// Return the ID (either provided, or the auto-generated one)
 		return data.id || result.lastInsertRowid?.toString()

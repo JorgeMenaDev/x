@@ -83,7 +83,7 @@ export default function ModelDataAdapter() {
 			label: node.name,
 			data: {
 				name: node.name,
-				type: 'Model',
+				type: node.type.toString(),
 				risk: mapRiskTier(node.type),
 				domain: node.owner || 'Unknown',
 				team: node.accountableExec || 'Unknown'
@@ -129,7 +129,7 @@ export default function ModelDataAdapter() {
 				</div>
 			</CardHeader>
 			<CardContent>
-				<div className='w-full h-[500px]'>
+				<div className='w-full h-[500px] relative'>
 					{viewMode === '2d' ? (
 						<DependencyGraph customData={graphData} nodeSize={45} />
 					) : (

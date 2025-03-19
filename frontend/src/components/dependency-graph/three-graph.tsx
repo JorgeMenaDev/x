@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import ForceGraph3D from 'react-force-graph-3d'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import * as THREE from 'three'
 
 // Types for our model data
@@ -68,7 +68,7 @@ interface ThreeDependencyGraphProps {
 }
 
 export default function ThreeDependencyGraph({ customData, nodeSize = 3 }: ThreeDependencyGraphProps) {
-	const graphRef = useRef<any>()
+	const graphRef = useRef<any>(null)
 	const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
 	const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] })
 
@@ -158,16 +158,40 @@ export default function ThreeDependencyGraph({ customData, nodeSize = 3 }: Three
 		// Zoom to node and highlight it
 		if (graphRef.current) {
 			const graph = graphRef.current as any
-			// Focus on the clicked node with animation
+
+			// Calculate a better camera position - slightly offset to better view the node
+			const distance = 40 // Distance from node
+			const offsetX = node.x ? node.x * 0.2 : 0 // Small offset for perspective
+			const offsetY = node.y ? node.y * 0.1 : 0 // Small offset for perspective
+
+			// Focus on the clicked node with better animation
 			graph.cameraPosition(
-				{ x: node.x || 0, y: node.y || 0, z: (node.z || 0) + 40 }, // New position
+				{
+					x: (node.x || 0) + offsetX,
+					y: (node.y || 0) + offsetY,
+					z: (node.z || 0) + distance
+				}, // New position
 				node, // Look at this node
-				2000 // Animation duration in ms
+				1500 // Animation duration in ms (shorter for better responsiveness)
 			)
 		}
 
 		// Set node as selected for details panel
 		setSelectedNode(node)
+
+		// Optional: Add sound feedback for click
+		// if (typeof window !== 'undefined' && window.AudioContext) {
+		//   const audioCtx = new AudioContext();
+		//   const oscillator = audioCtx.createOscillator();
+		//   oscillator.type = 'sine';
+		//   oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4 note
+		//   const gainNode = audioCtx.createGain();
+		//   gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); // 10% volume
+		//   oscillator.connect(gainNode);
+		//   gainNode.connect(audioCtx.destination);
+		//   oscillator.start();
+		//   oscillator.stop(audioCtx.currentTime + 0.1); // 0.1 second duration
+		// }
 	}, [])
 
 	// Function to highlight links and nodes when a node is selected
@@ -305,50 +329,52 @@ export default function ThreeDependencyGraph({ customData, nodeSize = 3 }: Three
 			</div>
 			{selectedNode && (
 				<Card className='mt-4'>
-					<CardContent className='p-4'>
-						<h3 className='text-lg font-semibold'>{selectedNode.name}</h3>
-						<div className='grid grid-cols-2 gap-2 mt-2 text-sm'>
+					<CardHeader className='py-3'>
+						<CardTitle>{selectedNode.name}</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className='grid gap-4'>
 							<div>
-								<span className='font-medium'>Type:</span> {selectedNode.type}
+								<h3 className='text-sm font-medium'>Model Details</h3>
+								<p className='text-sm text-muted-foreground'>ID: {selectedNode.id}</p>
+								<p className='text-sm text-muted-foreground'>Type: {selectedNode.type}</p>
+								<p className='text-sm text-muted-foreground'>Risk Level: {selectedNode.risk}</p>
+								{selectedNode.domain && <p className='text-sm text-muted-foreground'>Domain: {selectedNode.domain}</p>}
+								{selectedNode.team && <p className='text-sm text-muted-foreground'>Team: {selectedNode.team}</p>}
 							</div>
+
 							<div>
-								<span className='font-medium'>Risk:</span> {selectedNode.risk}
+								<h3 className='text-sm font-medium'>Inputs</h3>
+								{inputs.length > 0 ? (
+									<ul className='text-sm'>
+										{inputs.map(({ node, link }) => (
+											<li key={link.id} className='mt-1'>
+												From <span className='font-medium text-blue-500'>{node?.label || node?.name}</span>
+												{link.dependencyType && <span className='text-muted-foreground'> - {link.dependencyType}</span>}
+											</li>
+										))}
+									</ul>
+								) : (
+									<p className='text-sm text-muted-foreground'>No inputs</p>
+								)}
 							</div>
+
 							<div>
-								<span className='font-medium'>Domain:</span> {selectedNode.domain || 'N/A'}
-							</div>
-							<div>
-								<span className='font-medium'>Team:</span> {selectedNode.team || 'N/A'}
+								<h3 className='text-sm font-medium'>Outputs</h3>
+								{outputs.length > 0 ? (
+									<ul className='text-sm'>
+										{outputs.map(({ node, link }) => (
+											<li key={link.id} className='mt-1'>
+												To <span className='font-medium text-blue-500'>{node?.label || node?.name}</span>
+												{link.dependencyType && <span className='text-muted-foreground'> - {link.dependencyType}</span>}
+											</li>
+										))}
+									</ul>
+								) : (
+									<p className='text-sm text-muted-foreground'>No outputs</p>
+								)}
 							</div>
 						</div>
-
-						{inputs.length > 0 && (
-							<div className='mt-4'>
-								<h4 className='font-medium'>Inputs</h4>
-								<ul className='mt-1 space-y-1'>
-									{inputs.map(({ node, link }) => (
-										<li key={link.id}>
-											From <span className='font-medium text-blue-500'>{node?.label}</span>
-											{link.dependencyType && <span> - {link.dependencyType}</span>}
-										</li>
-									))}
-								</ul>
-							</div>
-						)}
-
-						{outputs.length > 0 && (
-							<div className='mt-4'>
-								<h4 className='font-medium'>Outputs</h4>
-								<ul className='mt-1 space-y-1'>
-									{outputs.map(({ node, link }) => (
-										<li key={link.id}>
-											To <span className='font-medium text-blue-500'>{node?.label}</span>
-											{link.dependencyType && <span> - {link.dependencyType}</span>}
-										</li>
-									))}
-								</ul>
-							</div>
-						)}
 					</CardContent>
 				</Card>
 			)}

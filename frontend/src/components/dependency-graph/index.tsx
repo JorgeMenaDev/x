@@ -265,6 +265,8 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 
 			// Check if clicking on a node
 			let nodeClicked = false
+			let selectedNodeData = null
+
 			for (const node of filteredNodes) {
 				const pos = nodePositionsRef.current[node.id]
 				if (!pos) continue
@@ -274,15 +276,31 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 				const distance = Math.sqrt(dx * dx + dy * dy)
 
 				if (distance < nodeSize) {
-					setSelectedNode(node)
+					selectedNodeData = node
 					nodeClicked = true
 					break
 				}
 			}
 
-			// If not clicking on a node, deselect
-			if (!nodeClicked) {
+			// If clicking on a node, select it (or deselect if clicking the same node)
+			if (nodeClicked && selectedNodeData) {
+				// Toggle selection if clicking on the same node
+				if (selectedNode && selectedNode.id === selectedNodeData.id) {
+					setSelectedNode(null)
+				} else {
+					setSelectedNode(selectedNodeData)
+					// Log the selected node for debugging
+					console.log('Selected Node:', selectedNodeData)
+				}
+			} else {
+				// If not clicking on a node, deselect
 				setSelectedNode(null)
+			}
+
+			// Immediately redraw the graph to update visual state
+			const ctx = canvas.getContext('2d')
+			if (ctx) {
+				drawGraph(ctx, canvas.width / devicePixelRatio, canvas.height / devicePixelRatio)
 			}
 		}
 

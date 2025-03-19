@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Download, Filter, X } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import ModelDetailsCard from './model-details-card'
 
 // Types for our model data
 interface ModelNode {
@@ -100,7 +101,7 @@ interface DependencyGraphProps {
 	nodeSize?: number
 }
 
-export default function DependencyGraph({ customData, nodeSize = 20 }: DependencyGraphProps) {
+export default function TwoDependencyGraph({ customData, nodeSize = 20 }: DependencyGraphProps) {
 	const canvasRef = useRef<HTMLCanvasElement>(null)
 	const [selectedNode, setSelectedNode] = useState<ModelNode | null>(null)
 	const [hoveredNode, setHoveredNode] = useState<ModelNode | null>(null)
@@ -460,55 +461,43 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 			<div className='flex-1 relative'>
 				<canvas ref={canvasRef} className='absolute inset-0 w-full h-full' />
 			</div>
-			{selectedNode && (
-				<Card className='mt-4'>
-					<CardContent className='p-4'>
-						<h3 className='text-lg font-semibold'>{selectedNode.data.name}</h3>
-						<div className='grid grid-cols-2 gap-2 mt-2 text-sm'>
-							<div>
-								<span className='font-medium'>Type:</span> {selectedNode.data.type}
-							</div>
-							<div>
-								<span className='font-medium'>Risk:</span> {selectedNode.data.risk}
-							</div>
-							<div>
-								<span className='font-medium'>Domain:</span> {selectedNode.data.domain || 'N/A'}
-							</div>
-							<div>
-								<span className='font-medium'>Team:</span> {selectedNode.data.team || 'N/A'}
-							</div>
-						</div>
 
-						{inputs.length > 0 && (
-							<div className='mt-4'>
-								<h4 className='font-medium'>Inputs</h4>
-								<ul className='mt-1 space-y-1'>
-									{inputs.map(({ node, edge }) => (
-										<li key={edge.id}>
-											From <span className='font-medium text-blue-500'>{node?.label}</span>
-											{edge.data?.dependencyType && <span> - {edge.data.dependencyType}</span>}
-										</li>
-									))}
-								</ul>
-							</div>
-						)}
-
-						{outputs.length > 0 && (
-							<div className='mt-4'>
-								<h4 className='font-medium'>Outputs</h4>
-								<ul className='mt-1 space-y-1'>
-									{outputs.map(({ node, edge }) => (
-										<li key={edge.id}>
-											To <span className='font-medium text-blue-500'>{node?.label}</span>
-											{edge.data?.dependencyType && <span> - {edge.data.dependencyType}</span>}
-										</li>
-									))}
-								</ul>
-							</div>
-						)}
-					</CardContent>
-				</Card>
-			)}
+			<div className='flex-1 relative'>
+				<div className='absolute bottom-0 left-0 right-0 p-4'>
+					{selectedNode && (
+						<ModelDetailsCard
+							selectedNode={{
+								name: selectedNode.data.name,
+								id: selectedNode.id,
+								type: selectedNode.data.type,
+								risk: selectedNode.data.risk,
+								domain: selectedNode.data.domain,
+								team: selectedNode.data.team
+							}}
+							inputs={inputs.map(({ node, edge }) => ({
+								node: {
+									label: node?.label,
+									name: node?.data.name
+								},
+								link: {
+									id: edge.id,
+									dependencyType: edge.data?.dependencyType
+								}
+							}))}
+							outputs={outputs.map(({ node, edge }) => ({
+								node: {
+									label: node?.label,
+									name: node?.data.name
+								},
+								link: {
+									id: edge.id,
+									dependencyType: edge.data?.dependencyType
+								}
+							}))}
+						/>
+					)}
+				</div>
+			</div>
 		</div>
 	)
 }

@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import DependencyGraph from '.'
+import TwoDependencyGraph from './2d-graph'
 import ThreeDependencyGraph from './three-graph'
 import { ModelGraph, ModelNode, ModelEdge } from '@/features/model-relationships/types'
 import { useModelGraphByRoot } from '@/features/model-relationships/api/get-model-graph'
 import { rootModels } from '@/features/model-relationships/api/get-models'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 // Types required for DependencyGraph
 interface ModelGraphData {
@@ -131,7 +131,7 @@ export default function ModelDataAdapter() {
 			<CardContent>
 				<div className='w-full h-[500px] relative'>
 					{viewMode === '2d' ? (
-						<DependencyGraph customData={graphData} nodeSize={45} />
+						<TwoDependencyGraph customData={graphData} nodeSize={45} />
 					) : (
 						<ThreeDependencyGraph customData={graphData} nodeSize={4} />
 					)}

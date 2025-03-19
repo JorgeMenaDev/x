@@ -15,8 +15,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 				<div className='flex flex-1'>
 					<AppSidebar />
 					<SidebarInset className='flex flex-col'>
-						<div className='flex-1'>{children}</div>
-						<ServerStatusFooterWrapper />
+						<div className='flex-1 overflow-auto pb-20'>{children}</div>
+						<div className='mt-auto'>
+							<ServerStatusFooterWrapper />
+						</div>
 					</SidebarInset>
 				</div>
 			</SidebarProvider>

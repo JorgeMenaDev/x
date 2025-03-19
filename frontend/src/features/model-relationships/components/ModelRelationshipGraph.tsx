@@ -293,7 +293,7 @@ export default function ModelRelationshipGraph() {
 			</Card>
 
 			{selectedNodeDetails && (
-				<Card>
+				<Card className='mt-4'>
 					<CardHeader>
 						<CardTitle>{selectedNodeDetails.name}</CardTitle>
 					</CardHeader>

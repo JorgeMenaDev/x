@@ -129,7 +129,7 @@ export default function ModelDataAdapter() {
 				</div>
 			</CardHeader>
 			<CardContent>
-				<div className='w-full h-[500px] relative'>
+				<div className='w-full h-full relative'>
 					{viewMode === '2d' ? (
 						<TwoDependencyGraph customData={graphData} nodeSize={45} />
 					) : (

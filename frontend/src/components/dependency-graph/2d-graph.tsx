@@ -625,11 +625,11 @@ export default function ImprovedDependencyGraph({ customData, nodeSize = 30 }: D
 	const { inputs, outputs } = getNodeRelationships()
 
 	return (
-		<div className='flex flex-col space-y-6'>
+		<div className='flex flex-col space-y-6 w-full'>
 			{/* Graph container */}
 			<div
 				ref={containerRef}
-				className='w-full h-[600px] relative rounded-lg overflow-hidden shadow-md bg-white border border-gray-200'
+				className='w-full min-h-[500px] relative rounded-lg overflow-hidden shadow-md bg-white border border-gray-200'
 			>
 				<canvas ref={canvasRef} className='w-full h-full block' />
 
@@ -641,7 +641,7 @@ export default function ImprovedDependencyGraph({ customData, nodeSize = 30 }: D
 
 			{/* Details container */}
 			{selectedNode && (
-				<div className='w-full max-w-4xl mx-auto'>
+				<div className='w-full max-w-full mx-auto mb-24 pb-10'>
 					<ModelDetailsCard
 						selectedNode={{
 							name: selectedNode.data.name,

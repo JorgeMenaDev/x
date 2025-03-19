@@ -106,33 +106,55 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 	const [hoveredNode, setHoveredNode] = useState<ModelNode | null>(null)
 	const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
 	const nodePositionsRef = useRef<Record<string, { x: number; y: number }>>({})
+	const [devicePixelRatio, setDevicePixelRatio] = useState(1)
 
 	// Use provided data or fallback to mock data
 	const graphData = customData || mockGraphData
 	const filteredNodes = graphData.nodes
 	const filteredEdges = graphData.edges
 
-	// Set up force simulation
+	// Initial render and whenever data changes
 	useEffect(() => {
 		if (!canvasRef.current || !graphData.nodes.length) return
 
-		const canvas = canvasRef.current
-		const ctx = canvas.getContext('2d')
-		if (!ctx) return
+		const dpr = window.devicePixelRatio || 1
+		setDevicePixelRatio(dpr)
 
-		// Set correct canvas resolution to avoid pixelation
-		const devicePixelRatio = window.devicePixelRatio || 1
-		const rect = canvas.getBoundingClientRect()
+		const setupCanvas = () => {
+			const canvas = canvasRef.current
+			if (!canvas) return
 
-		canvas.width = rect.width * devicePixelRatio
-		canvas.height = rect.height * devicePixelRatio
-		ctx.scale(devicePixelRatio, devicePixelRatio)
+			const ctx = canvas.getContext('2d', { alpha: false })
+			if (!ctx) return
 
-		// Calculate node positions (simplified)
+			// Get exact container dimensions
+			const rect = canvas.getBoundingClientRect()
+
+			// Set canvas dimensions accounting for pixel ratio
+			canvas.width = rect.width * dpr
+			canvas.height = rect.height * dpr
+
+			// Scale canvas correctly
+			ctx.scale(dpr, dpr)
+
+			// Set display size via CSS
+			canvas.style.width = `${rect.width}px`
+			canvas.style.height = `${rect.height}px`
+
+			// Enable anti-aliasing
+			ctx.imageSmoothingEnabled = true
+			ctx.imageSmoothingQuality = 'high'
+
+			return { ctx, width: rect.width, height: rect.height }
+		}
+
+		const canvasSetup = setupCanvas()
+		if (!canvasSetup) return
+
+		const { ctx, width, height } = canvasSetup
+
+		// Calculate node positions
 		const positions: Record<string, { x: number; y: number }> = {}
-		const width = rect.width
-		const height = rect.height
-
 		const centerX = width / 2
 		const centerY = height / 2
 		const radius = Math.min(width, height) * 0.35
@@ -149,45 +171,61 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 		nodePositionsRef.current = positions
 
 		// Draw the graph
-		drawGraph(ctx, rect.width, rect.height)
+		drawGraph(ctx, width, height)
 	}, [graphData, nodeSize])
+
+	// Handle canvas resize
+	useEffect(() => {
+		const handleResize = () => {
+			if (!canvasRef.current) return
+
+			const dpr = window.devicePixelRatio || 1
+			setDevicePixelRatio(dpr)
+
+			const canvas = canvasRef.current
+			const parent = canvas.parentElement
+			if (!parent) return
+
+			// Set canvas dimensions
+			const width = parent.clientWidth
+			const height = parent.clientHeight
+
+			canvas.width = width * dpr
+			canvas.height = height * dpr
+
+			// Scale canvas
+			const ctx = canvas.getContext('2d')
+			if (!ctx) return
+
+			ctx.scale(dpr, dpr)
+
+			// Set display size
+			canvas.style.width = `${width}px`
+			canvas.style.height = `${height}px`
+
+			// Redraw
+			drawGraph(ctx, width, height)
+		}
+
+		window.addEventListener('resize', handleResize)
+		handleResize() // Initial resize
+
+		return () => window.removeEventListener('resize', handleResize)
+	}, [])
 
 	// Redraw when selection changes
 	useEffect(() => {
 		const canvas = canvasRef.current
 		if (!canvas) return
+
 		const ctx = canvas.getContext('2d')
 		if (!ctx) return
 
-		const rect = canvas.getBoundingClientRect()
-		drawGraph(ctx, rect.width, rect.height)
-	}, [selectedNode, hoveredNode, mousePos])
+		const width = canvas.width / devicePixelRatio
+		const height = canvas.height / devicePixelRatio
 
-	// Handle canvas resize
-	useEffect(() => {
-		const handleResize = () => {
-			const canvas = canvasRef.current
-			if (!canvas) return
-
-			const parent = canvas.parentElement
-			if (!parent) return
-
-			const devicePixelRatio = window.devicePixelRatio || 1
-			canvas.width = parent.clientWidth * devicePixelRatio
-			canvas.height = parent.clientHeight * devicePixelRatio
-
-			const ctx = canvas.getContext('2d')
-			if (ctx) {
-				ctx.scale(devicePixelRatio, devicePixelRatio)
-				drawGraph(ctx, parent.clientWidth, parent.clientHeight)
-			}
-		}
-
-		window.addEventListener('resize', handleResize)
-		handleResize()
-
-		return () => window.removeEventListener('resize', handleResize)
-	}, [])
+		drawGraph(ctx, width, height)
+	}, [selectedNode, hoveredNode, devicePixelRatio])
 
 	// Handle mouse interactions
 	useEffect(() => {
@@ -226,6 +264,7 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 			const y = e.clientY - rect.top
 
 			// Check if clicking on a node
+			let nodeClicked = false
 			for (const node of filteredNodes) {
 				const pos = nodePositionsRef.current[node.id]
 				if (!pos) continue
@@ -236,12 +275,15 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 
 				if (distance < nodeSize) {
 					setSelectedNode(node)
-					return
+					nodeClicked = true
+					break
 				}
 			}
 
 			// If not clicking on a node, deselect
-			setSelectedNode(null)
+			if (!nodeClicked) {
+				setSelectedNode(null)
+			}
 		}
 
 		canvas.addEventListener('mousemove', handleMouseMove)
@@ -256,7 +298,13 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 	// Draw the graph
 	const drawGraph = useCallback(
 		(ctx: CanvasRenderingContext2D, width: number, height: number) => {
-			ctx.clearRect(0, 0, width, height)
+			// Clear with solid fill for better performance
+			ctx.fillStyle = '#ffffff'
+			ctx.fillRect(0, 0, width, height)
+
+			// Make sure lines are sharp
+			ctx.lineCap = 'round'
+			ctx.lineJoin = 'round'
 
 			// Draw edges
 			for (const edge of filteredEdges) {
@@ -271,7 +319,7 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 				ctx.beginPath()
 				ctx.moveTo(sourcePos.x, sourcePos.y)
 				ctx.lineTo(targetPos.x, targetPos.y)
-				ctx.strokeStyle = isSelectedEdge ? '#3b82f6' : '#ccc'
+				ctx.strokeStyle = isSelectedEdge ? '#3b82f6' : '#dddddd'
 				ctx.lineWidth = isSelectedEdge ? 2 : 1
 				ctx.stroke()
 
@@ -296,7 +344,7 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 					arrowX - Math.cos(angle + Math.PI / 6) * arrowLength,
 					arrowY - Math.sin(angle + Math.PI / 6) * arrowLength
 				)
-				ctx.fillStyle = isSelectedEdge ? '#3b82f6' : '#ccc'
+				ctx.fillStyle = isSelectedEdge ? '#3b82f6' : '#dddddd'
 				ctx.fill()
 			}
 
@@ -317,7 +365,7 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 							(edge.target === selectedNode.id && edge.source === node.id)
 					)
 
-				// Draw node circle
+				// Draw node circle with crisp edges
 				ctx.beginPath()
 				ctx.arc(pos.x, pos.y, nodeSize, 0, 2 * Math.PI)
 
@@ -345,12 +393,21 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 					ctx.stroke()
 				}
 
-				// Draw node label
+				// Draw node label with crisp text
 				const fontSize = Math.max(12, nodeSize * 0.6)
-				ctx.font = `${fontSize}px sans-serif`
-				ctx.fillStyle = '#ffffff'
+				ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`
 				ctx.textAlign = 'center'
 				ctx.textBaseline = 'middle'
+
+				// Add text with shadow for better contrast
+				if (isSelected || isHovered) {
+					ctx.fillStyle = '#000000'
+					ctx.globalAlpha = 0.3
+					ctx.fillText(node.label, pos.x + 1, pos.y + 1)
+					ctx.globalAlpha = 1.0
+				}
+
+				ctx.fillStyle = '#ffffff'
 				ctx.fillText(node.label, pos.x, pos.y)
 			}
 		},

@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import DependencyGraph from '.'
+import ThreeDependencyGraph from './three-graph'
 import { ModelGraph, ModelNode, ModelEdge } from '@/features/model-relationships/types'
 import { useModelGraphByRoot } from '@/features/model-relationships/api/get-model-graph'
 import { rootModels } from '@/features/model-relationships/api/get-models'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 // Types required for DependencyGraph
 interface ModelGraphData {
@@ -36,10 +38,15 @@ interface ModelGraphData {
  */
 export default function ModelDataAdapter() {
 	const [selectedModel, setSelectedModel] = useState('MODEL_Z')
+	const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d')
 	const { data, isLoading } = useModelGraphByRoot(selectedModel)
 
 	const handleModelChange = (value: string) => {
 		setSelectedModel(value)
+	}
+
+	const handleViewModeChange = (value: string) => {
+		setViewMode(value as '2d' | '3d')
 	}
 
 	if (isLoading) {
@@ -96,24 +103,38 @@ export default function ModelDataAdapter() {
 		<Card>
 			<CardHeader className='pb-0'>
 				<CardTitle>Model Relationships</CardTitle>
-				<div className='w-full max-w-xs mt-2'>
-					<Select value={selectedModel} onValueChange={handleModelChange}>
-						<SelectTrigger>
-							<SelectValue placeholder='Select a model' />
-						</SelectTrigger>
-						<SelectContent>
-							{rootModels.map(model => (
-								<SelectItem key={model.id} value={model.id}>
-									{model.name}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
+				<div className='flex flex-wrap items-center justify-between gap-4 mt-2'>
+					<div className='w-full max-w-xs'>
+						<Select value={selectedModel} onValueChange={handleModelChange}>
+							<SelectTrigger>
+								<SelectValue placeholder='Select a model' />
+							</SelectTrigger>
+							<SelectContent>
+								{rootModels.map(model => (
+									<SelectItem key={model.id} value={model.id}>
+										{model.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+					<div>
+						<Tabs value={viewMode} onValueChange={handleViewModeChange} className='w-[200px]'>
+							<TabsList className='grid w-full grid-cols-2'>
+								<TabsTrigger value='2d'>2D View</TabsTrigger>
+								<TabsTrigger value='3d'>3D View</TabsTrigger>
+							</TabsList>
+						</Tabs>
+					</div>
 				</div>
 			</CardHeader>
 			<CardContent>
 				<div className='w-full h-[500px]'>
-					<DependencyGraph customData={graphData} nodeSize={35} />
+					{viewMode === '2d' ? (
+						<DependencyGraph customData={graphData} nodeSize={45} />
+					) : (
+						<ThreeDependencyGraph customData={graphData} nodeSize={4} />
+					)}
 				</div>
 			</CardContent>
 		</Card>

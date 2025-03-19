@@ -21,8 +21,8 @@ const mockModels: Model[] = [
 		reviewReport: [],
 		modelUses: [],
 		relationships: [
-			{ modelId: 'MODEL_P', type: 'output', description: 'Output from Model Z is used as input to Model P' },
-			{ modelId: 'MODEL_Q', type: 'output', description: 'Output from Model Z is used as input to Model Q' }
+			{ modelId: 'MODEL_P', type: 'output', description: 'Output to Model P' },
+			{ modelId: 'MODEL_Q', type: 'output', description: 'Output to Model Q' }
 		]
 	},
 	{
@@ -31,26 +31,7 @@ const mockModels: Model[] = [
 		modelType: 2,
 		purpose: 2,
 		owner: 'MO1',
-		accountableExec: '',
-		riskTier: 2,
-		lastValidationDate: '2024-01-01',
-		nextValidationDate: '2025-01-01',
-		validationStatus: 2,
-		validationComments: [],
-		leadReviewer: '',
-		dateOfReview: '',
-		typeOfReview: 2,
-		reviewReport: [],
-		modelUses: [],
-		relationships: [{ modelId: 'MODEL_Z', type: 'input', description: 'Input from Model Z' }]
-	},
-	{
-		uniqueReference: 'MODEL_Q',
-		modelName: 'Model Q',
-		modelType: 2,
-		purpose: 2,
-		owner: 'MO1',
-		accountableExec: '',
+		accountableExec: 'MRAE1',
 		riskTier: 2,
 		lastValidationDate: '2024-01-01',
 		nextValidationDate: '2025-01-01',
@@ -63,7 +44,52 @@ const mockModels: Model[] = [
 		modelUses: [],
 		relationships: [
 			{ modelId: 'MODEL_Z', type: 'input', description: 'Input from Model Z' },
-			{ modelId: 'MODEL_R', type: 'output', description: 'Output from Model Q is used as input to Model R' }
+			{ modelId: 'MODEL_S', type: 'output', description: 'Output to Model S' }
+		]
+	},
+	{
+		uniqueReference: 'MODEL_Q',
+		modelName: 'Model Q',
+		modelType: 2,
+		purpose: 2,
+		owner: 'MO1',
+		accountableExec: 'MRAE1',
+		riskTier: 2,
+		lastValidationDate: '2024-01-01',
+		nextValidationDate: '2025-01-01',
+		validationStatus: 2,
+		validationComments: [],
+		leadReviewer: '',
+		dateOfReview: '',
+		typeOfReview: 2,
+		reviewReport: [],
+		modelUses: [],
+		relationships: [
+			{ modelId: 'MODEL_Z', type: 'input', description: 'Input from Model Z' },
+			{ modelId: 'MODEL_S', type: 'input', description: 'Input from Model S' },
+			{ modelId: 'MODEL_R', type: 'output', description: 'Output to Model R' }
+		]
+	},
+	{
+		uniqueReference: 'MODEL_S',
+		modelName: 'Model S',
+		modelType: 2,
+		purpose: 2,
+		owner: 'MO1',
+		accountableExec: 'MRAE1',
+		riskTier: 2,
+		lastValidationDate: '2024-01-01',
+		nextValidationDate: '2025-01-01',
+		validationStatus: 2,
+		validationComments: [],
+		leadReviewer: '',
+		dateOfReview: '',
+		typeOfReview: 2,
+		reviewReport: [],
+		modelUses: [],
+		relationships: [
+			{ modelId: 'MODEL_P', type: 'input', description: 'Input from Model P' },
+			{ modelId: 'MODEL_Q', type: 'output', description: 'Output to Model Q' }
 		]
 	},
 	{
@@ -72,7 +98,7 @@ const mockModels: Model[] = [
 		modelType: 2,
 		purpose: 2,
 		owner: 'MO1',
-		accountableExec: '',
+		accountableExec: 'MRAE1',
 		riskTier: 2,
 		lastValidationDate: '2024-01-01',
 		nextValidationDate: '2025-01-01',

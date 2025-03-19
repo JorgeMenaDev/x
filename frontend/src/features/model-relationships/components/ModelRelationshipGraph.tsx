@@ -13,13 +13,20 @@ interface NodePosition {
 	vy: number
 }
 
+interface GraphData {
+	nodes: ModelNode[]
+	edges: ModelEdge[]
+}
+
 export default function ModelRelationshipGraph() {
 	const canvasRef = useRef<HTMLCanvasElement>(null)
 	const [size, setSize] = useState({ width: 0, height: 0 })
-	const { data, isLoading } = useModelGraph()
+	const { data, isLoading } = useModelGraph() as { data: GraphData | null; isLoading: boolean }
+	const graphData: GraphData = data || { nodes: [], edges: [] }
 	const nodePositionsRef = useRef<Record<string, NodePosition>>({})
 	const animationRef = useRef<number | null>(null)
 	const [selectedNode, setSelectedNode] = useState<string | null>(null)
+	const [isStable, setIsStable] = useState(false)
 
 	// Setup canvas and animation
 	useEffect(() => {
@@ -53,17 +60,53 @@ export default function ModelRelationshipGraph() {
 
 	// Initialize node positions or update when data changes
 	useEffect(() => {
-		if (!data || !size.width || !size.height) return
+		if (!graphData || !size.width || !size.height) return
+
+		// Reset stability when data changes
+		setIsStable(false)
 
 		const existingIds = new Set(Object.keys(nodePositionsRef.current))
-		const newIds = new Set(data.nodes.map(node => node.id))
+		const newIds = new Set(graphData.nodes.map(node => node.id))
 
-		// Initialize positions for new nodes
-		data.nodes.forEach(node => {
+		// Initialize positions for new nodes in a hierarchical layout
+		const levels: { [key: string]: number } = {}
+		const visited = new Set<string>()
+
+		// Helper function to determine node level
+		const assignLevels = (nodeId: string, level: number) => {
+			if (visited.has(nodeId)) return
+			visited.add(nodeId)
+			levels[nodeId] = Math.max(level, levels[nodeId] || 0)
+
+			// Find children (nodes this node points to)
+			const edges = graphData.edges.filter(edge => edge.source === nodeId)
+			edges.forEach(edge => {
+				assignLevels(edge.target, level + 1)
+			})
+		}
+
+		// Find root nodes (nodes with no incoming edges)
+		const hasIncoming = new Set(graphData.edges.map(edge => edge.target))
+		const rootNodes = graphData.nodes.filter(node => !hasIncoming.has(node.id))
+
+		// Assign levels starting from root nodes
+		rootNodes.forEach(node => assignLevels(node.id, 0))
+
+		// Calculate maximum level
+		const maxLevel = Math.max(...Object.values(levels))
+
+		// Initialize positions based on levels
+		graphData.nodes.forEach(node => {
 			if (!existingIds.has(node.id)) {
+				const level = levels[node.id] || 0
+				const nodesAtLevel = Object.entries(levels).filter(([, l]) => l === level).length
+				const index = Object.entries(levels)
+					.filter(([, l]) => l === level)
+					.findIndex(([id]) => id === node.id)
+
 				nodePositionsRef.current[node.id] = {
-					x: Math.random() * size.width * 0.8 + size.width * 0.1,
-					y: Math.random() * size.height * 0.8 + size.height * 0.1,
+					x: (size.width * (level + 1)) / (maxLevel + 2),
+					y: (size.height * (index + 1)) / (nodesAtLevel + 1),
 					vx: 0,
 					vy: 0
 				}
@@ -81,31 +124,40 @@ export default function ModelRelationshipGraph() {
 		if (!animationRef.current) {
 			startSimulation()
 		}
-	}, [data, size])
+	}, [graphData, size])
 
 	// Force-directed graph simulation
 	const startSimulation = () => {
-		if (!data) return
+		if (!graphData) return
+
+		let iterations = 0
+		const maxIterations = 200
+		let totalMovement = 0
 
 		const simulate = () => {
-			if (!canvasRef.current || !data) return
+			if (!canvasRef.current || !graphData) return
+
+			totalMovement = 0
 
 			// Apply forces
-			for (let i = 0; i < data.nodes.length; i++) {
-				const nodeId = data.nodes[i].id
+			for (let i = 0; i < graphData.nodes.length; i++) {
+				const nodeId = graphData.nodes[i].id
 				const nodePos = nodePositionsRef.current[nodeId]
 
 				if (!nodePos) continue
+
+				const originalX = nodePos.x
+				const originalY = nodePos.y
 
 				// Reset velocities
 				nodePos.vx = 0
 				nodePos.vy = 0
 
 				// Apply repulsive forces between nodes
-				for (let j = 0; j < data.nodes.length; j++) {
+				for (let j = 0; j < graphData.nodes.length; j++) {
 					if (i === j) continue
 
-					const otherId = data.nodes[j].id
+					const otherId = graphData.nodes[j].id
 					const otherPos = nodePositionsRef.current[otherId]
 
 					if (!otherPos) continue
@@ -113,14 +165,14 @@ export default function ModelRelationshipGraph() {
 					const dx = nodePos.x - otherPos.x
 					const dy = nodePos.y - otherPos.y
 					const distance = Math.max(1, Math.sqrt(dx * dx + dy * dy))
-					const force = 200 / (distance * distance)
+					const force = 2000 / (distance * distance)
 
 					nodePos.vx += dx * force
 					nodePos.vy += dy * force
 				}
 
 				// Apply attractive forces along edges
-				data.edges.forEach(edge => {
+				graphData.edges.forEach(edge => {
 					if (edge.source === nodeId || edge.target === nodeId) {
 						const otherId = edge.source === nodeId ? edge.target : edge.source
 						const otherPos = nodePositionsRef.current[otherId]
@@ -130,33 +182,39 @@ export default function ModelRelationshipGraph() {
 						const dx = otherPos.x - nodePos.x
 						const dy = otherPos.y - nodePos.y
 						const distance = Math.sqrt(dx * dx + dy * dy)
-						const force = distance * 0.005
+						const force = distance * 0.01
 
 						nodePos.vx += dx * force
 						nodePos.vy += dy * force
 					}
 				})
 
-				// Add centering force
-				const centerX = size.width / 2
-				const centerY = size.height / 2
-				nodePos.vx += (centerX - nodePos.x) * 0.001
-				nodePos.vy += (centerY - nodePos.y) * 0.001
-
 				// Apply velocity with damping
-				nodePos.x += nodePos.vx * 0.5
-				nodePos.y += nodePos.vy * 0.5
+				nodePos.x += nodePos.vx * 0.3
+				nodePos.y += nodePos.vy * 0.3
 
 				// Constrain to bounds
 				nodePos.x = Math.max(50, Math.min(size.width - 50, nodePos.x))
 				nodePos.y = Math.max(50, Math.min(size.height - 50, nodePos.y))
+
+				// Calculate movement
+				const dx = nodePos.x - originalX
+				const dy = nodePos.y - originalY
+				totalMovement += Math.sqrt(dx * dx + dy * dy)
 			}
 
 			// Render
 			renderGraph()
 
-			// Continue simulation
-			animationRef.current = requestAnimationFrame(simulate)
+			iterations++
+
+			// Check if simulation should continue
+			if (iterations < maxIterations && totalMovement > 0.1) {
+				animationRef.current = requestAnimationFrame(simulate)
+			} else {
+				setIsStable(true)
+				animationRef.current = null
+			}
 		}
 
 		// Start the simulation loop
@@ -166,7 +224,7 @@ export default function ModelRelationshipGraph() {
 	// Render the graph
 	const renderGraph = () => {
 		const canvas = canvasRef.current
-		if (!canvas || !data) return
+		if (!canvas || !graphData) return
 
 		const ctx = canvas.getContext('2d')
 		if (!ctx) return
@@ -177,22 +235,35 @@ export default function ModelRelationshipGraph() {
 		// Draw edges
 		ctx.strokeStyle = '#aaa'
 		ctx.lineWidth = 1
-		data.edges.forEach(edge => {
+		graphData.edges.forEach(edge => {
 			const sourcePos = nodePositionsRef.current[edge.source]
 			const targetPos = nodePositionsRef.current[edge.target]
 
 			if (!sourcePos || !targetPos) return
 
+			// Calculate the direction vector
+			const dx = targetPos.x - sourcePos.x
+			const dy = targetPos.y - sourcePos.y
+			const distance = Math.sqrt(dx * dx + dy * dy)
+
+			// Calculate start and end points (offset from node centers)
+			const nodeRadius = 15
+			const startX = sourcePos.x + (dx * nodeRadius) / distance
+			const startY = sourcePos.y + (dy * nodeRadius) / distance
+			const endX = targetPos.x - (dx * nodeRadius) / distance
+			const endY = targetPos.y - (dy * nodeRadius) / distance
+
+			// Draw the line
 			ctx.beginPath()
-			ctx.moveTo(sourcePos.x, sourcePos.y)
-			ctx.lineTo(targetPos.x, targetPos.y)
+			ctx.moveTo(startX, startY)
+			ctx.lineTo(endX, endY)
 			ctx.stroke()
 
 			// Draw arrow
-			const angle = Math.atan2(targetPos.y - sourcePos.y, targetPos.x - sourcePos.x)
-			const arrowSize = 6
-			const arrowX = targetPos.x - 12 * Math.cos(angle)
-			const arrowY = targetPos.y - 12 * Math.sin(angle)
+			const angle = Math.atan2(dy, dx)
+			const arrowSize = 8
+			const arrowX = endX
+			const arrowY = endY
 
 			ctx.beginPath()
 			ctx.moveTo(arrowX, arrowY)
@@ -204,31 +275,41 @@ export default function ModelRelationshipGraph() {
 		})
 
 		// Draw nodes
-		data.nodes.forEach(node => {
+		graphData.nodes.forEach(node => {
 			const pos = nodePositionsRef.current[node.id]
 			if (!pos) return
 
-			// Node circle
+			// Node circle with larger radius
 			ctx.beginPath()
-			ctx.arc(pos.x, pos.y, 12, 0, Math.PI * 2)
+			ctx.arc(pos.x, pos.y, 15, 0, Math.PI * 2)
 			ctx.fillStyle = selectedNode === node.id ? '#3b82f6' : '#1e293b'
 			ctx.fill()
 			ctx.strokeStyle = '#fff'
-			ctx.lineWidth = 1
+			ctx.lineWidth = 2
 			ctx.stroke()
 
-			// Node label
-			ctx.font = '10px sans-serif'
+			// Node label with larger font and background
+			const label = node.name
+			ctx.font = 'bold 12px sans-serif'
+			const textMetrics = ctx.measureText(label)
+			const textWidth = textMetrics.width
+			const padding = 4
+
+			// Draw label background
+			ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
+			ctx.fillRect(pos.x - textWidth / 2 - padding, pos.y + 20 - padding, textWidth + padding * 2, 20)
+
+			// Draw label text
 			ctx.fillStyle = '#000'
 			ctx.textAlign = 'center'
 			ctx.textBaseline = 'middle'
-			ctx.fillText(node.name, pos.x, pos.y + 25)
+			ctx.fillText(label, pos.x, pos.y + 25)
 		})
 	}
 
 	// Handle click on canvas
 	const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-		if (!data) return
+		if (!graphData || !isStable) return
 
 		const canvas = canvasRef.current
 		if (!canvas) return
@@ -237,43 +318,49 @@ export default function ModelRelationshipGraph() {
 		const x = e.clientX - rect.left
 		const y = e.clientY - rect.top
 
+		// Scale coordinates if canvas is scaled
+		const scaleX = canvas.width / rect.width
+		const scaleY = canvas.height / rect.height
+		const canvasX = x * scaleX
+		const canvasY = y * scaleY
+
 		// Check if click is on a node
-		for (const node of data.nodes) {
+		let clickedNode = null
+		for (const node of graphData.nodes) {
 			const pos = nodePositionsRef.current[node.id]
 			if (!pos) continue
 
-			const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2))
+			const distance = Math.sqrt(Math.pow(canvasX - pos.x, 2) + Math.pow(canvasY - pos.y, 2))
 			if (distance <= 15) {
-				setSelectedNode(node.id)
-				return
+				clickedNode = node
+				break
 			}
 		}
 
-		// If click is not on a node, deselect
-		setSelectedNode(null)
+		setSelectedNode(clickedNode ? clickedNode.id : null)
 	}
 
 	// Find the selected node object
 	const getSelectedNodeDetails = () => {
-		if (!selectedNode || !data) return null
-		return data.nodes.find(node => node.id === selectedNode)
+		if (!selectedNode || !graphData) return null
+		return graphData.nodes.find(node => node.id === selectedNode)
 	}
 
 	// Get connections for selected node
 	const getNodeConnections = () => {
-		if (!selectedNode || !data) return { inputs: [], outputs: [] }
+		if (!selectedNode || !graphData) return { inputs: [], outputs: [] }
 
-		const inputs = data.edges
+		const inputs = graphData.edges
 			.filter(edge => edge.target === selectedNode)
 			.map(edge => {
-				const node = data.nodes.find(n => n.id === edge.source)
+				const node = graphData.nodes.find(n => n.id === edge.source)
 				return { edge, node }
 			})
 
-		const outputs = data.edges
+		const outputs = graphData.edges
 			.filter(edge => edge.source === selectedNode)
 			.map(edge => {
-				const node = data.nodes.find(n => n.id === edge.target)
+				const node = graphData.nodes.find(n => n.id === edge.target)
 				return { edge, node }
 			})
 

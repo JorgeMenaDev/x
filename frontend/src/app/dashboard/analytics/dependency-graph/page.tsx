@@ -7,8 +7,8 @@ export default function DependencyGraphPage() {
 		<div className='flex flex-col h-full p-4'>
 			<Tabs defaultValue='model-relationships' className='w-full'>
 				<TabsList className='grid w-full grid-cols-2 mb-4'>
-					<TabsTrigger value='model-relationships'>Model Relationships</TabsTrigger>
-					<TabsTrigger value='model-graph'>Model Dependency Graph</TabsTrigger>
+					<TabsTrigger value='model-relationships'>Org Chart</TabsTrigger>
+					<TabsTrigger value='model-graph'>2D & 3D Graphs</TabsTrigger>
 				</TabsList>
 				<TabsContent value='model-relationships'>
 					<ModelRelationships />

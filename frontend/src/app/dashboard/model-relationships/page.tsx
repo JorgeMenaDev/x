@@ -1,10 +1,9 @@
 import ModelRelationships from '@/features/model-relationships/components'
-// import ModelExplorer from '@/components/model-explorer'
-export default function DependencyGraphPage() {
+
+export default function ModelRelationshipsPage() {
 	return (
 		<div className='flex flex-col h-full p-4'>
 			<ModelRelationships />
-			{/* <ModelExplorer /> */}
 		</div>
 	)
 }

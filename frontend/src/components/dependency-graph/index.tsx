@@ -184,15 +184,19 @@ const mockGraphData: ModelGraphData = {
 	]
 }
 
-export default function DependencyGraph() {
+export default function DependencyGraph({ customData }: { customData?: ModelGraphData }) {
 	const canvasRef = useRef<HTMLCanvasElement>(null)
 	const [selectedNode, setSelectedNode] = useState<ModelNode | null>(null)
 	const [hoveredNode, setHoveredNode] = useState<ModelNode | null>(null)
 	const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+
+	// Use customData if provided, otherwise use mockGraphData
+	const graphData = customData || mockGraphData
+
 	const [filters, setFilters] = useState({
 		riskLevels: { high: true, medium: true, low: true },
-		departments: new Set(mockGraphData.nodes.map(node => node.department)),
-		owners: new Set(mockGraphData.nodes.map(node => node.owner))
+		departments: new Set(graphData.nodes.map(node => node.department)),
+		owners: new Set(graphData.nodes.map(node => node.owner))
 	})
 	const [showFilters, setShowFilters] = useState(false)
 	const [isSimulationStable, setIsSimulationStable] = useState(false)
@@ -200,11 +204,11 @@ export default function DependencyGraph() {
 	const animationRef = useRef<number | null>(null)
 
 	// Get unique departments and owners for filters
-	const departments = Array.from(new Set(mockGraphData.nodes.map(node => node.department)))
-	const owners = Array.from(new Set(mockGraphData.nodes.map(node => node.owner)))
+	const departments = Array.from(new Set(graphData.nodes.map(node => node.department)))
+	const owners = Array.from(new Set(graphData.nodes.map(node => node.owner)))
 
 	// Apply filters to nodes
-	const filteredNodes = mockGraphData.nodes.filter(
+	const filteredNodes = graphData.nodes.filter(
 		node =>
 			filters.riskLevels[node.riskRating] && filters.departments.has(node.department) && filters.owners.has(node.owner)
 	)
@@ -213,16 +217,16 @@ export default function DependencyGraph() {
 	const filteredNodeIds = new Set(filteredNodes.map(node => node.id))
 
 	// Filter edges to only include connections between visible nodes
-	const filteredEdges = mockGraphData.edges.filter(
+	const filteredEdges = graphData.edges.filter(
 		edge => filteredNodeIds.has(edge.source) && filteredNodeIds.has(edge.target)
 	)
 
 	// Get direct connections for selected node
 	const getNodeConnections = (nodeId: string) => {
-		const upstream = mockGraphData.edges
+		const upstream = graphData.edges
 			.filter(edge => edge.target === nodeId)
 			.map(edge => {
-				const sourceNode = mockGraphData.nodes.find(node => node.id === edge.source)
+				const sourceNode = graphData.nodes.find(node => node.id === edge.source)
 				return {
 					node: sourceNode,
 					relationship: edge.relationship,
@@ -231,10 +235,10 @@ export default function DependencyGraph() {
 				}
 			})
 
-		const downstream = mockGraphData.edges
+		const downstream = graphData.edges
 			.filter(edge => edge.source === nodeId)
 			.map(edge => {
-				const targetNode = mockGraphData.nodes.find(node => node.id === edge.target)
+				const targetNode = graphData.nodes.find(node => node.id === edge.target)
 				return {
 					node: targetNode,
 					relationship: edge.relationship,

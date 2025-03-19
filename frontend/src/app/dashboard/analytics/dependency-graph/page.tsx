@@ -1,5 +1,5 @@
-import ModelRelationships from '@/features/model-relationships/components'
-import ModelDataAdapter from '@/components/dependency-graph/model-adapter'
+import OrgChart from '@/features/model-relationships/components'
+import Graphs2DAnd3D from '@/components/dependency-graph/model-adapter'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function DependencyGraphPage() {
@@ -11,11 +11,11 @@ export default function DependencyGraphPage() {
 					<TabsTrigger value='model-graph'>2D & 3D Graphs</TabsTrigger>
 				</TabsList>
 				<TabsContent value='model-relationships'>
-					<ModelRelationships />
+					<OrgChart />
 				</TabsContent>
 
 				<TabsContent value='model-graph'>
-					<ModelDataAdapter />
+					<Graphs2DAnd3D />
 				</TabsContent>
 			</Tabs>
 		</div>

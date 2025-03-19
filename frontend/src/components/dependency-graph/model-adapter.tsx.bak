@@ -71,7 +71,7 @@ export default function ModelDataAdapter() {
 
 	// Transform models data to graph data
 	const graphData: ModelGraphData = {
-		nodes: (data as ModelGraph).nodes.map((node: ModelNode) => ({
+		nodes: data.nodes.map((node: ModelNode) => ({
 			id: node.id,
 			label: node.name,
 			data: {
@@ -82,7 +82,7 @@ export default function ModelDataAdapter() {
 				team: node.accountableExec || 'Unknown'
 			}
 		})),
-		edges: (data as ModelGraph).edges.map((edge: ModelEdge) => ({
+		edges: data.edges.map((edge: ModelEdge) => ({
 			id: `${edge.source}-${edge.target}`,
 			source: edge.source,
 			target: edge.target,

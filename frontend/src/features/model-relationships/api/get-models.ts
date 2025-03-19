@@ -32,7 +32,7 @@ const mockModelsZ: Model[] = [
 		purpose: 2,
 		owner: 'MO1',
 		accountableExec: 'MRAE1',
-		riskTier: 2,
+		riskTier: 1,
 		lastValidationDate: '2024-01-01',
 		nextValidationDate: '2025-01-01',
 		validationStatus: 2,

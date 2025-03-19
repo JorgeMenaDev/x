@@ -120,10 +120,18 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 		const ctx = canvas.getContext('2d')
 		if (!ctx) return
 
+		// Set correct canvas resolution to avoid pixelation
+		const devicePixelRatio = window.devicePixelRatio || 1
+		const rect = canvas.getBoundingClientRect()
+
+		canvas.width = rect.width * devicePixelRatio
+		canvas.height = rect.height * devicePixelRatio
+		ctx.scale(devicePixelRatio, devicePixelRatio)
+
 		// Calculate node positions (simplified)
 		const positions: Record<string, { x: number; y: number }> = {}
-		const width = canvas.width
-		const height = canvas.height
+		const width = rect.width
+		const height = rect.height
 
 		const centerX = width / 2
 		const centerY = height / 2
@@ -141,7 +149,7 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 		nodePositionsRef.current = positions
 
 		// Draw the graph
-		drawGraph(ctx)
+		drawGraph(ctx, rect.width, rect.height)
 	}, [graphData, nodeSize])
 
 	// Redraw when selection changes
@@ -151,7 +159,8 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 		const ctx = canvas.getContext('2d')
 		if (!ctx) return
 
-		drawGraph(ctx)
+		const rect = canvas.getBoundingClientRect()
+		drawGraph(ctx, rect.width, rect.height)
 	}, [selectedNode, hoveredNode, mousePos])
 
 	// Handle canvas resize
@@ -163,11 +172,15 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 			const parent = canvas.parentElement
 			if (!parent) return
 
-			canvas.width = parent.clientWidth
-			canvas.height = parent.clientHeight
+			const devicePixelRatio = window.devicePixelRatio || 1
+			canvas.width = parent.clientWidth * devicePixelRatio
+			canvas.height = parent.clientHeight * devicePixelRatio
 
 			const ctx = canvas.getContext('2d')
-			if (ctx) drawGraph(ctx)
+			if (ctx) {
+				ctx.scale(devicePixelRatio, devicePixelRatio)
+				drawGraph(ctx, parent.clientWidth, parent.clientHeight)
+			}
 		}
 
 		window.addEventListener('resize', handleResize)
@@ -242,9 +255,8 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 
 	// Draw the graph
 	const drawGraph = useCallback(
-		(ctx: CanvasRenderingContext2D) => {
-			const canvas = ctx.canvas
-			ctx.clearRect(0, 0, canvas.width, canvas.height)
+		(ctx: CanvasRenderingContext2D, width: number, height: number) => {
+			ctx.clearRect(0, 0, width, height)
 
 			// Draw edges
 			for (const edge of filteredEdges) {
@@ -253,11 +265,14 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 
 				if (!sourcePos || !targetPos) continue
 
+				// Check if edge is connected to selected node
+				const isSelectedEdge = selectedNode && (selectedNode.id === edge.source || selectedNode.id === edge.target)
+
 				ctx.beginPath()
 				ctx.moveTo(sourcePos.x, sourcePos.y)
 				ctx.lineTo(targetPos.x, targetPos.y)
-				ctx.strokeStyle = '#ccc'
-				ctx.lineWidth = 1
+				ctx.strokeStyle = isSelectedEdge ? '#3b82f6' : '#ccc'
+				ctx.lineWidth = isSelectedEdge ? 2 : 1
 				ctx.stroke()
 
 				// Draw arrow
@@ -281,7 +296,7 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 					arrowX - Math.cos(angle + Math.PI / 6) * arrowLength,
 					arrowY - Math.sin(angle + Math.PI / 6) * arrowLength
 				)
-				ctx.fillStyle = '#ccc'
+				ctx.fillStyle = isSelectedEdge ? '#3b82f6' : '#ccc'
 				ctx.fill()
 			}
 
@@ -293,6 +308,14 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 				// Determine if node is selected or hovered
 				const isSelected = selectedNode?.id === node.id
 				const isHovered = hoveredNode?.id === node.id
+				const isRelated =
+					selectedNode &&
+					!isSelected &&
+					filteredEdges.some(
+						edge =>
+							(edge.source === selectedNode.id && edge.target === node.id) ||
+							(edge.target === selectedNode.id && edge.source === node.id)
+					)
 
 				// Draw node circle
 				ctx.beginPath()
@@ -315,9 +338,9 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 				ctx.fillStyle = fillColor
 				ctx.fill()
 
-				// Add stroke for selected/hovered nodes
-				if (isSelected || isHovered) {
-					ctx.strokeStyle = isSelected ? '#ffffff' : '#d1d5db'
+				// Add stroke for selected/hovered/related nodes
+				if (isSelected || isHovered || isRelated) {
+					ctx.strokeStyle = isSelected ? '#ffffff' : isRelated ? '#3b82f6' : '#d1d5db'
 					ctx.lineWidth = isSelected ? 3 : 2
 					ctx.stroke()
 				}
@@ -333,6 +356,29 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 		},
 		[filteredNodes, filteredEdges, selectedNode, hoveredNode, nodeSize]
 	)
+
+	// Get node relationships
+	const getNodeRelationships = () => {
+		if (!selectedNode) return { inputs: [], outputs: [] }
+
+		const inputs = filteredEdges
+			.filter(edge => edge.target === selectedNode.id)
+			.map(edge => {
+				const sourceNode = filteredNodes.find(node => node.id === edge.source)
+				return { edge, node: sourceNode }
+			})
+
+		const outputs = filteredEdges
+			.filter(edge => edge.source === selectedNode.id)
+			.map(edge => {
+				const targetNode = filteredNodes.find(node => node.id === edge.target)
+				return { edge, node: targetNode }
+			})
+
+		return { inputs, outputs }
+	}
+
+	const { inputs, outputs } = getNodeRelationships()
 
 	return (
 		<div className='w-full h-full flex flex-col'>
@@ -357,6 +403,34 @@ export default function DependencyGraph({ customData, nodeSize = 20 }: Dependenc
 								<span className='font-medium'>Team:</span> {selectedNode.data.team || 'N/A'}
 							</div>
 						</div>
+
+						{inputs.length > 0 && (
+							<div className='mt-4'>
+								<h4 className='font-medium'>Inputs</h4>
+								<ul className='mt-1 space-y-1'>
+									{inputs.map(({ node, edge }) => (
+										<li key={edge.id}>
+											From <span className='font-medium text-blue-500'>{node?.label}</span>
+											{edge.data?.dependencyType && <span> - {edge.data.dependencyType}</span>}
+										</li>
+									))}
+								</ul>
+							</div>
+						)}
+
+						{outputs.length > 0 && (
+							<div className='mt-4'>
+								<h4 className='font-medium'>Outputs</h4>
+								<ul className='mt-1 space-y-1'>
+									{outputs.map(({ node, edge }) => (
+										<li key={edge.id}>
+											To <span className='font-medium text-blue-500'>{node?.label}</span>
+											{edge.data?.dependencyType && <span> - {edge.data.dependencyType}</span>}
+										</li>
+									))}
+								</ul>
+							</div>
+						)}
 					</CardContent>
 				</Card>
 			)}

@@ -87,7 +87,7 @@ export default function ModelDataAdapter() {
 			source: edge.source,
 			target: edge.target,
 			data: {
-				dependencyType: edge.type
+				dependencyType: edge.description || edge.type
 			}
 		}))
 	}
@@ -113,7 +113,7 @@ export default function ModelDataAdapter() {
 			</CardHeader>
 			<CardContent>
 				<div className='w-full h-[500px]'>
-					<DependencyGraph customData={graphData} nodeSize={30} />
+					<DependencyGraph customData={graphData} nodeSize={35} />
 				</div>
 			</CardContent>
 		</Card>

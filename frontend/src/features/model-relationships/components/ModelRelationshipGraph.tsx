@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useModelGraph } from '../api/get-model-graph'
 import { ModelNode, ModelEdge } from '../types'
+import ModelDetailsCard from '@/components/dependency-graph/model-details-card'
 
 interface GraphData {
 	nodes: ModelNode[]
@@ -233,118 +234,99 @@ export default function ModelRelationshipGraph() {
 	const { inputs, outputs } = getNodeConnections()
 
 	return (
-		<div className='flex flex-col gap-4 h-full'>
-			<Card className='flex-1'>
-				<CardHeader>
-					<CardTitle>Model Relationship Graph</CardTitle>
-				</CardHeader>
-				<CardContent className='h-[500px] relative overflow-auto'>
-					{isLoading ? (
-						<div className='flex items-center justify-center h-full'>
-							<p>Loading model relationships...</p>
-						</div>
-					) : (
-						<div
-							ref={containerRef}
-							className='relative mx-auto'
-							style={{
-								height: Math.max(...positions.map(p => p.y + p.height + 100), 500),
-								width: Math.max(...positions.map(p => p.x + p.width + 100), 500)
-							}}
-						>
-							{renderConnectors()}
-							{data?.nodes.map(node => {
-								// Determine if node is related to selected node
-								const isRelated = selectedNode && (selectedNode === node.id || hasConnection(selectedNode, node.id))
+		<>
+			<div className='flex flex-col gap-4 h-full'>
+				<Card className='flex-1'>
+					<CardHeader>
+						<CardTitle>Model Relationship Graph</CardTitle>
+					</CardHeader>
+					<CardContent className='h-[500px] relative overflow-auto'>
+						{isLoading ? (
+							<div className='flex items-center justify-center h-full'>
+								<p>Loading model relationships...</p>
+							</div>
+						) : (
+							<div
+								ref={containerRef}
+								className='relative mx-auto'
+								style={{
+									height: Math.max(...positions.map(p => p.y + p.height + 100), 500),
+									width: Math.max(...positions.map(p => p.x + p.width + 100), 500)
+								}}
+							>
+								{renderConnectors()}
+								{data?.nodes.map(node => {
+									// Determine if node is related to selected node
+									const isRelated = selectedNode && (selectedNode === node.id || hasConnection(selectedNode, node.id))
 
-								return (
-									<div
-										key={node.id}
-										ref={el => {
-											if (el) nodesRef.current[node.id] = el
-										}}
-										className={`absolute transition-all duration-200 cursor-pointer
+									return (
+										<div
+											key={node.id}
+											ref={el => {
+												if (el) nodesRef.current[node.id] = el
+											}}
+											className={`absolute transition-all duration-200 cursor-pointer
 											${selectedNode === node.id ? 'ring-2 ring-blue-500' : ''}
 											${isRelated && selectedNode !== node.id ? 'ring-1 ring-blue-400' : ''}`}
-										style={{
-											left: positions.find(p => p.id === node.id)?.x ?? 0,
-											top: positions.find(p => p.id === node.id)?.y ?? 0,
-											width: NODE_WIDTH,
-											height: NODE_HEIGHT,
-											backgroundColor: selectedNode === node.id ? '#3b82f6' : '#1e293b',
-											border: '1px solid #fff',
-											borderRadius: '4px',
-											display: 'flex',
-											alignItems: 'center',
-											justifyContent: 'center',
-											color: '#fff',
-											fontWeight: 'bold',
-											opacity: selectedNode && !isRelated ? 0.6 : 1
-										}}
-										onClick={() => setSelectedNode(node.id === selectedNode ? null : node.id)}
-									>
-										{node.name}
-									</div>
-								)
-							})}
-						</div>
-					)}
-				</CardContent>
-			</Card>
-
-			{selectedNodeDetails && (
-				<Card className='mt-4'>
-					<CardHeader>
-						<CardTitle>{selectedNodeDetails.name}</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className='grid gap-4'>
-							<div>
-								<h3 className='text-sm font-medium'>Model Details</h3>
-								<p className='text-sm text-muted-foreground'>ID: {selectedNodeDetails.id}</p>
-								<p className='text-sm text-muted-foreground'>Owner: {selectedNodeDetails.owner}</p>
-								{selectedNodeDetails.accountableExec && (
-									<p className='text-sm text-muted-foreground'>
-										Accountable Exec: {selectedNodeDetails.accountableExec}
-									</p>
-								)}
+											style={{
+												left: positions.find(p => p.id === node.id)?.x ?? 0,
+												top: positions.find(p => p.id === node.id)?.y ?? 0,
+												width: NODE_WIDTH,
+												height: NODE_HEIGHT,
+												backgroundColor: selectedNode === node.id ? '#3b82f6' : '#1e293b',
+												border: '1px solid #fff',
+												borderRadius: '4px',
+												display: 'flex',
+												alignItems: 'center',
+												justifyContent: 'center',
+												color: '#fff',
+												fontWeight: 'bold',
+												opacity: selectedNode && !isRelated ? 0.6 : 1
+											}}
+											onClick={() => setSelectedNode(node.id === selectedNode ? null : node.id)}
+										>
+											{node.name}
+										</div>
+									)
+								})}
 							</div>
-
-							<div>
-								<h3 className='text-sm font-medium'>Inputs</h3>
-								{inputs.length > 0 ? (
-									<ul className='text-sm'>
-										{inputs.map(({ node, edge }) => (
-											<li key={edge.source} className='mt-1'>
-												From <span className='font-medium text-blue-500'>{node?.name}</span>
-												{edge.description && <span className='text-muted-foreground'> - {edge.description}</span>}
-											</li>
-										))}
-									</ul>
-								) : (
-									<p className='text-sm text-muted-foreground'>No inputs</p>
-								)}
-							</div>
-
-							<div>
-								<h3 className='text-sm font-medium'>Outputs</h3>
-								{outputs.length > 0 ? (
-									<ul className='text-sm'>
-										{outputs.map(({ node, edge }) => (
-											<li key={edge.target} className='mt-1'>
-												To <span className='font-medium text-blue-500'>{node?.name}</span>
-												{edge.description && <span className='text-muted-foreground'> - {edge.description}</span>}
-											</li>
-										))}
-									</ul>
-								) : (
-									<p className='text-sm text-muted-foreground'>No outputs</p>
-								)}
-							</div>
-						</div>
+						)}
 					</CardContent>
 				</Card>
+			</div>
+
+			{selectedNodeDetails && (
+				<ModelDetailsCard
+					selectedNode={{
+						name: selectedNodeDetails.name,
+						id: selectedNodeDetails.id,
+						type: String(selectedNodeDetails.type || 'Unknown'),
+						risk: 'medium',
+						domain: selectedNodeDetails.purpose?.toString(),
+						team: selectedNodeDetails.owner
+					}}
+					inputs={inputs.map(({ node, edge }) => ({
+						node: {
+							name: node?.name,
+							label: node?.name
+						},
+						link: {
+							id: edge.source,
+							dependencyType: edge.description
+						}
+					}))}
+					outputs={outputs.map(({ node, edge }) => ({
+						node: {
+							name: node?.name,
+							label: node?.name
+						},
+						link: {
+							id: edge.target,
+							dependencyType: edge.description
+						}
+					}))}
+				/>
 			)}
-		</div>
+		</>
 	)
 }

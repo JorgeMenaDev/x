@@ -702,35 +702,30 @@ export default function DefaultDependencyGraph() {
 			ctx.moveTo(pos1.x, pos1.y)
 			ctx.lineTo(pos2.x, pos2.y)
 
-			// Edge color based on relationship and selection
-			let strokeStyle
-			switch (edge.relationship) {
-				case 'input':
-					strokeStyle = isSelected ? '#60a5fa' : '#3b82f6' // Brighter blue when selected
-					break
-				case 'output':
-					strokeStyle = isSelected ? '#a78bfa' : '#8b5cf6' // Brighter purple when selected
-					break
-				case 'calculation':
-					strokeStyle = isSelected ? '#fb923c' : '#f97316' // Brighter orange when selected
-					break
-				default:
-					strokeStyle = isSelected ? '#d1d5db' : '#9ca3af' // Brighter gray when selected
+			// Edge styling based on selection state
+			if (isSelected) {
+				// Highlighted edge style - similar to org chart
+				ctx.strokeStyle = '#60a5fa' // Bright blue for selected connections
+				ctx.lineWidth = 3
+			} else {
+				// Normal edge style - more subtle
+				ctx.strokeStyle = '#4b5563' // Subtle gray for unselected
+				ctx.lineWidth = 1
+				ctx.globalAlpha = 0.5
 			}
 
-			ctx.strokeStyle = strokeStyle
-			ctx.lineWidth = isSelected ? 2 : 1
 			ctx.stroke()
+			ctx.globalAlpha = 1.0
 
 			// Draw arrow
 			const angle = Math.atan2(pos2.y - pos1.y, pos2.x - pos1.x)
-			const arrowSize = isSelected ? 10 : 8
+			const arrowSize = isSelected ? 12 : 8
 
 			ctx.beginPath()
 			ctx.moveTo(pos2.x - arrowSize * Math.cos(angle - Math.PI / 6), pos2.y - arrowSize * Math.sin(angle - Math.PI / 6))
 			ctx.lineTo(pos2.x, pos2.y)
 			ctx.lineTo(pos2.x - arrowSize * Math.cos(angle + Math.PI / 6), pos2.y - arrowSize * Math.sin(angle + Math.PI / 6))
-			ctx.fillStyle = strokeStyle
+			ctx.fillStyle = isSelected ? '#60a5fa' : '#4b5563'
 			ctx.fill()
 		})
 
@@ -741,20 +736,42 @@ export default function DefaultDependencyGraph() {
 
 			const isSelected = selectedNode && selectedNode.id === node.id
 			const isHovered = hoveredNode && hoveredNode.id === node.id
+			const isConnected =
+				selectedNode &&
+				filteredEdges.some(
+					edge =>
+						(edge.source === selectedNode.id && edge.target === node.id) ||
+						(edge.target === selectedNode.id && edge.source === node.id)
+				)
 
 			// Node circle
 			ctx.beginPath()
 			ctx.arc(pos.x, pos.y, isSelected || isHovered ? 22 : 20, 0, Math.PI * 2)
-			ctx.fillStyle = getRiskColor(node.riskRating)
+
+			// Fill color based on state
+			if (isSelected) {
+				ctx.fillStyle = '#60a5fa' // Bright blue for selected node
+			} else if (isConnected) {
+				ctx.fillStyle = getRiskColor(node.riskRating)
+				ctx.globalAlpha = 1.0 // Full opacity for connected nodes
+			} else if (selectedNode) {
+				ctx.fillStyle = getRiskColor(node.riskRating)
+				ctx.globalAlpha = 0.3 // Fade out unconnected nodes when a node is selected
+			} else {
+				ctx.fillStyle = getRiskColor(node.riskRating)
+				ctx.globalAlpha = 1.0
+			}
+
 			ctx.fill()
+			ctx.globalAlpha = 1.0
 
 			// Node border
-			ctx.strokeStyle = isSelected ? '#000000' : '#ffffff'
+			ctx.strokeStyle = isSelected ? '#1d4ed8' : isConnected ? '#ffffff' : '#e5e7eb'
 			ctx.lineWidth = isSelected || isHovered ? 3 : 2
 			ctx.stroke()
 
 			// Node label
-			ctx.fillStyle = '#ffffff'
+			ctx.fillStyle = isSelected || isConnected ? '#ffffff' : '#e5e7eb'
 			ctx.font = isSelected || isHovered ? 'bold 10px Arial' : '10px Arial'
 			ctx.textAlign = 'center'
 			ctx.textBaseline = 'middle'

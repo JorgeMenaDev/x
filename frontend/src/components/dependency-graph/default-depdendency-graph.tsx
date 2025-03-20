@@ -463,6 +463,8 @@ export default function DefaultDependencyGraph() {
 	const [draggedNode, setDraggedNode] = useState<string | null>(null)
 	const [groupBy, setGroupBy] = useState<'none' | 'department' | 'risk'>('none')
 	const [groups, setGroups] = useState<{ [key: string]: boolean }>({})
+	const [isDraggingNode, setIsDraggingNode] = useState(false)
+	const dragStartTimeRef = useRef<number>(0)
 
 	// Get current model data
 	const currentModelData = MODEL_DATA_MAP[selectedModelId as keyof typeof MODEL_DATA_MAP]
@@ -985,78 +987,6 @@ export default function DefaultDependencyGraph() {
 		const canvas = canvasRef.current
 		if (!canvas) return
 
-		const handleMouseMove = (e: MouseEvent) => {
-			const rect = canvas.getBoundingClientRect()
-			const x = e.clientX - rect.left
-			const y = e.clientY - rect.top
-			setMousePos({ x, y })
-
-			// Check if hovering over a node
-			let hovered = null
-			for (const node of filteredNodes) {
-				const pos = nodePositionsRef.current[node.id]
-				if (!pos) continue
-
-				const dx = x - pos.x
-				const dy = y - pos.y
-				const distance = Math.sqrt(dx * dx + dy * dy)
-
-				if (distance < 20) {
-					hovered = node
-					break
-				}
-			}
-
-			setHoveredNode(hovered)
-			canvas.style.cursor = hovered ? 'pointer' : 'default'
-		}
-
-		const handleClick = (e: MouseEvent) => {
-			const rect = canvas.getBoundingClientRect()
-			const x = e.clientX - rect.left
-			const y = e.clientY - rect.top
-
-			// Check if clicking on a node
-			for (const node of filteredNodes) {
-				const pos = nodePositionsRef.current[node.id]
-				if (!pos) continue
-
-				const dx = x - pos.x
-				const dy = y - pos.y
-				const distance = Math.sqrt(dx * dx + dy * dy)
-
-				if (distance < 20) {
-					setSelectedNode(node)
-					return
-				}
-			}
-
-			// If not clicking on a node, deselect
-			setSelectedNode(null)
-		}
-
-		canvas.addEventListener('mousemove', handleMouseMove)
-		canvas.addEventListener('click', handleClick)
-
-		return () => {
-			canvas.removeEventListener('mousemove', handleMouseMove)
-			canvas.removeEventListener('click', handleClick)
-		}
-	}, [filteredNodes])
-
-	// Add zoom controls
-	const handleZoom = (direction: 'in' | 'out') => {
-		setScale(prevScale => {
-			const newScale = direction === 'in' ? prevScale * 1.2 : prevScale / 1.2
-			return Math.min(Math.max(0.5, newScale), 2) // Limit zoom between 0.5x and 2x
-		})
-	}
-
-	// Add mouse event handlers for dragging
-	useEffect(() => {
-		const canvas = canvasRef.current
-		if (!canvas) return
-
 		const handleMouseDown = (e: MouseEvent) => {
 			const rect = canvas.getBoundingClientRect()
 			const x = (e.clientX - rect.left - offset.x) / scale
@@ -1080,6 +1010,8 @@ export default function DefaultDependencyGraph() {
 
 			if (clickedNode) {
 				setDraggedNode(clickedNode)
+				setIsDraggingNode(false)
+				dragStartTimeRef.current = Date.now()
 			} else {
 				setIsDragging(true)
 				setDragStart({ x: e.clientX, y: e.clientY })
@@ -1087,15 +1019,22 @@ export default function DefaultDependencyGraph() {
 		}
 
 		const handleMouseMove = (e: MouseEvent) => {
+			const rect = canvas.getBoundingClientRect()
+			const x = e.clientX - rect.left
+			const y = e.clientY - rect.top
+			setMousePos({ x, y })
+
 			if (draggedNode) {
-				const rect = canvas.getBoundingClientRect()
-				const x = (e.clientX - rect.left - offset.x) / scale
-				const y = (e.clientY - rect.top - offset.y) / scale
+				setIsDraggingNode(true)
+				const nodeX = (e.clientX - rect.left - offset.x) / scale
+				const nodeY = (e.clientY - rect.top - offset.y) / scale
 
 				nodePositionsRef.current[draggedNode] = {
 					...nodePositionsRef.current[draggedNode],
-					x,
-					y
+					x: nodeX,
+					y: nodeY,
+					vx: 0,
+					vy: 0
 				}
 			} else if (isDragging) {
 				setOffset(prev => ({
@@ -1103,12 +1042,47 @@ export default function DefaultDependencyGraph() {
 					y: prev.y + (e.clientY - dragStart.y)
 				}))
 				setDragStart({ x: e.clientX, y: e.clientY })
+			} else {
+				// Handle hover state
+				let hovered = null
+				for (const node of filteredNodes) {
+					const pos = nodePositionsRef.current[node.id]
+					if (!pos) continue
+
+					const dx = (x - offset.x) / scale - pos.x
+					const dy = (y - offset.y) / scale - pos.y
+					const distance = Math.sqrt(dx * dx + dy * dy)
+
+					if (distance < 20) {
+						hovered = node
+						break
+					}
+				}
+
+				setHoveredNode(hovered)
+				canvas.style.cursor = hovered ? 'pointer' : 'default'
 			}
 		}
 
-		const handleMouseUp = () => {
+		const handleMouseUp = (e: MouseEvent) => {
+			if (draggedNode) {
+				const dragDuration = Date.now() - dragStartTimeRef.current
+				const wasActuallyDragging = isDraggingNode
+
+				// Reset dragging states
+				setDraggedNode(null)
+				setIsDraggingNode(false)
+
+				// If it was a quick click (not a drag), select the node
+				if (!wasActuallyDragging && dragDuration < 200) {
+					const node = filteredNodes.find(n => n.id === draggedNode)
+					if (node) {
+						setSelectedNode(node)
+					}
+				}
+			}
+
 			setIsDragging(false)
-			setDraggedNode(null)
 		}
 
 		canvas.addEventListener('mousedown', handleMouseDown)
@@ -1120,7 +1094,15 @@ export default function DefaultDependencyGraph() {
 			window.removeEventListener('mousemove', handleMouseMove)
 			window.removeEventListener('mouseup', handleMouseUp)
 		}
-	}, [scale, offset, draggedNode, isDragging, dragStart, filteredNodes])
+	}, [scale, offset, draggedNode, isDragging, dragStart, filteredNodes, isDraggingNode])
+
+	// Add zoom controls
+	const handleZoom = (direction: 'in' | 'out') => {
+		setScale(prevScale => {
+			const newScale = direction === 'in' ? prevScale * 1.2 : prevScale / 1.2
+			return Math.min(Math.max(0.5, newScale), 2) // Limit zoom between 0.5x and 2x
+		})
+	}
 
 	return (
 		<div className='grid grid-cols-1 md:grid-cols-3 gap-6'>

@@ -339,12 +339,96 @@ const MODEL_4_DATA: ModelGraphData = {
 	]
 }
 
+const MODEL_5_DATA: ModelGraphData = {
+	nodes: [
+		{
+			id: 'MODEL_Z',
+			name: 'Model Z',
+			type: 'Model',
+			riskRating: 'high',
+			owner: 'Alex Thompson',
+			department: 'Core Models',
+			lastUpdated: '2024-02-28',
+			purpose: 'Core model orchestration',
+			remediationStatus: 'Completed',
+			remediationSteps: ['Core model validation', 'Integration testing', 'Documentation update']
+		},
+		{
+			id: 'MODEL_P',
+			name: 'Model P',
+			type: 'Model',
+			riskRating: 'medium',
+			owner: 'Sarah Chen',
+			department: 'Risk Analytics',
+			lastUpdated: '2024-02-26',
+			purpose: 'Risk processing module'
+		},
+		{
+			id: 'MODEL_Q',
+			name: 'Model Q',
+			type: 'Model',
+			riskRating: 'medium',
+			owner: 'Michael Lee',
+			department: 'Analytics',
+			lastUpdated: '2024-02-25',
+			purpose: 'Analytics processing'
+		},
+		{
+			id: 'MODEL_S',
+			name: 'Model S',
+			type: 'Model',
+			riskRating: 'low',
+			owner: 'Emma Davis',
+			department: 'Risk Analytics',
+			lastUpdated: '2024-02-24',
+			purpose: 'Specialized risk calculations'
+		},
+		{
+			id: 'MODEL_R',
+			name: 'Model R',
+			type: 'Model',
+			riskRating: 'low',
+			owner: 'James Wilson',
+			department: 'Analytics',
+			lastUpdated: '2024-02-23',
+			purpose: 'Results processing'
+		}
+	],
+	edges: [
+		{
+			source: 'MODEL_Z',
+			target: 'MODEL_P',
+			relationship: 'output',
+			description: 'Core to Risk Processing'
+		},
+		{
+			source: 'MODEL_Z',
+			target: 'MODEL_Q',
+			relationship: 'output',
+			description: 'Core to Analytics Processing'
+		},
+		{
+			source: 'MODEL_P',
+			target: 'MODEL_S',
+			relationship: 'output',
+			description: 'Risk Processing to Specialized Calculations'
+		},
+		{
+			source: 'MODEL_Q',
+			target: 'MODEL_R',
+			relationship: 'output',
+			description: 'Analytics Processing to Results'
+		}
+	]
+}
+
 // Map model IDs to their data
 const MODEL_DATA_MAP = {
 	MODEL_1: MODEL_1_DATA,
 	MODEL_2: MODEL_2_DATA,
 	MODEL_3: MODEL_3_DATA,
-	MODEL_4: MODEL_4_DATA
+	MODEL_4: MODEL_4_DATA,
+	MODEL_5: MODEL_5_DATA
 }
 
 // Add root models for dropdown selection
@@ -352,7 +436,8 @@ const rootModels = [
 	{ id: 'MODEL_1', name: 'Credit Risk Assessment Model', data: MODEL_1_DATA },
 	{ id: 'MODEL_2', name: 'Loan Pricing Model', data: MODEL_2_DATA },
 	{ id: 'MODEL_3', name: 'Portfolio Risk Model', data: MODEL_3_DATA },
-	{ id: 'MODEL_4', name: 'Market Risk Model', data: MODEL_4_DATA }
+	{ id: 'MODEL_4', name: 'Market Risk Model', data: MODEL_4_DATA },
+	{ id: 'MODEL_5', name: 'Model Z Hierarchy', data: MODEL_5_DATA }
 ]
 
 export default function DefaultDependencyGraph() {

@@ -39,11 +39,11 @@ const data = {
 					url: '/dashboard/models/explorer'
 				},
 				{
-					title: 'Model Lifecycle',
-					url: '/dashboard/models/lifecycle'
+					title: 'Model Relationships',
+					url: '/dashboard/models/relationships'
 				},
 				{
-					title: 'Model Validation and Attestation',
+					title: 'Model Validation',
 					url: '/dashboard/models/validation'
 				}
 			]
@@ -51,24 +51,12 @@ const data = {
 		{
 			title: 'Analytics',
 			url: '',
-			icon: ChartLine,
-			items: [
-				{
-					title: 'Dependency Graph',
-					url: '/dashboard/analytics/dependency-graph'
-				}
-			]
+			icon: ChartLine
 		},
 		{
 			title: 'Documentation',
 			url: '/dashboard/docs',
-			icon: BookOpen,
-			items: [
-				{
-					title: 'Get Started',
-					url: '/dashboard/docs/get-started'
-				}
-			]
+			icon: BookOpen
 		},
 		{
 			title: 'Settings',

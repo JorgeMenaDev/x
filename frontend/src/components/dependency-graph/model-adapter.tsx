@@ -38,15 +38,11 @@ interface ModelGraphData {
  */
 export default function ModelDataAdapter() {
 	const [selectedModel, setSelectedModel] = useState('MODEL_Z')
-	const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d')
+
 	const { data, isLoading } = useModelGraphByRoot(selectedModel)
 
 	const handleModelChange = (value: string) => {
 		setSelectedModel(value)
-	}
-
-	const handleViewModeChange = (value: string) => {
-		setViewMode(value as '2d' | '3d')
 	}
 
 	if (isLoading) {
@@ -118,23 +114,11 @@ export default function ModelDataAdapter() {
 							</SelectContent>
 						</Select>
 					</div>
-					<div>
-						<Tabs value={viewMode} onValueChange={handleViewModeChange} className='w-[200px]'>
-							<TabsList className='grid w-full grid-cols-2'>
-								<TabsTrigger value='2d'>2D View</TabsTrigger>
-								<TabsTrigger value='3d'>3D View</TabsTrigger>
-							</TabsList>
-						</Tabs>
-					</div>
 				</div>
 			</CardHeader>
 			<CardContent>
 				<div className='w-full h-full relative'>
-					{viewMode === '2d' ? (
-						<TwoDependencyGraph customData={graphData} nodeSize={45} />
-					) : (
-						<ThreeDependencyGraph customData={graphData} nodeSize={4} />
-					)}
+					<TwoDependencyGraph customData={graphData} nodeSize={45} />
 				</div>
 			</CardContent>
 		</Card>

@@ -1197,9 +1197,9 @@ export default function DefaultDependencyGraph() {
 													})
 												}
 											/>
-											<Label htmlFor='filter-high' className='flex items-center text-white'>
+											<Label htmlFor='filter-high' className='flex items-center dark:text-white text-dark'>
 												<div className='w-3 h-3 rounded-full bg-red-500 mr-2'></div>
-												<span className='text-white'>High Risk</span>
+												<span className=''>High Risk</span>
 											</Label>
 										</div>
 										<div className='flex items-center space-x-2'>
@@ -1292,15 +1292,15 @@ export default function DefaultDependencyGraph() {
 						<div className='mb-4 flex gap-4'>
 							<div className='flex items-center gap-2'>
 								<div className='w-3 h-3 rounded-full bg-red-500'></div>
-								<span className='text-sm text-white'>High Risk</span>
+								<span className='text-sm text-dark dark:text-white'>High Risk</span>
 							</div>
 							<div className='flex items-center gap-2'>
 								<div className='w-3 h-3 rounded-full bg-orange-500'></div>
-								<span className='text-sm text-white'>Medium Risk</span>
+								<span className='text-sm text-dark dark:text-white'>Medium Risk</span>
 							</div>
 							<div className='flex items-center gap-2'>
 								<div className='w-3 h-3 rounded-full bg-green-500'></div>
-								<span className='text-sm text-white'>Low Risk</span>
+								<span className='text-sm text-dark dark:text-white'>Low Risk</span>
 							</div>
 						</div>
 						<canvas

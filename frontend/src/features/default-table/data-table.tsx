@@ -40,13 +40,15 @@ export interface DataTableProps<TData, TValue> {
 	defaultColumnFilters?: ColumnFiltersState
 	// TODO: add sortingColumnFilters
 	filterFields?: DataTableFilterField<TData>[]
+	onFiltersChange?: (filters: ColumnFiltersState) => void
 }
 
 export function DataTable<TData, TValue>({
 	columns,
 	data,
 	defaultColumnFilters = [],
-	filterFields = []
+	filterFields = [],
+	onFiltersChange
 }: DataTableProps<TData, TValue>) {
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(defaultColumnFilters)
 	const [sorting, setSorting] = React.useState<SortingState>([])
@@ -57,12 +59,29 @@ export function DataTable<TData, TValue>({
 	const [columnVisibility, setColumnVisibility] = useLocalStorage<VisibilityState>('data-table-visibility', {})
 	const [_, setSearch] = useQueryStates(searchParamsParser)
 
+	// Custom column filters handler that also calls the external handler if provided
+	const handleColumnFiltersChange = React.useCallback(
+		(updaterOrValue: any) => {
+			// First update the internal state
+			setColumnFilters(updaterOrValue)
+
+			// Then call the external handler if provided
+			if (onFiltersChange) {
+				// If it's a function, call it with current value to get the new value
+				const newValue = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters) : updaterOrValue
+
+				onFiltersChange(newValue)
+			}
+		},
+		[onFiltersChange, columnFilters]
+	)
+
 	const table = useReactTable({
 		data,
 		columns,
 		state: { columnFilters, sorting, columnVisibility, pagination },
 		onColumnVisibilityChange: setColumnVisibility,
-		onColumnFiltersChange: setColumnFilters,
+		onColumnFiltersChange: handleColumnFiltersChange,
 		onSortingChange: setSorting,
 		onPaginationChange: setPagination,
 		getSortedRowModel: getSortedRowModel(),

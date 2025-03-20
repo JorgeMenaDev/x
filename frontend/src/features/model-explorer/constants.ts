@@ -121,7 +121,7 @@ export const filterFields = [
 	{
 		label: 'Risk Rating',
 		value: 'riskRating',
-		type: 'multiple-select',
+		type: 'checkbox',
 		options: RISK_RATINGS.map(rating => ({
 			label: rating.charAt(0).toUpperCase() + rating.slice(1),
 			value: rating
@@ -130,7 +130,7 @@ export const filterFields = [
 	{
 		label: 'Type',
 		value: 'type',
-		type: 'multiple-select',
+		type: 'checkbox',
 		options: MODEL_TYPES.map(type => ({
 			label: type,
 			value: type
@@ -139,7 +139,7 @@ export const filterFields = [
 	{
 		label: 'Purpose',
 		value: 'purpose',
-		type: 'multiple-select',
+		type: 'checkbox',
 		options: MODEL_PURPOSES.map(purpose => ({
 			label: purpose,
 			value: purpose
@@ -148,7 +148,7 @@ export const filterFields = [
 	{
 		label: 'Legal Entity',
 		value: 'legalEntities',
-		type: 'multiple-select',
+		type: 'checkbox',
 		options: [
 			{ label: 'LE1', value: 'LE1' },
 			{ label: 'LE2', value: 'LE2' },

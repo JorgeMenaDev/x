@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Download, Filter, X } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import ModelDetailsCard from './model-details-card'
 
 // Types for our model data
 interface ModelNode {
@@ -1300,55 +1301,40 @@ export default function DefaultDependencyGraph() {
 								</TabsContent>
 
 								<TabsContent value='model-info' className='p-4'>
-									<div className='space-y-4'>
-										<div>
-											<h3 className='text-sm font-medium mb-2'>Model Information</h3>
-											<div className='grid grid-cols-2 gap-4'>
-												<div>
-													<h4 className='text-sm font-medium text-muted-foreground'>Model Type</h4>
-													<p>{selectedNode.type}</p>
-												</div>
-												<div>
-													<h4 className='text-sm font-medium text-muted-foreground'>Purpose</h4>
-													<p>{selectedNode.purpose}</p>
-												</div>
-												<div>
-													<h4 className='text-sm font-medium text-muted-foreground'>Last Updated</h4>
-													<p>{selectedNode.lastUpdated}</p>
-												</div>
-												<div>
-													<h4 className='text-sm font-medium text-muted-foreground'>Department</h4>
-													<p>{selectedNode.department}</p>
-												</div>
-											</div>
-										</div>
-
-										{selectedNode.remediationStatus && (
-											<div>
-												<h3 className='text-sm font-medium mb-2'>Remediation Details</h3>
-												<div className='space-y-2'>
-													<div>
-														<h4 className='text-sm font-medium text-muted-foreground'>Status</h4>
-														<Badge variant={selectedNode.remediationStatus === 'Completed' ? 'secondary' : 'outline'}>
-															{selectedNode.remediationStatus}
-														</Badge>
-													</div>
-													{selectedNode.remediationSteps && (
-														<div>
-															<h4 className='text-sm font-medium text-muted-foreground'>Steps</h4>
-															<ul className='list-disc pl-4 space-y-1'>
-																{selectedNode.remediationSteps.map((step, index) => (
-																	<li key={index} className='text-sm'>
-																		{step}
-																	</li>
-																))}
-															</ul>
-														</div>
-													)}
-												</div>
-											</div>
-										)}
-									</div>
+									<ModelDetailsCard
+										selectedNode={{
+											name: selectedNode.name,
+											id: selectedNode.id,
+											type: selectedNode.type,
+											risk: selectedNode.riskRating,
+											domain: selectedNode.department,
+											team: selectedNode.owner
+										}}
+										inputs={filteredEdges
+											.filter(edge => edge.target === selectedNode.id)
+											.map(edge => ({
+												node: {
+													label: filteredNodes.find(node => node.id === edge.source)?.name,
+													name: filteredNodes.find(node => node.id === edge.source)?.name
+												},
+												link: {
+													id: edge.source,
+													dependencyType: edge.relationship
+												}
+											}))}
+										outputs={filteredEdges
+											.filter(edge => edge.source === selectedNode.id)
+											.map(edge => ({
+												node: {
+													label: filteredNodes.find(node => node.id === edge.target)?.name,
+													name: filteredNodes.find(node => node.id === edge.target)?.name
+												},
+												link: {
+													id: edge.target,
+													dependencyType: edge.relationship
+												}
+											}))}
+									/>
 								</TabsContent>
 							</Tabs>
 						</CardContent>

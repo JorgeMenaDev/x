@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { TableCell } from './table-cell'
 import { TableRecord, TableViewProps } from '../types'
-import { validateField, isFieldEditable } from '@/lib/validation/table-schemas'
+import { validateField, isFieldEditable } from '@/features/default-table/lib/validation/table-schemas'
 import { toast } from 'sonner'
 
 export function TableView({

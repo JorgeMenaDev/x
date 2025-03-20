@@ -25,7 +25,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { Slot, type SlotProps } from '@radix-ui/react-slot'
 
-import { composeRefs } from '@/lib/compose-refs'
+import { composeRefs } from '@/features/default-table/lib/compose-refs'
 import { cn } from '@/lib/utils'
 import { Button, type ButtonProps } from '@/components/ui/button'
 import { createPortal } from 'react-dom'

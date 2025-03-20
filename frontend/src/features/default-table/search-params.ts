@@ -9,7 +9,7 @@ import {
 	parseAsTimestamp
 } from 'nuqs/server'
 // Note: import from 'nuqs/server' to avoid the "use client" directive
-import { ARRAY_DELIMITER, RANGE_DELIMITER, SLIDER_DELIMITER } from '@/lib/delimiters'
+import { ARRAY_DELIMITER, RANGE_DELIMITER, SLIDER_DELIMITER } from '@/features/default-table/lib/delimiters'
 import { REGIONS } from '../../constants/region'
 import { TAGS } from '../../constants/tag'
 

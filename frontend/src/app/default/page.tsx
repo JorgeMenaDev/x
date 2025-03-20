@@ -1,31 +1,31 @@
-import { columns } from "./columns";
-import { data, filterFields } from "./constants";
-import { DataTable } from "./data-table";
-import { searchParamsCache } from "./search-params";
-import { Skeleton } from "./skeleton";
+import { columns } from '../../features/default-table/columns'
+import { data, filterFields } from '../../features/default-table/constants'
+import { DataTable } from '../../features/default-table/data-table'
+import { searchParamsCache } from '../../features/default-table/search-params'
+import { Skeleton } from '../../features/default-table/skeleton'
 
-import * as React from "react";
+import * as React from 'react'
 
 export default async function Page({
-  searchParams,
+	searchParams
 }: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const search = searchParamsCache.parse(await searchParams);
+	const search = searchParamsCache.parse(await searchParams)
 
-  return (
-    <React.Suspense fallback={<Skeleton />}>
-      <DataTable
-        columns={columns}
-        data={data}
-        filterFields={filterFields}
-        defaultColumnFilters={Object.entries(search)
-          .map(([key, value]) => ({
-            id: key,
-            value,
-          }))
-          .filter(({ value }) => value ?? undefined)}
-      />
-    </React.Suspense>
-  );
+	return (
+		<React.Suspense fallback={<Skeleton />}>
+			<DataTable
+				columns={columns}
+				data={data}
+				filterFields={filterFields}
+				defaultColumnFilters={Object.entries(search)
+					.map(([key, value]) => ({
+						id: key,
+						value
+					}))
+					.filter(({ value }) => value ?? undefined)}
+			/>
+		</React.Suspense>
+	)
 }

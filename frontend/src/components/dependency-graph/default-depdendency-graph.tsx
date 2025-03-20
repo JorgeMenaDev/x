@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { Download, Filter, X } from 'lucide-react'
+import { Download, Filter, X, ZoomIn, ZoomOut, Move } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import ModelDetailsCard from './model-details-card'
@@ -456,6 +456,13 @@ export default function DefaultDependencyGraph() {
 	const nodePositionsRef = useRef<{ [key: string]: { x: number; y: number; vx: number; vy: number } }>({})
 	const animationRef = useRef<number | null>(null)
 	const [selectedModelId, setSelectedModelId] = useState('MODEL_1')
+	const [scale, setScale] = useState(1)
+	const [offset, setOffset] = useState({ x: 0, y: 0 })
+	const [isDragging, setIsDragging] = useState(false)
+	const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+	const [draggedNode, setDraggedNode] = useState<string | null>(null)
+	const [groupBy, setGroupBy] = useState<'none' | 'department' | 'risk'>('none')
+	const [groups, setGroups] = useState<{ [key: string]: boolean }>({})
 
 	// Get current model data
 	const currentModelData = MODEL_DATA_MAP[selectedModelId as keyof typeof MODEL_DATA_MAP]
@@ -676,7 +683,75 @@ export default function DefaultDependencyGraph() {
 		}
 	}, [filteredNodes, filteredEdges, isSimulationStable])
 
-	// Render the graph
+	// Function to calculate group positions
+	const calculateGroupPositions = useCallback(() => {
+		if (groupBy === 'none') return {}
+
+		const groupPositions: { [key: string]: { x: number; y: number; width: number; height: number } } = {}
+		const groupedNodes: { [key: string]: ModelNode[] } = {}
+
+		// Group nodes
+		filteredNodes.forEach(node => {
+			const groupKey = groupBy === 'department' ? node.department : node.riskRating
+			if (!groupedNodes[groupKey]) {
+				groupedNodes[groupKey] = []
+			}
+			groupedNodes[groupKey].push(node)
+		})
+
+		// Calculate group positions
+		const canvasWidth = canvasRef.current?.width || 1000
+		const canvasHeight = canvasRef.current?.height || 500
+		const padding = 50
+		const groupCount = Object.keys(groupedNodes).length
+		const groupHeight = (canvasHeight - padding * 2) / groupCount
+
+		// Position groups vertically
+		Object.entries(groupedNodes).forEach(([groupKey, nodes], index) => {
+			const width = canvasWidth - padding * 2
+			const height = groupHeight - padding
+
+			groupPositions[groupKey] = {
+				x: padding,
+				y: padding + index * groupHeight,
+				width,
+				height
+			}
+
+			// Position nodes within group
+			const nodeCount = nodes.length
+			const nodesPerRow = Math.ceil(Math.sqrt(nodeCount))
+			const nodeSpacing = Math.min(width / nodesPerRow, height / Math.ceil(nodeCount / nodesPerRow))
+
+			nodes.forEach((node, nodeIndex) => {
+				const row = Math.floor(nodeIndex / nodesPerRow)
+				const col = nodeIndex % nodesPerRow
+				const nodeX = padding + col * nodeSpacing + nodeSpacing / 2 + (width - nodesPerRow * nodeSpacing) / 2
+				const nodeY = padding + index * groupHeight + row * nodeSpacing + nodeSpacing / 2
+
+				nodePositionsRef.current[node.id] = {
+					x: nodeX,
+					y: nodeY,
+					vx: 0,
+					vy: 0
+				}
+			})
+		})
+
+		return groupPositions
+	}, [groupBy, filteredNodes])
+
+	// Update effect to handle grouping changes
+	useEffect(() => {
+		if (groupBy !== 'none') {
+			setIsSimulationStable(true) // Stop physics simulation when grouping
+			calculateGroupPositions() // Position nodes in groups
+		} else {
+			setIsSimulationStable(false) // Resume physics simulation when no grouping
+		}
+	}, [groupBy, calculateGroupPositions])
+
+	// Update renderGraph function
 	const renderGraph = useCallback(() => {
 		const canvas = canvasRef.current
 		if (!canvas) return
@@ -684,15 +759,40 @@ export default function DefaultDependencyGraph() {
 		const ctx = canvas.getContext('2d')
 		if (!ctx) return
 
-		const nodePositions = nodePositionsRef.current
-
+		ctx.save()
 		ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+		// Apply zoom and pan
+		ctx.translate(offset.x, offset.y)
+		ctx.scale(scale, scale)
+
+		// Draw groups if enabled
+		if (groupBy !== 'none') {
+			const groupPositions = calculateGroupPositions()
+			Object.entries(groupPositions).forEach(([groupKey, pos]) => {
+				if (groups[groupKey] !== false) {
+					// Draw if group is not collapsed
+					ctx.fillStyle = 'rgba(55, 65, 81, 0.3)'
+					ctx.strokeStyle = '#4b5563'
+					ctx.lineWidth = 1
+					ctx.beginPath()
+					ctx.roundRect(pos.x, pos.y, pos.width, pos.height, 10)
+					ctx.fill()
+					ctx.stroke()
+
+					// Group label
+					ctx.fillStyle = '#e5e7eb'
+					ctx.font = 'bold 14px Arial'
+					ctx.fillText(groupKey, pos.x + 10, pos.y + 25)
+				}
+			})
+		}
 
 		// Draw edges
 		ctx.lineWidth = 1
 		filteredEdges.forEach(edge => {
-			const pos1 = nodePositions[edge.source]
-			const pos2 = nodePositions[edge.target]
+			const pos1 = nodePositionsRef.current[edge.source]
+			const pos2 = nodePositionsRef.current[edge.target]
 			if (!pos1 || !pos2) return
 
 			// Highlight edges connected to selected node
@@ -731,7 +831,7 @@ export default function DefaultDependencyGraph() {
 
 		// Draw nodes
 		filteredNodes.forEach(node => {
-			const pos = nodePositions[node.id]
+			const pos = nodePositionsRef.current[node.id]
 			if (!pos) return
 
 			const isSelected = selectedNode && selectedNode.id === node.id
@@ -780,7 +880,7 @@ export default function DefaultDependencyGraph() {
 
 		// Draw tooltip for hovered node
 		if (hoveredNode) {
-			const pos = nodePositions[hoveredNode.id]
+			const pos = nodePositionsRef.current[hoveredNode.id]
 			if (pos) {
 				const tooltipWidth = 200
 				const tooltipHeight = 80
@@ -826,8 +926,10 @@ export default function DefaultDependencyGraph() {
 			runPhysicsSimulation()
 		}
 
+		ctx.restore()
+
 		animationRef.current = requestAnimationFrame(renderGraph)
-	}, [filteredNodes, filteredEdges, selectedNode, hoveredNode, mousePos, isSimulationStable, runPhysicsSimulation])
+	}, [filteredNodes, filteredEdges, selectedNode, hoveredNode, mousePos, scale, offset, groupBy, groups])
 
 	// Initialize canvas and simulation
 	useEffect(() => {
@@ -942,6 +1044,84 @@ export default function DefaultDependencyGraph() {
 		}
 	}, [filteredNodes])
 
+	// Add zoom controls
+	const handleZoom = (direction: 'in' | 'out') => {
+		setScale(prevScale => {
+			const newScale = direction === 'in' ? prevScale * 1.2 : prevScale / 1.2
+			return Math.min(Math.max(0.5, newScale), 2) // Limit zoom between 0.5x and 2x
+		})
+	}
+
+	// Add mouse event handlers for dragging
+	useEffect(() => {
+		const canvas = canvasRef.current
+		if (!canvas) return
+
+		const handleMouseDown = (e: MouseEvent) => {
+			const rect = canvas.getBoundingClientRect()
+			const x = (e.clientX - rect.left - offset.x) / scale
+			const y = (e.clientY - rect.top - offset.y) / scale
+
+			// Check if clicking on a node
+			let clickedNode = null
+			for (const node of filteredNodes) {
+				const pos = nodePositionsRef.current[node.id]
+				if (!pos) continue
+
+				const dx = x - pos.x
+				const dy = y - pos.y
+				const distance = Math.sqrt(dx * dx + dy * dy)
+
+				if (distance < 20) {
+					clickedNode = node.id
+					break
+				}
+			}
+
+			if (clickedNode) {
+				setDraggedNode(clickedNode)
+			} else {
+				setIsDragging(true)
+				setDragStart({ x: e.clientX, y: e.clientY })
+			}
+		}
+
+		const handleMouseMove = (e: MouseEvent) => {
+			if (draggedNode) {
+				const rect = canvas.getBoundingClientRect()
+				const x = (e.clientX - rect.left - offset.x) / scale
+				const y = (e.clientY - rect.top - offset.y) / scale
+
+				nodePositionsRef.current[draggedNode] = {
+					...nodePositionsRef.current[draggedNode],
+					x,
+					y
+				}
+			} else if (isDragging) {
+				setOffset(prev => ({
+					x: prev.x + (e.clientX - dragStart.x),
+					y: prev.y + (e.clientY - dragStart.y)
+				}))
+				setDragStart({ x: e.clientX, y: e.clientY })
+			}
+		}
+
+		const handleMouseUp = () => {
+			setIsDragging(false)
+			setDraggedNode(null)
+		}
+
+		canvas.addEventListener('mousedown', handleMouseDown)
+		window.addEventListener('mousemove', handleMouseMove)
+		window.addEventListener('mouseup', handleMouseUp)
+
+		return () => {
+			canvas.removeEventListener('mousedown', handleMouseDown)
+			window.removeEventListener('mousemove', handleMouseMove)
+			window.removeEventListener('mouseup', handleMouseUp)
+		}
+	}, [scale, offset, draggedNode, isDragging, dragStart, filteredNodes])
+
 	return (
 		<div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
 			<div className={`${selectedNode ? 'md:col-span-2' : 'md:col-span-3'}`}>
@@ -954,7 +1134,7 @@ export default function DefaultDependencyGraph() {
 						<div className='flex items-center gap-2'>
 							<Select value={selectedModelId} onValueChange={value => setSelectedModelId(value)}>
 								<SelectTrigger className='w-[200px]'>
-									<span>Select Model</span>
+									{rootModels.find(model => model.id === selectedModelId)?.name || 'Select Model'}
 								</SelectTrigger>
 								<SelectContent>
 									{rootModels.map(model => (
@@ -962,6 +1142,34 @@ export default function DefaultDependencyGraph() {
 											{model.name}
 										</SelectItem>
 									))}
+								</SelectContent>
+							</Select>
+							<div className='flex items-center gap-1 border rounded-md p-1'>
+								<Button variant='ghost' size='sm' onClick={() => handleZoom('in')}>
+									<ZoomIn className='h-4 w-4' />
+								</Button>
+								<Button variant='ghost' size='sm' onClick={() => handleZoom('out')}>
+									<ZoomOut className='h-4 w-4' />
+								</Button>
+								<Button
+									variant='ghost'
+									size='sm'
+									onClick={() => {
+										setScale(1)
+										setOffset({ x: 0, y: 0 })
+									}}
+								>
+									<Move className='h-4 w-4' />
+								</Button>
+							</div>
+							<Select value={groupBy} onValueChange={value => setGroupBy(value as 'none' | 'department' | 'risk')}>
+								<SelectTrigger className='w-[150px]'>
+									<span>Group By</span>
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value='none'>No Grouping</SelectItem>
+									<SelectItem value='department'>Department</SelectItem>
+									<SelectItem value='risk'>Risk Level</SelectItem>
 								</SelectContent>
 							</Select>
 							<Button variant='outline' size='sm' onClick={() => setShowFilters(!showFilters)}>
@@ -1111,9 +1319,16 @@ export default function DefaultDependencyGraph() {
 								<span className='text-sm text-white'>Low Risk</span>
 							</div>
 						</div>
-						<canvas ref={canvasRef} className='w-full border rounded-md' style={{ height: '500px' }} />
+						<canvas
+							ref={canvasRef}
+							className='w-full border rounded-md cursor-grab active:cursor-grabbing'
+							style={{ height: '500px' }}
+						/>
 						<div className='mt-4 text-sm text-muted-foreground'>
-							<p>Click on a node to view detailed information. Hover over nodes for quick details.</p>
+							<p>
+								Click and drag nodes to reposition them. Use mouse wheel or zoom controls to zoom in/out. Click and drag
+								the background to pan.
+							</p>
 						</div>
 					</CardContent>
 				</Card>

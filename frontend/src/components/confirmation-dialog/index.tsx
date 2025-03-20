@@ -5,7 +5,7 @@ import * as React from 'react'
 import { useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { useDisclosure } from '@/hooks/use-disclosure'
+import { useDisclosure } from '@/features/default-table/hooks/use-disclosure'
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 

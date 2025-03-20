@@ -26,7 +26,7 @@ export const columns: ColumnDef<ModelSchema>[] = [
 			return <Badge variant='outline'>{row.getValue('type')}</Badge>
 		},
 		filterFn: (row, id, value) => {
-			const rowValue = row.getValue(id)
+			const rowValue = row.getValue(id) as string
 			if (typeof value === 'string') return value === rowValue
 			if (Array.isArray(value)) return value.includes(rowValue)
 			return false
@@ -36,7 +36,7 @@ export const columns: ColumnDef<ModelSchema>[] = [
 		accessorKey: 'purpose',
 		header: 'Purpose',
 		filterFn: (row, id, value) => {
-			const rowValue = row.getValue(id)
+			const rowValue = row.getValue(id) as string
 			if (typeof value === 'string') return value === rowValue
 			if (Array.isArray(value)) return value.includes(rowValue)
 			return false
@@ -50,7 +50,7 @@ export const columns: ColumnDef<ModelSchema>[] = [
 		accessorKey: 'legalEntities',
 		header: 'Legal Entities',
 		cell: ({ row }) => {
-			const value = row.getValue('legalEntities')
+			const value = row.getValue('legalEntities') as string[]
 			if (Array.isArray(value)) {
 				return <div className='flex flex-wrap gap-1'>{value.join(', ')}</div>
 			}
@@ -75,7 +75,7 @@ export const columns: ColumnDef<ModelSchema>[] = [
 			)
 		},
 		filterFn: (row, id, value) => {
-			const rowValue = row.getValue(id)
+			const rowValue = row.getValue(id) as string
 			if (typeof value === 'string') return value === rowValue
 			if (Array.isArray(value)) return value.includes(rowValue)
 			return false
@@ -93,7 +93,7 @@ export const columns: ColumnDef<ModelSchema>[] = [
 			)
 		},
 		filterFn: (row, id, value) => {
-			const rowValue = row.getValue(id)
+			const rowValue = row.getValue(id) as Date
 			if (value instanceof Date && rowValue instanceof Date) {
 				return isSameDay(value, rowValue)
 			}

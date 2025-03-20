@@ -10,14 +10,14 @@ import { MODEL_PURPOSES, MODEL_TYPES, RISK_RATINGS } from './constants'
 
 // Create parsers that match the default-table's format
 export const searchParamsParser = {
-	id: parseAsString,
-	name: parseAsString,
-	type: parseAsArrayOf(parseAsStringLiteral(MODEL_TYPES), ARRAY_DELIMITER),
-	purpose: parseAsArrayOf(parseAsStringLiteral(MODEL_PURPOSES), ARRAY_DELIMITER),
-	owner: parseAsString,
-	legalEntities: parseAsArrayOf(parseAsString, ARRAY_DELIMITER),
-	riskRating: parseAsArrayOf(parseAsStringLiteral(RISK_RATINGS), ARRAY_DELIMITER),
-	lastUpdated: parseAsArrayOf(parseAsTimestamp, RANGE_DELIMITER)
+	id: parseAsString.withDefault(''),
+	name: parseAsString.withDefault(''),
+	type: parseAsArrayOf(parseAsStringLiteral(MODEL_TYPES), ARRAY_DELIMITER).withDefault([]),
+	purpose: parseAsArrayOf(parseAsStringLiteral(MODEL_PURPOSES), ARRAY_DELIMITER).withDefault([]),
+	owner: parseAsString.withDefault(''),
+	legalEntities: parseAsArrayOf(parseAsString, ARRAY_DELIMITER).withDefault([]),
+	riskRating: parseAsArrayOf(parseAsStringLiteral(RISK_RATINGS), ARRAY_DELIMITER).withDefault([]),
+	lastUpdated: parseAsArrayOf(parseAsTimestamp, RANGE_DELIMITER).withDefault([])
 }
 
 export const searchParamsCache = createSearchParamsCache(searchParamsParser)

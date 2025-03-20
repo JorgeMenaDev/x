@@ -1131,19 +1131,21 @@ export default function DefaultDependencyGraph() {
 							<CardTitle>Model Dependency Graph</CardTitle>
 							<CardDescription>Interactive visualization of model relationships and dependencies</CardDescription>
 						</div>
-						<div className='flex items-center gap-2'>
-							<Select value={selectedModelId} onValueChange={value => setSelectedModelId(value)}>
-								<SelectTrigger className='w-[200px]'>
-									{rootModels.find(model => model.id === selectedModelId)?.name || 'Select Model'}
-								</SelectTrigger>
-								<SelectContent>
-									{rootModels.map(model => (
-										<SelectItem key={model.id} value={model.id}>
-											{model.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+						<div className='flex items-center gap-2 '>
+							<div className=''>
+								<Select value={selectedModelId} onValueChange={value => setSelectedModelId(value)}>
+									<SelectTrigger className='w-[250px]'>
+										{rootModels.find(model => model.id === selectedModelId)?.name || 'Select Model'}
+									</SelectTrigger>
+									<SelectContent>
+										{rootModels.map(model => (
+											<SelectItem key={model.id} value={model.id}>
+												{model.name}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
 							<div className='flex items-center gap-1 border rounded-md p-1'>
 								<Button variant='ghost' size='sm' onClick={() => handleZoom('in')}>
 									<ZoomIn className='h-4 w-4' />

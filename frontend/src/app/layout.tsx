@@ -4,7 +4,7 @@ import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Toaster } from 'sonner'
-import { Providers } from '@/components/providers'
+import { Providers } from '@/providers'
 import { Notifications } from '@/components/notifications/notifications'
 
 const geistSans = Geist({
@@ -30,16 +30,13 @@ export default function RootLayout({
 	return (
 		<html lang='en' suppressHydrationWarning>
 			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-				<ThemeProvider attribute='class' defaultTheme='system' enableSystem disableTransitionOnChange>
-					<Providers>
-						<Notifications />
-						<div className='flex-1'>{children}</div>
-						<div className='fixed bottom-4 right-4'>
-							<ThemeToggle />
-						</div>
-					</Providers>
-				</ThemeProvider>
-				<Toaster richColors />
+				<Providers>
+					<Notifications />
+					<div className='flex-1'>{children}</div>
+					<div className='fixed bottom-4 right-4'>
+						<ThemeToggle />
+					</div>
+				</Providers>
 			</body>
 		</html>
 	)

@@ -33,7 +33,7 @@ interface ModelNode {
 interface ModelEdge {
 	source: string
 	target: string
-	relationship: 'input' | 'output' | 'calculation'
+	relationship: string
 	description?: string
 }
 
@@ -184,6 +184,177 @@ const mockGraphData: ModelGraphData = {
 	]
 }
 
+// Add mock data for different models
+const MODEL_1_DATA: ModelGraphData = mockGraphData // Original mock data
+const MODEL_2_DATA: ModelGraphData = {
+	nodes: [
+		{
+			id: 'LP001',
+			name: 'Loan Pricing Core',
+			type: 'Model',
+			riskRating: 'high',
+			owner: 'Sarah Wilson',
+			department: 'Finance',
+			lastUpdated: '2024-02-15',
+			purpose: 'Core loan pricing calculations',
+			remediationStatus: 'In Progress',
+			remediationSteps: ['Update pricing parameters', 'Validate market data inputs', 'Review risk adjustments']
+		},
+		{
+			id: 'LP002',
+			name: 'Market Data Feed',
+			type: 'DQM',
+			riskRating: 'medium',
+			owner: 'John Davis',
+			department: 'Market Data',
+			lastUpdated: '2024-02-10',
+			purpose: 'Market data integration'
+		},
+		{
+			id: 'LP003',
+			name: 'Risk Adjustment',
+			type: 'Model',
+			riskRating: 'high',
+			owner: 'Emily Chen',
+			department: 'Risk',
+			lastUpdated: '2024-02-12',
+			purpose: 'Risk-based pricing adjustments'
+		}
+	],
+	edges: [
+		{
+			source: 'LP002',
+			target: 'LP001',
+			relationship: 'input',
+			description: 'Market data feed'
+		},
+		{
+			source: 'LP003',
+			target: 'LP001',
+			relationship: 'input',
+			description: 'Risk adjustments'
+		}
+	]
+}
+
+const MODEL_3_DATA: ModelGraphData = {
+	nodes: [
+		{
+			id: 'PR001',
+			name: 'Portfolio Risk Engine',
+			type: 'Model',
+			riskRating: 'high',
+			owner: 'Michael Brown',
+			department: 'Risk',
+			lastUpdated: '2024-02-20',
+			purpose: 'Portfolio risk assessment',
+			remediationStatus: 'Completed',
+			remediationSteps: ['Updated risk metrics', 'Enhanced stress testing', 'Improved reporting']
+		},
+		{
+			id: 'PR002',
+			name: 'Market Risk Feed',
+			type: 'DQM',
+			riskRating: 'medium',
+			owner: 'Lisa Anderson',
+			department: 'Market Risk',
+			lastUpdated: '2024-02-18',
+			purpose: 'Market risk data'
+		},
+		{
+			id: 'PR003',
+			name: 'Credit Risk Feed',
+			type: 'DQM',
+			riskRating: 'high',
+			owner: 'David Wilson',
+			department: 'Credit Risk',
+			lastUpdated: '2024-02-19',
+			purpose: 'Credit risk data'
+		}
+	],
+	edges: [
+		{
+			source: 'PR002',
+			target: 'PR001',
+			relationship: 'input',
+			description: 'Market risk data'
+		},
+		{
+			source: 'PR003',
+			target: 'PR001',
+			relationship: 'input',
+			description: 'Credit risk data'
+		}
+	]
+}
+
+const MODEL_4_DATA: ModelGraphData = {
+	nodes: [
+		{
+			id: 'MR001',
+			name: 'Market Risk Core',
+			type: 'Model',
+			riskRating: 'high',
+			owner: 'James Wilson',
+			department: 'Market Risk',
+			lastUpdated: '2024-02-25',
+			purpose: 'Market risk assessment',
+			remediationStatus: 'Not Started',
+			remediationSteps: ['Review VaR calculations', 'Update stress scenarios', 'Enhance risk reporting']
+		},
+		{
+			id: 'MR002',
+			name: 'Price Feed',
+			type: 'DQM',
+			riskRating: 'low',
+			owner: 'Emma Davis',
+			department: 'Market Data',
+			lastUpdated: '2024-02-23',
+			purpose: 'Price data integration'
+		},
+		{
+			id: 'MR003',
+			name: 'Volatility Model',
+			type: 'Model',
+			riskRating: 'medium',
+			owner: 'Robert Chen',
+			department: 'Quant',
+			lastUpdated: '2024-02-24',
+			purpose: 'Volatility calculations'
+		}
+	],
+	edges: [
+		{
+			source: 'MR002',
+			target: 'MR001',
+			relationship: 'input',
+			description: 'Price data'
+		},
+		{
+			source: 'MR003',
+			target: 'MR001',
+			relationship: 'input',
+			description: 'Volatility inputs'
+		}
+	]
+}
+
+// Map model IDs to their data
+const MODEL_DATA_MAP = {
+	MODEL_1: MODEL_1_DATA,
+	MODEL_2: MODEL_2_DATA,
+	MODEL_3: MODEL_3_DATA,
+	MODEL_4: MODEL_4_DATA
+}
+
+// Add root models for dropdown selection
+const rootModels = [
+	{ id: 'MODEL_1', name: 'Credit Risk Assessment Model', data: MODEL_1_DATA },
+	{ id: 'MODEL_2', name: 'Loan Pricing Model', data: MODEL_2_DATA },
+	{ id: 'MODEL_3', name: 'Portfolio Risk Model', data: MODEL_3_DATA },
+	{ id: 'MODEL_4', name: 'Market Risk Model', data: MODEL_4_DATA }
+]
+
 export default function DefaultDependencyGraph() {
 	const canvasRef = useRef<HTMLCanvasElement>(null)
 	const [selectedNode, setSelectedNode] = useState<ModelNode | null>(null)
@@ -198,24 +369,42 @@ export default function DefaultDependencyGraph() {
 	const [isSimulationStable, setIsSimulationStable] = useState(false)
 	const nodePositionsRef = useRef<{ [key: string]: { x: number; y: number; vx: number; vy: number } }>({})
 	const animationRef = useRef<number | null>(null)
+	const [selectedModelId, setSelectedModelId] = useState('MODEL_1')
+
+	// Get current model data
+	const currentModelData = MODEL_DATA_MAP[selectedModelId as keyof typeof MODEL_DATA_MAP]
 
 	// Get unique departments and owners for filters
-	const departments = Array.from(new Set(mockGraphData.nodes.map(node => node.department)))
-	const owners = Array.from(new Set(mockGraphData.nodes.map(node => node.owner)))
+	const departments = Array.from(new Set(currentModelData.nodes.map(node => node.department)))
+	const owners = Array.from(new Set(currentModelData.nodes.map(node => node.owner)))
 
-	// Apply filters to nodes
-	const filteredNodes = mockGraphData.nodes.filter(
+	// Filter nodes based on current filters
+	const filteredNodes = currentModelData.nodes.filter(
 		node =>
-			filters.riskLevels[node.riskRating] && filters.departments.has(node.department) && filters.owners.has(node.owner)
+			filters.riskLevels[node.riskRating as keyof typeof filters.riskLevels] &&
+			filters.departments.has(node.department) &&
+			filters.owners.has(node.owner)
 	)
 
 	// Get filtered node IDs for edge filtering
 	const filteredNodeIds = new Set(filteredNodes.map(node => node.id))
 
 	// Filter edges to only include connections between visible nodes
-	const filteredEdges = mockGraphData.edges.filter(
+	const filteredEdges = currentModelData.edges.filter(
 		edge => filteredNodeIds.has(edge.source) && filteredNodeIds.has(edge.target)
 	)
+
+	// Update filters when model changes
+	useEffect(() => {
+		const modelData = MODEL_DATA_MAP[selectedModelId as keyof typeof MODEL_DATA_MAP]
+		setFilters({
+			riskLevels: { high: true, medium: true, low: true },
+			departments: new Set(modelData.nodes.map(node => node.department)),
+			owners: new Set(modelData.nodes.map(node => node.owner))
+		})
+		setSelectedNode(null)
+		setIsSimulationStable(false)
+	}, [selectedModelId])
 
 	// Get direct connections for selected node
 	const getNodeConnections = (nodeId: string) => {
@@ -660,6 +849,18 @@ export default function DefaultDependencyGraph() {
 							<CardDescription>Interactive visualization of model relationships and dependencies</CardDescription>
 						</div>
 						<div className='flex items-center gap-2'>
+							<Select value={selectedModelId} onValueChange={value => setSelectedModelId(value)}>
+								<SelectTrigger className='w-[200px]'>
+									<span>Select Model</span>
+								</SelectTrigger>
+								<SelectContent>
+									{rootModels.map(model => (
+										<SelectItem key={model.id} value={model.id}>
+											{model.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 							<Button variant='outline' size='sm' onClick={() => setShowFilters(!showFilters)}>
 								<Filter className='h-4 w-4 mr-2' />
 								Filters
@@ -831,10 +1032,11 @@ export default function DefaultDependencyGraph() {
 						</CardHeader>
 						<CardContent className='p-0'>
 							<Tabs defaultValue='details' className='w-full'>
-								<TabsList className='w-full grid grid-cols-3'>
+								<TabsList className='w-full grid grid-cols-4'>
 									<TabsTrigger value='details'>Details</TabsTrigger>
 									<TabsTrigger value='dependencies'>Dependencies</TabsTrigger>
 									<TabsTrigger value='history'>History</TabsTrigger>
+									<TabsTrigger value='model-info'>Model Info</TabsTrigger>
 								</TabsList>
 
 								<TabsContent value='details' className='p-4 space-y-4'>
@@ -1010,6 +1212,58 @@ export default function DefaultDependencyGraph() {
 									) : (
 										<p className='text-sm text-muted-foreground italic'>No change history available</p>
 									)}
+								</TabsContent>
+
+								<TabsContent value='model-info' className='p-4'>
+									<div className='space-y-4'>
+										<div>
+											<h3 className='text-sm font-medium mb-2'>Model Information</h3>
+											<div className='grid grid-cols-2 gap-4'>
+												<div>
+													<h4 className='text-sm font-medium text-muted-foreground'>Model Type</h4>
+													<p>{selectedNode.type}</p>
+												</div>
+												<div>
+													<h4 className='text-sm font-medium text-muted-foreground'>Purpose</h4>
+													<p>{selectedNode.purpose}</p>
+												</div>
+												<div>
+													<h4 className='text-sm font-medium text-muted-foreground'>Last Updated</h4>
+													<p>{selectedNode.lastUpdated}</p>
+												</div>
+												<div>
+													<h4 className='text-sm font-medium text-muted-foreground'>Department</h4>
+													<p>{selectedNode.department}</p>
+												</div>
+											</div>
+										</div>
+
+										{selectedNode.remediationStatus && (
+											<div>
+												<h3 className='text-sm font-medium mb-2'>Remediation Details</h3>
+												<div className='space-y-2'>
+													<div>
+														<h4 className='text-sm font-medium text-muted-foreground'>Status</h4>
+														<Badge variant={selectedNode.remediationStatus === 'Completed' ? 'secondary' : 'outline'}>
+															{selectedNode.remediationStatus}
+														</Badge>
+													</div>
+													{selectedNode.remediationSteps && (
+														<div>
+															<h4 className='text-sm font-medium text-muted-foreground'>Steps</h4>
+															<ul className='list-disc pl-4 space-y-1'>
+																{selectedNode.remediationSteps.map((step, index) => (
+																	<li key={index} className='text-sm'>
+																		{step}
+																	</li>
+																))}
+															</ul>
+														</div>
+													)}
+												</div>
+											</div>
+										)}
+									</div>
 								</TabsContent>
 							</Tabs>
 						</CardContent>

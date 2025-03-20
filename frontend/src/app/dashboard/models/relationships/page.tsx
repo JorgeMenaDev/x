@@ -1,6 +1,7 @@
 import OrgChart from '@/features/model-relationships/components'
 import Graphs2DAnd3D from '@/components/dependency-graph/model-adapter'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import DefaultDependencyGraph from '@/components/dependency-graph/default-depdendency-graph'
 
 export default function DependencyGraphPage() {
 	return (
@@ -15,7 +16,8 @@ export default function DependencyGraphPage() {
 				</TabsContent>
 
 				<TabsContent value='model-graph'>
-					<Graphs2DAnd3D />
+					{/* <Graphs2DAnd3D /> */}
+					<DefaultDependencyGraph />
 				</TabsContent>
 			</Tabs>
 		</div>

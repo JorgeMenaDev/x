@@ -34,7 +34,7 @@ export const columns: ColumnDef<ModelSchema>[] = [
 	},
 	{
 		accessorKey: 'purpose',
-		header: 'Purpose',
+		header: ({ column }) => <DataTableColumnHeader column={column} title='Purpose' />,
 		filterFn: (row, id, value) => {
 			const rowValue = row.getValue(id) as string
 			if (typeof value === 'string') return value === rowValue
@@ -44,7 +44,7 @@ export const columns: ColumnDef<ModelSchema>[] = [
 	},
 	{
 		accessorKey: 'owner',
-		header: 'Owner'
+		header: ({ column }) => <DataTableColumnHeader column={column} title='Owner' />
 	},
 	{
 		accessorKey: 'legalEntities',
@@ -65,7 +65,7 @@ export const columns: ColumnDef<ModelSchema>[] = [
 	},
 	{
 		accessorKey: 'riskRating',
-		header: 'Risk Rating',
+		header: ({ column }) => <DataTableColumnHeader column={column} title='Risk Rating' />,
 		cell: ({ row }) => {
 			const value = row.getValue('riskRating') as 'high' | 'medium' | 'low'
 			return (

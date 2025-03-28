@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import type { ColumnDef, ColumnFiltersState, SortingState, RowSelectionState } from '@tanstack/react-table'
+import type { ColumnDef, ColumnFiltersState, SortingState } from '@tanstack/react-table'
 import {
 	flexRender,
 	getCoreRowModel,
@@ -23,7 +23,6 @@ import { DataTableToolbar } from '@/components/data-table/data-table-toolbar'
 import { cn } from '@/lib/utils'
 import { useLocalStorage } from '@/features/default-table/hooks/use-local-storage'
 import { DataTableProvider } from '@/components/data-table/data-table-provider'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal } from 'lucide-react'
@@ -45,69 +44,62 @@ export function ModelDataTable<TData, TValue>({
 }: ModelDataTableProps<TData, TValue>) {
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(defaultColumnFilters)
 	const [sorting, setSorting] = React.useState<SortingState>([])
-	const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
 	const [pagination, setPagination] = React.useState({
 		pageIndex: 0,
 		pageSize: 10
 	})
 	const [columnVisibility, setColumnVisibility] = useLocalStorage('model-table-visibility', {})
 
-	// Custom column filters handler that also calls the external handler if provided
 	const handleColumnFiltersChange = React.useCallback(
 		(updaterOrValue: any) => {
-			// First update the internal state
 			setColumnFilters(updaterOrValue)
 
-			// Then call the external handler if provided
 			if (onFiltersChange) {
-				// If it's a function, call it with current value to get the new value
 				const newValue = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters) : updaterOrValue
-
 				onFiltersChange(newValue)
 			}
 		},
 		[onFiltersChange, columnFilters]
 	)
 
-	// Add selection column to the beginning of columns array
-	const columnsWithSelection = React.useMemo<ColumnDef<TData, TValue>[]>(
+	// Add actions column to the end of columns array
+	const columnsWithActions = React.useMemo<ColumnDef<TData, TValue>[]>(
 		() => [
+			...columns,
 			{
-				id: 'select',
-				header: ({ table }) => (
-					<Checkbox
-						checked={table.getIsAllPageRowsSelected()}
-						onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
-						aria-label='Select all'
-					/>
-				),
-				cell: ({ row }) => (
-					<Checkbox
-						checked={row.getIsSelected()}
-						onCheckedChange={value => row.toggleSelected(!!value)}
-						aria-label='Select row'
-					/>
+				id: 'actions',
+				header: 'Actions',
+				cell: () => (
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button variant='ghost' size='sm'>
+								<MoreHorizontal className='h-4 w-4' />
+								<span className='sr-only'>Actions</span>
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align='end'>
+							<DropdownMenuItem onClick={() => console.log('Action C')}>View details</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => console.log('Action A')}>Add new model use</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => console.log('Action B')}>Add model relationship</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				),
 				enableSorting: false,
 				enableHiding: false
-			},
-			...columns
+			}
 		],
 		[columns]
 	)
 
 	const table = useReactTable({
 		data,
-		columns: columnsWithSelection,
+		columns: columnsWithActions,
 		state: {
 			columnFilters,
 			sorting,
 			columnVisibility,
-			pagination,
-			rowSelection
+			pagination
 		},
-		enableRowSelection: true,
-		onRowSelectionChange: setRowSelection,
 		onColumnVisibilityChange: setColumnVisibility,
 		onColumnFiltersChange: handleColumnFiltersChange,
 		onSortingChange: setSorting,
@@ -124,7 +116,7 @@ export function ModelDataTable<TData, TValue>({
 	return (
 		<DataTableProvider
 			table={table}
-			columns={columnsWithSelection}
+			columns={columnsWithActions}
 			filterFields={filterFields}
 			columnFilters={columnFilters}
 			sorting={sorting}
@@ -142,26 +134,6 @@ export function ModelDataTable<TData, TValue>({
 				<div className='flex max-w-full flex-1 flex-col gap-4 overflow-hidden p-1'>
 					<DataTableFilterCommand schema={modelFilterSchema} />
 					<DataTableToolbar />
-					{table.getSelectedRowModel().rows.length > 0 && (
-						<div className='flex items-center gap-2'>
-							<span className='text-sm text-muted-foreground'>
-								{table.getSelectedRowModel().rows.length} row(s) selected
-							</span>
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button variant='ghost' size='sm'>
-										<MoreHorizontal className='h-4 w-4' />
-										<span className='sr-only'>Actions</span>
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent align='end'>
-									<DropdownMenuItem onClick={() => console.log('Action A')}>Action A</DropdownMenuItem>
-									<DropdownMenuItem onClick={() => console.log('Action B')}>Action B</DropdownMenuItem>
-									<DropdownMenuItem onClick={() => console.log('Action C')}>Action C</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
-						</div>
-					)}
 					<div className='rounded-md border'>
 						<Table>
 							<TableHeader className='bg-muted/50'>
@@ -182,7 +154,7 @@ export function ModelDataTable<TData, TValue>({
 							<TableBody>
 								{table.getRowModel().rows?.length ? (
 									table.getRowModel().rows.map(row => (
-										<TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+										<TableRow key={row.id}>
 											{row.getVisibleCells().map(cell => (
 												<TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
 											))}
@@ -190,7 +162,7 @@ export function ModelDataTable<TData, TValue>({
 									))
 								) : (
 									<TableRow>
-										<TableCell colSpan={columnsWithSelection.length} className='h-24 text-center'>
+										<TableCell colSpan={columnsWithActions.length} className='h-24 text-center'>
 											No results.
 										</TableCell>
 									</TableRow>

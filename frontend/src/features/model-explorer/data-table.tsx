@@ -28,6 +28,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MoreHorizontal } from 'lucide-react'
 import { AddModelUseDialog } from '../models/components/add-model-use-dialog'
 import { ViewModelDetailsDialog } from '../models/components/view-model-details-dialog'
+import { AddModelRelationshipDialog } from '../models/components/add-model-relationship-dialog'
 
 export interface ModelDataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
@@ -53,6 +54,7 @@ export function ModelDataTable<TData, TValue>({
 	const [columnVisibility, setColumnVisibility] = useLocalStorage('model-table-visibility', {})
 	const [addModelUseDialogOpen, setAddModelUseDialogOpen] = React.useState(false)
 	const [viewDetailsDialogOpen, setViewDetailsDialogOpen] = React.useState(false)
+	const [addRelationshipDialogOpen, setAddRelationshipDialogOpen] = React.useState(false)
 	const [selectedModelId, setSelectedModelId] = React.useState<string>('')
 	const [selectedModelData, setSelectedModelData] = React.useState<any>(null)
 
@@ -110,7 +112,17 @@ export function ModelDataTable<TData, TValue>({
 									>
 										Add new model use
 									</DropdownMenuItem>
-									<DropdownMenuItem onClick={() => console.log('Action B')}>Add model relationship</DropdownMenuItem>
+									<DropdownMenuItem
+										onClick={() => {
+											if (modelId) {
+												setSelectedModelId(modelId)
+												setSelectedModelData(rowData)
+												setAddRelationshipDialogOpen(true)
+											}
+										}}
+									>
+										Add model relationship
+									</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
 							{modelId && (
@@ -134,6 +146,18 @@ export function ModelDataTable<TData, TValue>({
 											}
 										}}
 									/>
+									<AddModelRelationshipDialog
+										modelId={selectedModelId}
+										modelData={selectedModelData}
+										open={addRelationshipDialogOpen && selectedModelId === modelId}
+										onOpenChange={open => {
+											setAddRelationshipDialogOpen(open)
+											if (!open) {
+												setSelectedModelId('')
+												setSelectedModelData(null)
+											}
+										}}
+									/>
 								</>
 							)}
 						</>
@@ -143,7 +167,14 @@ export function ModelDataTable<TData, TValue>({
 				enableHiding: false
 			}
 		],
-		[columns, selectedModelId, addModelUseDialogOpen, viewDetailsDialogOpen, selectedModelData]
+		[
+			columns,
+			selectedModelId,
+			addModelUseDialogOpen,
+			viewDetailsDialogOpen,
+			addRelationshipDialogOpen,
+			selectedModelData
+		]
 	)
 
 	const table = useReactTable({

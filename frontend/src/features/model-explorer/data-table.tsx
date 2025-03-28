@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal } from 'lucide-react'
 import { AddModelUseDialog } from '../models/components/add-model-use-dialog'
+import { ViewModelDetailsDialog } from '../models/components/view-model-details-dialog'
 
 export interface ModelDataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
@@ -51,7 +52,9 @@ export function ModelDataTable<TData, TValue>({
 	})
 	const [columnVisibility, setColumnVisibility] = useLocalStorage('model-table-visibility', {})
 	const [addModelUseDialogOpen, setAddModelUseDialogOpen] = React.useState(false)
+	const [viewDetailsDialogOpen, setViewDetailsDialogOpen] = React.useState(false)
 	const [selectedModelId, setSelectedModelId] = React.useState<string>('')
+	const [selectedModelData, setSelectedModelData] = React.useState<any>(null)
 
 	const handleColumnFiltersChange = React.useCallback(
 		(updaterOrValue: any) => {
@@ -73,7 +76,9 @@ export function ModelDataTable<TData, TValue>({
 				id: 'actions',
 				header: 'Actions',
 				cell: ({ row }) => {
-					const modelId = (row.original as any).id || (row.original as any).model_id // Adjust based on your data structure
+					const modelId = (row.original as any)?.id || (row.original as any)?.model_id || ''
+					const rowData = row.original || null
+
 					return (
 						<>
 							<DropdownMenu>
@@ -84,11 +89,23 @@ export function ModelDataTable<TData, TValue>({
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align='end'>
-									<DropdownMenuItem onClick={() => console.log('Action C')}>View details</DropdownMenuItem>
 									<DropdownMenuItem
 										onClick={() => {
-											setSelectedModelId(modelId)
-											setAddModelUseDialogOpen(true)
+											if (rowData) {
+												setSelectedModelId(modelId)
+												setSelectedModelData(rowData)
+												setViewDetailsDialogOpen(true)
+											}
+										}}
+									>
+										View details
+									</DropdownMenuItem>
+									<DropdownMenuItem
+										onClick={() => {
+											if (modelId) {
+												setSelectedModelId(modelId)
+												setAddModelUseDialogOpen(true)
+											}
 										}}
 									>
 										Add new model use
@@ -96,14 +113,29 @@ export function ModelDataTable<TData, TValue>({
 									<DropdownMenuItem onClick={() => console.log('Action B')}>Add model relationship</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
-							<AddModelUseDialog
-								modelId={selectedModelId}
-								open={addModelUseDialogOpen && selectedModelId === modelId}
-								onOpenChange={open => {
-									setAddModelUseDialogOpen(open)
-									if (!open) setSelectedModelId('')
-								}}
-							/>
+							{modelId && (
+								<>
+									<AddModelUseDialog
+										modelId={selectedModelId}
+										open={addModelUseDialogOpen && selectedModelId === modelId}
+										onOpenChange={open => {
+											setAddModelUseDialogOpen(open)
+											if (!open) setSelectedModelId('')
+										}}
+									/>
+									<ViewModelDetailsDialog
+										modelData={selectedModelData}
+										open={viewDetailsDialogOpen && selectedModelId === modelId}
+										onOpenChange={open => {
+											setViewDetailsDialogOpen(open)
+											if (!open) {
+												setSelectedModelId('')
+												setSelectedModelData(null)
+											}
+										}}
+									/>
+								</>
+							)}
 						</>
 					)
 				},
@@ -111,7 +143,7 @@ export function ModelDataTable<TData, TValue>({
 				enableHiding: false
 			}
 		],
-		[columns, selectedModelId, addModelUseDialogOpen]
+		[columns, selectedModelId, addModelUseDialogOpen, viewDetailsDialogOpen, selectedModelData]
 	)
 
 	const table = useReactTable({

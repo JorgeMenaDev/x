@@ -23,6 +23,9 @@ import { DataTableToolbar } from '@/components/data-table/data-table-toolbar'
 import { cn } from '@/lib/utils'
 import { useLocalStorage } from '@/features/default-table/hooks/use-local-storage'
 import { DataTableProvider } from '@/components/data-table/data-table-provider'
+import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { MoreHorizontal } from 'lucide-react'
 
 export interface ModelDataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
@@ -47,27 +50,56 @@ export function ModelDataTable<TData, TValue>({
 	})
 	const [columnVisibility, setColumnVisibility] = useLocalStorage('model-table-visibility', {})
 
-	// Custom column filters handler that also calls the external handler if provided
 	const handleColumnFiltersChange = React.useCallback(
 		(updaterOrValue: any) => {
-			// First update the internal state
 			setColumnFilters(updaterOrValue)
 
-			// Then call the external handler if provided
 			if (onFiltersChange) {
-				// If it's a function, call it with current value to get the new value
 				const newValue = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters) : updaterOrValue
-
 				onFiltersChange(newValue)
 			}
 		},
 		[onFiltersChange, columnFilters]
 	)
 
+	// Add actions column to the end of columns array
+	const columnsWithActions = React.useMemo<ColumnDef<TData, TValue>[]>(
+		() => [
+			...columns,
+			{
+				id: 'actions',
+				header: 'Actions',
+				cell: () => (
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button variant='ghost' size='sm'>
+								<MoreHorizontal className='h-4 w-4' />
+								<span className='sr-only'>Actions</span>
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align='end'>
+							<DropdownMenuItem onClick={() => console.log('Action C')}>View details</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => console.log('Action A')}>Add new model use</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => console.log('Action B')}>Add model relationship</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				),
+				enableSorting: false,
+				enableHiding: false
+			}
+		],
+		[columns]
+	)
+
 	const table = useReactTable({
 		data,
-		columns,
-		state: { columnFilters, sorting, columnVisibility, pagination },
+		columns: columnsWithActions,
+		state: {
+			columnFilters,
+			sorting,
+			columnVisibility,
+			pagination
+		},
 		onColumnVisibilityChange: setColumnVisibility,
 		onColumnFiltersChange: handleColumnFiltersChange,
 		onSortingChange: setSorting,
@@ -84,7 +116,7 @@ export function ModelDataTable<TData, TValue>({
 	return (
 		<DataTableProvider
 			table={table}
-			columns={columns}
+			columns={columnsWithActions}
 			filterFields={filterFields}
 			columnFilters={columnFilters}
 			sorting={sorting}
@@ -122,7 +154,7 @@ export function ModelDataTable<TData, TValue>({
 							<TableBody>
 								{table.getRowModel().rows?.length ? (
 									table.getRowModel().rows.map(row => (
-										<TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+										<TableRow key={row.id}>
 											{row.getVisibleCells().map(cell => (
 												<TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
 											))}
@@ -130,7 +162,7 @@ export function ModelDataTable<TData, TValue>({
 									))
 								) : (
 									<TableRow>
-										<TableCell colSpan={columns.length} className='h-24 text-center'>
+										<TableCell colSpan={columnsWithActions.length} className='h-24 text-center'>
 											No results.
 										</TableCell>
 									</TableRow>

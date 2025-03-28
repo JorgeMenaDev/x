@@ -26,6 +26,7 @@ import { DataTableProvider } from '@/components/data-table/data-table-provider'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal } from 'lucide-react'
+import { AddModelUseDialog } from '../models/components/add-model-use-dialog'
 
 export interface ModelDataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
@@ -49,6 +50,8 @@ export function ModelDataTable<TData, TValue>({
 		pageSize: 10
 	})
 	const [columnVisibility, setColumnVisibility] = useLocalStorage('model-table-visibility', {})
+	const [addModelUseDialogOpen, setAddModelUseDialogOpen] = React.useState(false)
+	const [selectedModelId, setSelectedModelId] = React.useState<string>('')
 
 	const handleColumnFiltersChange = React.useCallback(
 		(updaterOrValue: any) => {
@@ -69,26 +72,46 @@ export function ModelDataTable<TData, TValue>({
 			{
 				id: 'actions',
 				header: 'Actions',
-				cell: () => (
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant='ghost' size='sm'>
-								<MoreHorizontal className='h-4 w-4' />
-								<span className='sr-only'>Actions</span>
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align='end'>
-							<DropdownMenuItem onClick={() => console.log('Action C')}>View details</DropdownMenuItem>
-							<DropdownMenuItem onClick={() => console.log('Action A')}>Add new model use</DropdownMenuItem>
-							<DropdownMenuItem onClick={() => console.log('Action B')}>Add model relationship</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				),
+				cell: ({ row }) => {
+					const modelId = (row.original as any).id || (row.original as any).model_id // Adjust based on your data structure
+					return (
+						<>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button variant='ghost' size='sm'>
+										<MoreHorizontal className='h-4 w-4' />
+										<span className='sr-only'>Actions</span>
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align='end'>
+									<DropdownMenuItem onClick={() => console.log('Action C')}>View details</DropdownMenuItem>
+									<DropdownMenuItem
+										onClick={() => {
+											setSelectedModelId(modelId)
+											setAddModelUseDialogOpen(true)
+										}}
+									>
+										Add new model use
+									</DropdownMenuItem>
+									<DropdownMenuItem onClick={() => console.log('Action B')}>Add model relationship</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+							<AddModelUseDialog
+								modelId={selectedModelId}
+								open={addModelUseDialogOpen && selectedModelId === modelId}
+								onOpenChange={open => {
+									setAddModelUseDialogOpen(open)
+									if (!open) setSelectedModelId('')
+								}}
+							/>
+						</>
+					)
+				},
 				enableSorting: false,
 				enableHiding: false
 			}
 		],
-		[columns]
+		[columns, selectedModelId, addModelUseDialogOpen]
 	)
 
 	const table = useReactTable({

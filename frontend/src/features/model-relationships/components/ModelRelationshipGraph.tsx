@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import ModelDetailsCard from '@/components/dependency-graph/model-details-card'
+import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 
 // Type definitions
 interface ModelGraphNode {
@@ -193,6 +194,20 @@ export default function ModelRelationshipGraph() {
 	const [selectedModelId, setSelectedModelId] = useState(availableModels[0].id)
 	const [positions, setPositions] = useState<NodePosition[]>([])
 	const [selectedNode, setSelectedNode] = useState<string | null>(null)
+	const [zoomLevel, setZoomLevel] = useState(1)
+
+	// Zoom control functions
+	const handleZoomIn = () => {
+		setZoomLevel(prev => Math.min(prev + 0.2, 2))
+	}
+
+	const handleZoomOut = () => {
+		setZoomLevel(prev => Math.max(prev - 0.2, 0.5))
+	}
+
+	const handleResetZoom = () => {
+		setZoomLevel(1)
+	}
 
 	// Transform current model data based on selection
 	const currentModelData = useMemo(() => {
@@ -482,64 +497,95 @@ export default function ModelRelationshipGraph() {
 							</div>
 						</div>
 					) : (
-						<div
-							ref={containerRef}
-							className='relative overflow-auto border rounded-lg p-8'
-							style={{
-								height: '600px',
-								width: '100%',
-								minWidth: '800px'
-							}}
-						>
+						<div className='relative'>
 							<div
-								className='absolute'
+								className='absolute right-4 top-4 flex gap-2 p-2 bg-gray-800 rounded-lg z-10'
+								style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}
+							>
+								<button
+									onClick={handleZoomIn}
+									className='p-1.5 hover:bg-gray-700 rounded-md text-gray-300 hover:text-white transition-colors'
+									title='Zoom In'
+								>
+									<ZoomIn size={18} />
+								</button>
+								<button
+									onClick={handleZoomOut}
+									className='p-1.5 hover:bg-gray-700 rounded-md text-gray-300 hover:text-white transition-colors'
+									title='Zoom Out'
+								>
+									<ZoomOut size={18} />
+								</button>
+								<button
+									onClick={handleResetZoom}
+									className='p-1.5 hover:bg-gray-700 rounded-md text-gray-300 hover:text-white transition-colors'
+									title='Reset Zoom'
+								>
+									<Maximize2 size={18} />
+								</button>
+							</div>
+							<div
+								ref={containerRef}
+								className='relative overflow-auto border rounded-lg p-8'
 								style={{
-									height: Math.max(...positions.map(p => p.y + NODE_HEIGHT + 100), 600),
-									width: Math.max(...positions.map(p => p.x + NODE_WIDTH + 100), 800),
-									minWidth: '100%'
+									height: '600px',
+									width: '100%',
+									minWidth: '800px'
 								}}
 							>
-								{renderConnectors()}
-								{currentModelData.nodes.map(node => {
-									const nodePosition = positions.find(p => p.id === node.id)
-									const isRelated = selectedNode && (selectedNode === node.id || hasConnection(selectedNode, node.id))
+								<div
+									className='absolute'
+									style={{
+										height: Math.max(...positions.map(p => p.y + NODE_HEIGHT + 100), 600),
+										width: Math.max(...positions.map(p => p.x + NODE_WIDTH + 100), 800),
+										minWidth: '100%',
+										transform: `scale(${zoomLevel})`,
+										transformOrigin: '0 0',
+										transition: 'transform 0.2s ease-out'
+									}}
+								>
+									{renderConnectors()}
+									{currentModelData.nodes.map(node => {
+										const nodePosition = positions.find(p => p.id === node.id)
+										const isRelated = selectedNode && (selectedNode === node.id || hasConnection(selectedNode, node.id))
 
-									if (!nodePosition) return null
+										if (!nodePosition) return null
 
-									return (
-										<div
-											key={node.id}
-											ref={el => {
-												if (el) nodesRef.current[node.id] = el
-											}}
-											className={`absolute transition-all duration-200 cursor-pointer
-												${selectedNode === node.id ? 'ring-2 ring-blue-500' : ''}
-												${isRelated && selectedNode !== node.id ? 'ring-1 ring-blue-400' : ''}`}
-											style={{
-												left: nodePosition.x,
-												top: nodePosition.y,
-												width: NODE_WIDTH,
-												height: NODE_HEIGHT,
-												backgroundColor: selectedNode === node.id ? '#3b82f6' : '#1e293b',
-												border: '1px solid #fff',
-												borderRadius: '4px',
-												display: 'flex',
-												alignItems: 'center',
-												justifyContent: 'center',
-												color: '#fff',
-												padding: '8px 16px',
-												opacity: selectedNode && !isRelated ? 0.6 : 1,
-												fontSize: '0.875rem',
-												lineHeight: '1.25rem',
-												textAlign: 'center',
-												wordBreak: 'break-word'
-											}}
-											onClick={() => setSelectedNode(node.id === selectedNode ? null : node.id)}
-										>
-											{node.name}
-										</div>
-									)
-								})}
+										return (
+											<div
+												key={node.id}
+												ref={el => {
+													if (el) nodesRef.current[node.id] = el
+												}}
+												className={`absolute transition-all duration-200 cursor-pointer
+													${selectedNode === node.id ? 'ring-2 ring-blue-500' : ''}
+													${isRelated && selectedNode !== node.id ? 'ring-1 ring-blue-400' : ''}`}
+												style={{
+													left: nodePosition.x,
+													top: nodePosition.y,
+													width: NODE_WIDTH,
+													height: NODE_HEIGHT,
+													backgroundColor: selectedNode === node.id ? '#3b82f6' : '#1e293b',
+													border: '1px solid #fff',
+													borderRadius: '4px',
+													display: 'flex',
+													alignItems: 'center',
+													justifyContent: 'center',
+													color: '#fff',
+													padding: '8px 16px',
+													opacity: selectedNode && !isRelated ? 0.6 : 1,
+													fontSize: '0.875rem',
+													lineHeight: '1.25rem',
+													textAlign: 'center',
+													wordBreak: 'break-word'
+												}}
+												onClick={() => setSelectedNode(node.id === selectedNode ? null : node.id)}
+											>
+												{node.name}
+											</div>
+										)
+									})}
+								</div>
 							</div>
 						</div>
 					)}

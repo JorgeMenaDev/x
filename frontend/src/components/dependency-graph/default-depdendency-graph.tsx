@@ -460,7 +460,7 @@ const transformModelData = (modelResponse: ModelResponse): ModelGraphData => {
 	const edges: ModelEdge[] = []
 	const processedNodes = new Set<number>()
 
-	const processRelationship = (relationship: ModelRelationship) => {
+	const processRelationship = (relationship: ModelRelationship, parentId?: string) => {
 		// Add source model node if not already added
 		if (!processedNodes.has(relationship.qmModel.qmModelId)) {
 			nodes.push({
@@ -476,37 +476,54 @@ const transformModelData = (modelResponse: ModelResponse): ModelGraphData => {
 			processedNodes.add(relationship.qmModel.qmModelId)
 		}
 
-		// Process input models
-		relationship.inputToModels.forEach(inputModel => {
-			if (!processedNodes.has(inputModel.qmModel.qmModelId)) {
-				nodes.push({
-					id: inputModel.qmModel.qmModelId.toString(),
-					name: inputModel.qmModel.qmName,
-					type: inputModel.qmModel.qmType || 'Model',
-					riskRating: 'medium',
-					owner: inputModel.qmModel.owner || 'Unknown',
-					department: inputModel.qmModel.accountableExec || 'Unknown',
-					lastUpdated: inputModel.qmModel.updatedAt || inputModel.qmModel.createdAt,
-					purpose: inputModel.qmModel.qmPurpose || 'Not specified'
-				})
-				processedNodes.add(inputModel.qmModel.qmModelId)
-			}
-
-			// Add edge from source to input model
+		// If there's a parent, add the edge
+		if (parentId) {
 			edges.push({
-				source: relationship.qmModel.qmModelId.toString(),
-				target: inputModel.qmModel.qmModelId.toString(),
+				source: parentId,
+				target: relationship.qmModel.qmModelId.toString(),
 				relationship: 'input',
 				description: 'Model input relationship'
 			})
+		}
 
-			// Recursively process nested relationships
-			processRelationship(inputModel)
-		})
+		// Process input models recursively
+		if (relationship.inputToModels && relationship.inputToModels.length > 0) {
+			relationship.inputToModels.forEach(inputModel => {
+				if (inputModel.qmModel) {
+					// Add the input model node if not already added
+					if (!processedNodes.has(inputModel.qmModel.qmModelId)) {
+						nodes.push({
+							id: inputModel.qmModel.qmModelId.toString(),
+							name: inputModel.qmModel.qmName,
+							type: inputModel.qmModel.qmType || 'Model',
+							riskRating: 'medium',
+							owner: inputModel.qmModel.owner || 'Unknown',
+							department: inputModel.qmModel.accountableExec || 'Unknown',
+							lastUpdated: inputModel.qmModel.updatedAt || inputModel.qmModel.createdAt,
+							purpose: inputModel.qmModel.qmPurpose || 'Not specified'
+						})
+						processedNodes.add(inputModel.qmModel.qmModelId)
+					}
+
+					// Add edge from current model to input model
+					edges.push({
+						source: relationship.qmModel.qmModelId.toString(),
+						target: inputModel.qmModel.qmModelId.toString(),
+						relationship: 'input',
+						description: 'Model input relationship'
+					})
+
+					// Process nested relationships
+					processRelationship(inputModel, inputModel.qmModel.qmModelId.toString())
+				}
+			})
+		}
 	}
 
 	// Process each relationship in the response
-	modelResponse.data.forEach(processRelationship)
+	modelResponse.data.forEach(relationship => {
+		processRelationship(relationship)
+	})
 
 	return { nodes, edges }
 }

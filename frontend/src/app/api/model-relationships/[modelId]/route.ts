@@ -61,7 +61,7 @@ const mockDataMap: { [key: string]: any } = {
 						updatedAt: null,
 						inputToModels: [
 							{
-								id: 1,
+								id: null,
 								qmModel: {
 									qmModelId: 99001,
 									qmType: null,
@@ -75,7 +75,327 @@ const mockDataMap: { [key: string]: any } = {
 									createdAt: '2025-04-09T09:49:22.133067',
 									updatedAt: null
 								},
-								inputToModels: []
+								qmInputToModel: null,
+								qmModelId: 99001,
+								qmInputTo: null,
+								createdAt: '2025-04-09T09:49:22.133067',
+								updatedAt: null,
+								inputToModels: [
+									{
+										id: null,
+										qmModel: {
+											qmModelId: 191,
+											qmType: null,
+											qmPurpose: null,
+											qmTypeId: null,
+											qmPurposeId: null,
+											qmName: 'CVA Stress Testing',
+											owner: null,
+											accountableExec: null,
+											modelUses: [],
+											createdAt: '2025-04-09T09:49:22.133067',
+											updatedAt: null
+										},
+										qmInputToModel: null,
+										qmModelId: 191,
+										qmInputTo: null,
+										createdAt: '2025-04-09T09:49:22.133067',
+										updatedAt: null,
+										inputToModels: []
+									},
+									{
+										id: null,
+										qmModel: {
+											qmModelId: 1024,
+											qmType: null,
+											qmPurpose: null,
+											qmTypeId: null,
+											qmPurposeId: null,
+											qmName: 'FRTB-CVA SA/BY Hybrid',
+											owner: null,
+											accountableExec: null,
+											modelUses: [],
+											createdAt: '2025-04-09T09:49:22.133067',
+											updatedAt: null
+										},
+										qmInputToModel: null,
+										qmModelId: 1024,
+										qmInputTo: null,
+										createdAt: '2025-04-09T09:49:22.133067',
+										updatedAt: null,
+										inputToModels: []
+									}
+								]
+							},
+							{
+								id: null,
+								qmModel: {
+									qmModelId: 99006,
+									qmType: null,
+									qmPurpose: null,
+									qmTypeId: null,
+									qmPurposeId: null,
+									qmName: 'Mi Smile',
+									owner: null,
+									accountableExec: null,
+									modelUses: [],
+									createdAt: '2025-04-09T09:49:22.133067',
+									updatedAt: null
+								},
+								qmInputToModel: null,
+								qmModelId: 99006,
+								qmInputTo: null,
+								createdAt: '2025-04-09T09:49:22.133067',
+								updatedAt: null,
+								inputToModels: [
+									{
+										id: null,
+										qmModel: {
+											qmModelId: 99001,
+											qmType: null,
+											qmPurpose: null,
+											qmTypeId: null,
+											qmPurposeId: null,
+											qmName: 'C&FVA',
+											owner: null,
+											accountableExec: null,
+											modelUses: [],
+											createdAt: '2025-04-09T09:49:22.133067',
+											updatedAt: null
+										},
+										qmInputToModel: null,
+										qmModelId: 99001,
+										qmInputTo: null,
+										createdAt: '2025-04-09T09:49:22.133067',
+										updatedAt: null,
+										inputToModels: [
+											{
+												id: null,
+												qmModel: {
+													qmModelId: 191,
+													qmType: null,
+													qmPurpose: null,
+													qmTypeId: null,
+													qmPurposeId: null,
+													qmName: 'CVA Stress Testing',
+													owner: null,
+													accountableExec: null,
+													modelUses: [],
+													createdAt: '2025-04-09T09:49:22.133067',
+													updatedAt: null
+												},
+												qmInputToModel: null,
+												qmModelId: 191,
+												qmInputTo: null,
+												createdAt: '2025-04-09T09:49:22.133067',
+												updatedAt: null,
+												inputToModels: []
+											},
+											{
+												id: null,
+												qmModel: {
+													qmModelId: 1024,
+													qmType: null,
+													qmPurpose: null,
+													qmTypeId: null,
+													qmPurposeId: null,
+													qmName: 'FRTB-CVA SA/BY Hybrid',
+													owner: null,
+													accountableExec: null,
+													modelUses: [],
+													createdAt: '2025-04-09T09:49:22.133067',
+													updatedAt: null
+												},
+												qmInputToModel: null,
+												qmModelId: 1024,
+												qmInputTo: null,
+												createdAt: '2025-04-09T09:49:22.133067',
+												updatedAt: null,
+												inputToModels: []
+											}
+										]
+									}
+								]
+							},
+							{
+								id: null,
+								qmModel: {
+									qmModelId: 99005,
+									qmType: null,
+									qmPurpose: null,
+									qmTypeId: null,
+									qmPurposeId: null,
+									qmName: 'LTFX:BS:Analytic',
+									owner: null,
+									accountableExec: null,
+									modelUses: [],
+									createdAt: '2025-04-09T09:49:22.133067',
+									updatedAt: null
+								},
+								qmInputToModel: null,
+								qmModelId: 99005,
+								qmInputTo: null,
+								createdAt: '2025-04-09T09:49:22.133067',
+								updatedAt: null,
+								inputToModels: [
+									{
+										id: null,
+										qmModel: {
+											qmModelId: 99001,
+											qmType: null,
+											qmPurpose: null,
+											qmTypeId: null,
+											qmPurposeId: null,
+											qmName: 'C&FVA',
+											owner: null,
+											accountableExec: null,
+											modelUses: [],
+											createdAt: '2025-04-09T09:49:22.133067',
+											updatedAt: null
+										},
+										qmInputToModel: null,
+										qmModelId: 99001,
+										qmInputTo: null,
+										createdAt: '2025-04-09T09:49:22.133067',
+										updatedAt: null,
+										inputToModels: [
+											{
+												id: null,
+												qmModel: {
+													qmModelId: 191,
+													qmType: null,
+													qmPurpose: null,
+													qmTypeId: null,
+													qmPurposeId: null,
+													qmName: 'CVA Stress Testing',
+													owner: null,
+													accountableExec: null,
+													modelUses: [],
+													createdAt: '2025-04-09T09:49:22.133067',
+													updatedAt: null
+												},
+												qmInputToModel: null,
+												qmModelId: 191,
+												qmInputTo: null,
+												createdAt: '2025-04-09T09:49:22.133067',
+												updatedAt: null,
+												inputToModels: []
+											},
+											{
+												id: null,
+												qmModel: {
+													qmModelId: 1024,
+													qmType: null,
+													qmPurpose: null,
+													qmTypeId: null,
+													qmPurposeId: null,
+													qmName: 'FRTB-CVA SA/BY Hybrid',
+													owner: null,
+													accountableExec: null,
+													modelUses: [],
+													createdAt: '2025-04-09T09:49:22.133067',
+													updatedAt: null
+												},
+												qmInputToModel: null,
+												qmModelId: 1024,
+												qmInputTo: null,
+												createdAt: '2025-04-09T09:49:22.133067',
+												updatedAt: null,
+												inputToModels: []
+											}
+										]
+									}
+								]
+							},
+							{
+								id: null,
+								qmModel: {
+									qmModelId: 99004,
+									qmType: null,
+									qmPurpose: null,
+									qmTypeId: null,
+									qmPurposeId: null,
+									qmName: 'LGIX2F',
+									owner: null,
+									accountableExec: null,
+									modelUses: [],
+									createdAt: '2025-04-09T09:49:22.133067',
+									updatedAt: null
+								},
+								qmInputToModel: null,
+								qmModelId: 99004,
+								qmInputTo: null,
+								createdAt: '2025-04-09T09:49:22.133067',
+								updatedAt: null,
+								inputToModels: [
+									{
+										id: null,
+										qmModel: {
+											qmModelId: 99001,
+											qmType: null,
+											qmPurpose: null,
+											qmTypeId: null,
+											qmPurposeId: null,
+											qmName: 'C&FVA',
+											owner: null,
+											accountableExec: null,
+											modelUses: [],
+											createdAt: '2025-04-09T09:49:22.133067',
+											updatedAt: null
+										},
+										qmInputToModel: null,
+										qmModelId: 99001,
+										qmInputTo: null,
+										createdAt: '2025-04-09T09:49:22.133067',
+										updatedAt: null,
+										inputToModels: [
+											{
+												id: null,
+												qmModel: {
+													qmModelId: 191,
+													qmType: null,
+													qmPurpose: null,
+													qmTypeId: null,
+													qmPurposeId: null,
+													qmName: 'CVA Stress Testing',
+													owner: null,
+													accountableExec: null,
+													modelUses: [],
+													createdAt: '2025-04-09T09:49:22.133067',
+													updatedAt: null
+												},
+												qmInputToModel: null,
+												qmModelId: 191,
+												qmInputTo: null,
+												createdAt: '2025-04-09T09:49:22.133067',
+												updatedAt: null,
+												inputToModels: []
+											},
+											{
+												id: null,
+												qmModel: {
+													qmModelId: 1024,
+													qmType: null,
+													qmPurpose: null,
+													qmTypeId: null,
+													qmPurposeId: null,
+													qmName: 'FRTB-CVA SA/BY Hybrid',
+													owner: null,
+													accountableExec: null,
+													modelUses: [],
+													createdAt: '2025-04-09T09:49:22.133067',
+													updatedAt: null
+												},
+												qmInputToModel: null,
+												qmModelId: 1024,
+												qmInputTo: null,
+												createdAt: '2025-04-09T09:49:22.133067',
+												updatedAt: null,
+												inputToModels: []
+											}
+										]
+									}
+								]
 							}
 						]
 					}

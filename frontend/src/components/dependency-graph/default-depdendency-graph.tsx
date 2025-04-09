@@ -455,12 +455,20 @@ const MODEL_5_DATA: ModelGraphData = {
 }
 
 // Function to transform the API response into graph data
-const transformModelData = (modelResponse: ModelResponse): ModelGraphData => {
+const transformModelData = (modelResponse: ModelResponse | null): ModelGraphData => {
 	const nodes: ModelNode[] = []
 	const edges: ModelEdge[] = []
 	const processedNodes = new Set<number>()
 
+	// Return empty graph data if response is null or data is missing
+	if (!modelResponse || !modelResponse.data || !Array.isArray(modelResponse.data)) {
+		return { nodes: [], edges: [] }
+	}
+
 	const processRelationship = (relationship: ModelRelationship, parentId?: string) => {
+		// Skip if relationship or qmModel is missing
+		if (!relationship || !relationship.qmModel) return
+
 		// Add source model node if not already added
 		if (!processedNodes.has(relationship.qmModel.qmModelId)) {
 			nodes.push({
@@ -487,9 +495,9 @@ const transformModelData = (modelResponse: ModelResponse): ModelGraphData => {
 		}
 
 		// Process input models recursively
-		if (relationship.inputToModels && relationship.inputToModels.length > 0) {
+		if (relationship.inputToModels && Array.isArray(relationship.inputToModels)) {
 			relationship.inputToModels.forEach(inputModel => {
-				if (inputModel.qmModel) {
+				if (inputModel && inputModel.qmModel) {
 					// Add the input model node if not already added
 					if (!processedNodes.has(inputModel.qmModel.qmModelId)) {
 						nodes.push({
@@ -522,7 +530,9 @@ const transformModelData = (modelResponse: ModelResponse): ModelGraphData => {
 
 	// Process each relationship in the response
 	modelResponse.data.forEach(relationship => {
-		processRelationship(relationship)
+		if (relationship) {
+			processRelationship(relationship)
+		}
 	})
 
 	return { nodes, edges }

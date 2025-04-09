@@ -90,10 +90,10 @@ const availableModels = [
 ]
 
 // Node dimensions and spacing constants
-const NODE_WIDTH = 200
-const NODE_HEIGHT = 60
-const VERTICAL_SPACING = 80
-const HORIZONTAL_SPACING = 40
+const NODE_WIDTH = 160
+const NODE_HEIGHT = 36
+const VERTICAL_SPACING = 24
+const HORIZONTAL_SPACING = 16
 
 // Function to transform model data
 const transformModelData = (modelResponse: ModelResponse | null): GraphData => {
@@ -526,18 +526,18 @@ export default function ModelRelationshipGraph() {
 							</div>
 							<div
 								ref={containerRef}
-								className='relative overflow-auto border rounded-lg p-8'
+								className='relative overflow-auto border rounded-lg'
 								style={{
-									height: '600px',
+									height: '500px',
 									width: '100%',
 									minWidth: '800px'
 								}}
 							>
 								<div
-									className='absolute'
+									className='absolute p-4'
 									style={{
-										height: Math.max(...positions.map(p => p.y + NODE_HEIGHT + 100), 600),
-										width: Math.max(...positions.map(p => p.x + NODE_WIDTH + 100), 800),
+										height: Math.max(...positions.map(p => p.y + NODE_HEIGHT + 50), 500),
+										width: Math.max(...positions.map(p => p.x + NODE_WIDTH + 50), 800),
 										minWidth: '100%',
 										transform: `scale(${zoomLevel})`,
 										transformOrigin: '0 0',
@@ -572,14 +572,18 @@ export default function ModelRelationshipGraph() {
 													alignItems: 'center',
 													justifyContent: 'center',
 													color: '#fff',
-													padding: '8px 16px',
+													padding: '4px 8px',
 													opacity: selectedNode && !isRelated ? 0.6 : 1,
-													fontSize: '0.875rem',
-													lineHeight: '1.25rem',
+													fontSize: '0.75rem',
+													lineHeight: '1rem',
 													textAlign: 'center',
-													wordBreak: 'break-word'
+													wordBreak: 'break-word',
+													whiteSpace: 'nowrap',
+													overflow: 'hidden',
+													textOverflow: 'ellipsis'
 												}}
 												onClick={() => setSelectedNode(node.id === selectedNode ? null : node.id)}
+												title={node.name}
 											>
 												{node.name}
 											</div>

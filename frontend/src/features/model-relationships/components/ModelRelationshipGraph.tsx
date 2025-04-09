@@ -90,10 +90,10 @@ const availableModels = [
 ]
 
 // Node dimensions and spacing constants
-const NODE_WIDTH = 160
-const NODE_HEIGHT = 36
-const VERTICAL_SPACING = 24
-const HORIZONTAL_SPACING = 16
+const NODE_WIDTH = 140
+const NODE_HEIGHT = 28
+const VERTICAL_SPACING = 16
+const HORIZONTAL_SPACING = 12
 
 // Function to transform model data
 const transformModelData = (modelResponse: ModelResponse | null): GraphData => {
@@ -528,16 +528,16 @@ export default function ModelRelationshipGraph() {
 								ref={containerRef}
 								className='relative overflow-auto border rounded-lg'
 								style={{
-									height: '500px',
+									height: '400px',
 									width: '100%',
 									minWidth: '800px'
 								}}
 							>
 								<div
-									className='absolute p-4'
+									className='absolute p-2'
 									style={{
-										height: Math.max(...positions.map(p => p.y + NODE_HEIGHT + 50), 500),
-										width: Math.max(...positions.map(p => p.x + NODE_WIDTH + 50), 800),
+										height: Math.max(...positions.map(p => p.y + NODE_HEIGHT + 30), 400),
+										width: Math.max(...positions.map(p => p.x + NODE_WIDTH + 30), 800),
 										minWidth: '100%',
 										transform: `scale(${zoomLevel})`,
 										transformOrigin: '0 0',
@@ -558,7 +558,7 @@ export default function ModelRelationshipGraph() {
 													if (el) nodesRef.current[node.id] = el
 												}}
 												className={`absolute transition-all duration-200 cursor-pointer
-													${selectedNode === node.id ? 'ring-2 ring-blue-500' : ''}
+													${selectedNode === node.id ? 'ring-1 ring-blue-500' : ''}
 													${isRelated && selectedNode !== node.id ? 'ring-1 ring-blue-400' : ''}`}
 												style={{
 													left: nodePosition.x,
@@ -566,16 +566,16 @@ export default function ModelRelationshipGraph() {
 													width: NODE_WIDTH,
 													height: NODE_HEIGHT,
 													backgroundColor: selectedNode === node.id ? '#3b82f6' : '#1e293b',
-													border: '1px solid #fff',
-													borderRadius: '4px',
+													border: '1px solid rgba(255,255,255,0.6)',
+													borderRadius: '3px',
 													display: 'flex',
 													alignItems: 'center',
 													justifyContent: 'center',
 													color: '#fff',
-													padding: '4px 8px',
+													padding: '2px 6px',
 													opacity: selectedNode && !isRelated ? 0.6 : 1,
-													fontSize: '0.75rem',
-													lineHeight: '1rem',
+													fontSize: '0.7rem',
+													lineHeight: '0.9rem',
 													textAlign: 'center',
 													wordBreak: 'break-word',
 													whiteSpace: 'nowrap',

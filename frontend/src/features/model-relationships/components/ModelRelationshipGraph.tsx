@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import ModelDetailsCard from '@/components/dependency-graph/model-details-card'
-import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, X } from 'lucide-react'
 
 // Type definitions
 interface ModelGraphNode {
@@ -195,6 +195,7 @@ export default function ModelRelationshipGraph() {
 	const [positions, setPositions] = useState<NodePosition[]>([])
 	const [selectedNode, setSelectedNode] = useState<string | null>(null)
 	const [zoomLevel, setZoomLevel] = useState(1)
+	const [isFullScreen, setIsFullScreen] = useState(false)
 
 	// Zoom control functions
 	const handleZoomIn = () => {
@@ -207,6 +208,11 @@ export default function ModelRelationshipGraph() {
 
 	const handleResetZoom = () => {
 		setZoomLevel(1)
+	}
+
+	const handleFullScreen = () => {
+		setIsFullScreen(true)
+		setZoomLevel(1) // Reset zoom when opening full screen
 	}
 
 	// Transform current model data based on selection
@@ -517,9 +523,9 @@ export default function ModelRelationshipGraph() {
 									<ZoomOut size={18} />
 								</button>
 								<button
-									onClick={handleResetZoom}
+									onClick={handleFullScreen}
 									className='p-1.5 hover:bg-gray-700 rounded-md text-gray-300 hover:text-white transition-colors'
-									title='Reset Zoom'
+									title='Full Screen'
 								>
 									<Maximize2 size={18} />
 								</button>
@@ -595,6 +601,101 @@ export default function ModelRelationshipGraph() {
 					)}
 				</CardContent>
 			</Card>
+
+			{/* Full Screen Modal */}
+			{isFullScreen && (
+				<div className='fixed inset-0 bg-black/90 z-50 flex items-center justify-center'>
+					<div className='absolute top-4 right-4 flex gap-2 p-2 bg-gray-800 rounded-lg'>
+						<button
+							onClick={handleZoomIn}
+							className='p-1.5 hover:bg-gray-700 rounded-md text-gray-300 hover:text-white transition-colors'
+							title='Zoom In'
+						>
+							<ZoomIn size={18} />
+						</button>
+						<button
+							onClick={handleZoomOut}
+							className='p-1.5 hover:bg-gray-700 rounded-md text-gray-300 hover:text-white transition-colors'
+							title='Zoom Out'
+						>
+							<ZoomOut size={18} />
+						</button>
+						<button
+							onClick={() => setIsFullScreen(false)}
+							className='p-1.5 hover:bg-gray-700 rounded-md text-gray-300 hover:text-white transition-colors'
+							title='Close Full Screen'
+						>
+							<X size={18} />
+						</button>
+					</div>
+					<div
+						className='w-[95vw] h-[90vh] relative overflow-auto'
+						style={{
+							backgroundColor: '#1e293b',
+							borderRadius: '8px'
+						}}
+					>
+						<div
+							className='absolute p-4'
+							style={{
+								height: `${Math.max(...positions.map(p => p.y + NODE_HEIGHT + 30))}px`,
+								width: `${Math.max(...positions.map(p => p.x + NODE_WIDTH + 30))}px`,
+								minWidth: '100%',
+								minHeight: '100%',
+								transform: `scale(${zoomLevel})`,
+								transformOrigin: '0 0',
+								transition: 'transform 0.2s ease-out'
+							}}
+						>
+							{renderConnectors()}
+							{currentModelData.nodes.map(node => {
+								const nodePosition = positions.find(p => p.id === node.id)
+								const isRelated = selectedNode && (selectedNode === node.id || hasConnection(selectedNode, node.id))
+
+								if (!nodePosition) return null
+
+								return (
+									<div
+										key={node.id}
+										ref={el => {
+											if (el) nodesRef.current[node.id] = el
+										}}
+										className={`absolute transition-all duration-200 cursor-pointer
+											${selectedNode === node.id ? 'ring-1 ring-blue-500' : ''}
+											${isRelated && selectedNode !== node.id ? 'ring-1 ring-blue-400' : ''}`}
+										style={{
+											left: nodePosition.x,
+											top: nodePosition.y,
+											width: NODE_WIDTH,
+											height: NODE_HEIGHT,
+											backgroundColor: selectedNode === node.id ? '#3b82f6' : '#1e293b',
+											border: '1px solid rgba(255,255,255,0.6)',
+											borderRadius: '3px',
+											display: 'flex',
+											alignItems: 'center',
+											justifyContent: 'center',
+											color: '#fff',
+											padding: '2px 6px',
+											opacity: selectedNode && !isRelated ? 0.6 : 1,
+											fontSize: '0.7rem',
+											lineHeight: '0.9rem',
+											textAlign: 'center',
+											wordBreak: 'break-word',
+											whiteSpace: 'nowrap',
+											overflow: 'hidden',
+											textOverflow: 'ellipsis'
+										}}
+										onClick={() => setSelectedNode(node.id === selectedNode ? null : node.id)}
+										title={node.name}
+									>
+										{node.name}
+									</div>
+								)
+							})}
+						</div>
+					</div>
+				</div>
+			)}
 
 			{selectedNodeDetails && (
 				<ModelDetailsCard

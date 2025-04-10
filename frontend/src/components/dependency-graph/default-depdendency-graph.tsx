@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +13,37 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import ModelDetailsCard from './model-details-card'
 
 // Types for our model data
+interface QmModel {
+	qmModelId: number
+	qmType: string | null
+	qmPurpose: string | null
+	qmTypeId: number | null
+	qmPurposeId: number | null
+	qmName: string
+	owner: string | null
+	accountableExec: string | null
+	modelUses: any[]
+	createdAt: string
+	updatedAt: string | null
+}
+
+interface ModelRelationship {
+	id: number | null
+	qmModel: QmModel
+	qmInputToModel: QmModel | null
+	qmModelId: number | null
+	qmInputTo: string | null
+	createdAt: string
+	updatedAt: string | null
+	inputToModels: ModelRelationship[]
+}
+
+interface ModelResponse {
+	success: boolean
+	message: string
+	data: ModelRelationship[]
+}
+
 interface ModelNode {
 	id: string
 	name: string
@@ -423,8 +454,95 @@ const MODEL_5_DATA: ModelGraphData = {
 	]
 }
 
-// Map model IDs to their data
-const MODEL_DATA_MAP = {
+// Function to transform the API response into graph data
+const transformModelData = (modelResponse: ModelResponse | null): ModelGraphData => {
+	const nodes: ModelNode[] = []
+	const edges: ModelEdge[] = []
+	const processedNodes = new Set<number>()
+
+	// Return empty graph data if response is null or data is missing
+	if (!modelResponse || !modelResponse.data || !Array.isArray(modelResponse.data)) {
+		return { nodes: [], edges: [] }
+	}
+
+	const processRelationship = (relationship: ModelRelationship, parentId?: string) => {
+		// Skip if relationship or qmModel is missing
+		if (!relationship || !relationship.qmModel) return
+
+		// Add source model node if not already added
+		if (!processedNodes.has(relationship.qmModel.qmModelId)) {
+			nodes.push({
+				id: relationship.qmModel.qmModelId.toString(),
+				name: relationship.qmModel.qmName,
+				type: relationship.qmModel.qmType || 'Model',
+				riskRating: 'medium', // Default risk rating - can be adjusted based on business logic
+				owner: relationship.qmModel.owner || 'Unknown',
+				department: relationship.qmModel.accountableExec || 'Unknown',
+				lastUpdated: relationship.qmModel.updatedAt || relationship.qmModel.createdAt,
+				purpose: relationship.qmModel.qmPurpose || 'Not specified'
+			})
+			processedNodes.add(relationship.qmModel.qmModelId)
+		}
+
+		// If there's a parent, add the edge
+		if (parentId) {
+			edges.push({
+				source: parentId,
+				target: relationship.qmModel.qmModelId.toString(),
+				relationship: 'input',
+				description: 'Model input relationship'
+			})
+		}
+
+		// Process input models recursively
+		if (relationship.inputToModels && Array.isArray(relationship.inputToModels)) {
+			relationship.inputToModels.forEach(inputModel => {
+				if (inputModel && inputModel.qmModel) {
+					// Add the input model node if not already added
+					if (!processedNodes.has(inputModel.qmModel.qmModelId)) {
+						nodes.push({
+							id: inputModel.qmModel.qmModelId.toString(),
+							name: inputModel.qmModel.qmName,
+							type: inputModel.qmModel.qmType || 'Model',
+							riskRating: 'medium',
+							owner: inputModel.qmModel.owner || 'Unknown',
+							department: inputModel.qmModel.accountableExec || 'Unknown',
+							lastUpdated: inputModel.qmModel.updatedAt || inputModel.qmModel.createdAt,
+							purpose: inputModel.qmModel.qmPurpose || 'Not specified'
+						})
+						processedNodes.add(inputModel.qmModel.qmModelId)
+					}
+
+					// Add edge from current model to input model
+					edges.push({
+						source: relationship.qmModel.qmModelId.toString(),
+						target: inputModel.qmModel.qmModelId.toString(),
+						relationship: 'input',
+						description: 'Model input relationship'
+					})
+
+					// Process nested relationships
+					processRelationship(inputModel, inputModel.qmModel.qmModelId.toString())
+				}
+			})
+		}
+	}
+
+	// Process each relationship in the response
+	modelResponse.data.forEach(relationship => {
+		if (relationship) {
+			processRelationship(relationship)
+		}
+	})
+
+	return { nodes, edges }
+}
+
+// Update the MODEL_DATA_MAP to use the new data structure
+const MODEL_DATA_MAP: { [key: string]: ModelGraphData } = {
+	// Example of how to use the transform function with actual data
+	// MODEL_1: transformModelData(MODEL_1_RESPONSE),
+	// Keep the mock data for now
 	MODEL_1: MODEL_1_DATA,
 	MODEL_2: MODEL_2_DATA,
 	MODEL_3: MODEL_3_DATA,
@@ -441,6 +559,26 @@ const rootModels = [
 	{ id: 'MODEL_5', name: 'Model Z Hierarchy', data: MODEL_5_DATA }
 ]
 
+// Available models for selection
+const availableModels = [
+	{
+		id: '99009',
+		name: 'Complex Regulatory Market Data Publications'
+	},
+	{
+		id: '99008',
+		name: 'Simple Market Data Publication'
+	},
+	{
+		id: '99010',
+		name: 'Deterministic.RFR.FX'
+	},
+	{
+		id: '171',
+		name: 'Credit Curves'
+	}
+]
+
 export default function DefaultDependencyGraph() {
 	const canvasRef = useRef<HTMLCanvasElement>(null)
 	const [selectedNode, setSelectedNode] = useState<ModelNode | null>(null)
@@ -448,14 +586,14 @@ export default function DefaultDependencyGraph() {
 	const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
 	const [filters, setFilters] = useState({
 		riskLevels: { high: true, medium: true, low: true },
-		departments: new Set(mockGraphData.nodes.map(node => node.department)),
-		owners: new Set(mockGraphData.nodes.map(node => node.owner))
+		departments: new Set<string>(),
+		owners: new Set<string>()
 	})
 	const [showFilters, setShowFilters] = useState(false)
 	const [isSimulationStable, setIsSimulationStable] = useState(false)
 	const nodePositionsRef = useRef<{ [key: string]: { x: number; y: number; vx: number; vy: number } }>({})
 	const animationRef = useRef<number | null>(null)
-	const [selectedModelId, setSelectedModelId] = useState('MODEL_1')
+	const [selectedModelId, setSelectedModelId] = useState(availableModels[0].id)
 	const [scale, setScale] = useState(1)
 	const [offset, setOffset] = useState({ x: 0, y: 0 })
 	const [isDragging, setIsDragging] = useState(false)
@@ -465,41 +603,86 @@ export default function DefaultDependencyGraph() {
 	const [groups, setGroups] = useState<{ [key: string]: boolean }>({})
 	const [isDraggingNode, setIsDraggingNode] = useState(false)
 	const dragStartTimeRef = useRef<number>(0)
+	const [modelResponse, setModelResponse] = useState<ModelResponse | null>(null)
+	const [isLoading, setIsLoading] = useState(true)
 
-	// Get current model data
-	const currentModelData = MODEL_DATA_MAP[selectedModelId as keyof typeof MODEL_DATA_MAP]
+	// Transform current model data based on selection
+	const currentModelData = useMemo(() => {
+		if (modelResponse) {
+			return transformModelData(modelResponse)
+		}
+		// Return empty graph data structure if no data available
+		return {
+			nodes: [],
+			edges: []
+		}
+	}, [selectedModelId, modelResponse])
 
 	// Get unique departments and owners for filters
-	const departments = Array.from(new Set(currentModelData.nodes.map(node => node.department)))
-	const owners = Array.from(new Set(currentModelData.nodes.map(node => node.owner)))
+	const departments = useMemo(() => {
+		return Array.from(new Set(currentModelData?.nodes?.map(node => node.department) || []))
+	}, [currentModelData])
 
-	// Filter nodes based on current filters
-	const filteredNodes = currentModelData.nodes.filter(
-		node =>
-			filters.riskLevels[node.riskRating as keyof typeof filters.riskLevels] &&
-			filters.departments.has(node.department) &&
-			filters.owners.has(node.owner)
-	)
+	const owners = useMemo(() => {
+		return Array.from(new Set(currentModelData?.nodes?.map(node => node.owner) || []))
+	}, [currentModelData])
 
-	// Get filtered node IDs for edge filtering
-	const filteredNodeIds = new Set(filteredNodes.map(node => node.id))
+	// Function to fetch model relationships
+	const fetchModelRelationships = async (modelId: string) => {
+		try {
+			setIsLoading(true)
+			const response = await fetch(`/api/model-relationships/${modelId}`)
+			const data = await response.json()
+			setModelResponse(data)
+		} catch (error) {
+			console.error('Error fetching model relationships:', error)
+			setModelResponse(null)
+		} finally {
+			setIsLoading(false)
+		}
+	}
 
-	// Filter edges to only include connections between visible nodes
-	const filteredEdges = currentModelData.edges.filter(
-		edge => filteredNodeIds.has(edge.source) && filteredNodeIds.has(edge.target)
-	)
+	// Effect to fetch data when model changes
+	useEffect(() => {
+		fetchModelRelationships(selectedModelId)
+	}, [selectedModelId])
 
 	// Update filters when model changes
 	useEffect(() => {
-		const modelData = MODEL_DATA_MAP[selectedModelId as keyof typeof MODEL_DATA_MAP]
-		setFilters({
-			riskLevels: { high: true, medium: true, low: true },
-			departments: new Set(modelData.nodes.map(node => node.department)),
-			owners: new Set(modelData.nodes.map(node => node.owner))
-		})
-		setSelectedNode(null)
-		setIsSimulationStable(false)
-	}, [selectedModelId])
+		if (currentModelData && currentModelData.nodes) {
+			setFilters(prev => ({
+				...prev,
+				departments: new Set(departments),
+				owners: new Set(owners)
+			}))
+			setSelectedNode(null)
+			setIsSimulationStable(false)
+		}
+	}, [departments, owners])
+
+	// Filter nodes based on current filters
+	const filteredNodes = useMemo(() => {
+		if (!currentModelData?.nodes) return []
+
+		return currentModelData.nodes.filter(
+			node =>
+				filters.riskLevels[node.riskRating as keyof typeof filters.riskLevels] &&
+				filters.departments.has(node.department) &&
+				filters.owners.has(node.owner)
+		)
+	}, [currentModelData, filters])
+
+	// Get filtered node IDs for edge filtering
+	const filteredNodeIds = useMemo(() => {
+		return new Set(filteredNodes.map(node => node.id))
+	}, [filteredNodes])
+
+	// Filter edges to only include connections between visible nodes
+	const filteredEdges = useMemo(() => {
+		if (!currentModelData?.edges) return []
+
+		return currentModelData.edges.filter(edge => filteredNodeIds.has(edge.source) && filteredNodeIds.has(edge.target))
+	}, [currentModelData, filteredNodeIds])
 
 	// Get direct connections for selected node
 	const getNodeConnections = (nodeId: string) => {
@@ -1104,6 +1287,26 @@ export default function DefaultDependencyGraph() {
 		})
 	}
 
+	if (isLoading) {
+		return (
+			<div className='flex justify-center items-center h-96'>
+				<div className='animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full'></div>
+				<span className='ml-3'>Loading model relationships...</span>
+			</div>
+		)
+	}
+
+	if (!currentModelData.nodes.length) {
+		return (
+			<div className='flex justify-center items-center h-96'>
+				<div className='text-center'>
+					<h3 className='text-lg font-semibold'>No data available</h3>
+					<p className='text-gray-500'>Select a different model or try again later.</p>
+				</div>
+			</div>
+		)
+	}
+
 	return (
 		<div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
 			<div className={`${selectedNode ? 'md:col-span-2' : 'md:col-span-3'}`}>
@@ -1117,10 +1320,10 @@ export default function DefaultDependencyGraph() {
 							<div className=''>
 								<Select value={selectedModelId} onValueChange={value => setSelectedModelId(value)}>
 									<SelectTrigger className='w-[250px]'>
-										{rootModels.find(model => model.id === selectedModelId)?.name || 'Select Model'}
+										{availableModels.find(model => model.id === selectedModelId)?.name || 'Select Model'}
 									</SelectTrigger>
 									<SelectContent>
-										{rootModels.map(model => (
+										{availableModels.map(model => (
 											<SelectItem key={model.id} value={model.id}>
 												{model.name}
 											</SelectItem>

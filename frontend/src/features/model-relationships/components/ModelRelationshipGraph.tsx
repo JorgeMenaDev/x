@@ -243,98 +243,111 @@ export default function ModelRelationshipGraph() {
 		fetchModelRelationships(selectedModelId)
 	}, [selectedModelId])
 
-	// Function to calculate tree width
-	const calculateTreeWidth = (
-		nodeId: string,
-		level: number,
-		memo: Map<string, number>,
-		visited: Set<string> = new Set()
-	): number => {
-		if (memo.has(nodeId)) return memo.get(nodeId)!
-		if (!currentModelData.nodes.length || visited.has(nodeId)) return NODE_WIDTH
-		visited.add(nodeId)
-
-		const children = currentModelData.edges.filter(edge => edge.source === nodeId).map(edge => edge.target)
-
-		if (children.length === 0) {
-			memo.set(nodeId, NODE_WIDTH)
-			return NODE_WIDTH
-		}
-
-		const childrenWidth = children
-			.map(childId => calculateTreeWidth(childId, level + 1, memo, new Set(visited)))
-			.reduce((a, b) => a + b, 0)
-
-		const width = Math.max(NODE_WIDTH, childrenWidth + (children.length - 1) * HORIZONTAL_SPACING)
-		memo.set(nodeId, width)
-		return width
-	}
-
 	// Calculate node positions using hierarchical layout
 	const calculatePositions = () => {
 		if (!currentModelData.nodes.length) return []
 
 		const positions: NodePosition[] = []
-		const memo = new Map<string, number>()
 
-		// Find root nodes (no incoming edges)
-		const hasIncoming = new Set(currentModelData.edges.map(edge => edge.target))
-		const rootNodeIds = currentModelData.nodes.filter(node => !hasIncoming.has(node.id)).map(node => node.id)
+		// Build adjacency graph
+		const childrenOf = new Map<string, string[]>()
+		const parentOf = new Map<string, string[]>()
 
-		// If no root nodes found, use the first node as root
-		if (rootNodeIds.length === 0 && currentModelData.nodes.length > 0) {
-			rootNodeIds.push(currentModelData.nodes[0].id)
-		}
-
-		// Calculate total width needed for the graph
-		const totalWidth = rootNodeIds.reduce((sum, id) => sum + calculateTreeWidth(id, 0, memo), 0)
-		let currentX = NODE_WIDTH // Add initial padding
-
-		// Start BFS from root nodes
-		const queue: { id: string; level: number; offsetX: number }[] = rootNodeIds.map(id => {
-			const width = calculateTreeWidth(id, 0, memo)
-			const x = currentX
-			currentX += width + HORIZONTAL_SPACING
-			return { id, level: 0, offsetX: x }
+		// Initialize maps
+		currentModelData.nodes.forEach(node => {
+			childrenOf.set(node.id, [])
+			parentOf.set(node.id, [])
 		})
 
-		const seen = new Set<string>()
+		// Populate relationships
+		currentModelData.edges.forEach(edge => {
+			// Add child to parent's children list
+			const children = childrenOf.get(edge.source) || []
+			children.push(edge.target)
+			childrenOf.set(edge.source, children)
+
+			// Add parent to child's parent list
+			const parents = parentOf.get(edge.target) || []
+			parents.push(edge.source)
+			parentOf.set(edge.target, parents)
+		})
+
+		// Find root nodes (nodes with no parents)
+		let rootNodes = currentModelData.nodes
+			.filter(node => {
+				const parents = parentOf.get(node.id) || []
+				return parents.length === 0
+			})
+			.map(node => node.id)
+
+		// If no root nodes found, use the first node
+		if (rootNodes.length === 0 && currentModelData.nodes.length > 0) {
+			rootNodes = [currentModelData.nodes[0].id]
+		}
+
+		// Assign levels to each node (distance from root)
+		const levels = new Map<string, number>()
+		const visited = new Set<string>()
+
+		// BFS to assign levels
+		const queue: Array<{ id: string; level: number }> = rootNodes.map(id => ({ id, level: 0 }))
 
 		while (queue.length > 0) {
-			const { id, level, offsetX } = queue.shift()!
-			if (seen.has(id)) continue
-			seen.add(id)
+			const { id, level } = queue.shift()!
 
-			positions.push({
-				id,
-				x: offsetX,
-				y: level * (NODE_HEIGHT + VERTICAL_SPACING) + NODE_HEIGHT, // Add initial vertical padding
-				width: NODE_WIDTH,
-				height: NODE_HEIGHT
-			})
+			if (visited.has(id)) {
+				// Update level to be the minimum of current and new level
+				if (level < (levels.get(id) || Infinity)) {
+					levels.set(id, level)
+				}
+				continue
+			}
 
-			// Get children from edges
-			const children = currentModelData.edges
-				.filter(edge => edge.source === id && !seen.has(edge.target))
-				.map(edge => edge.target)
+			visited.add(id)
+			levels.set(id, level)
 
-			let childOffsetX = offsetX - (children.length * (NODE_WIDTH + HORIZONTAL_SPACING)) / 2 + NODE_WIDTH / 2
-
+			// Process children
+			const children = childrenOf.get(id) || []
 			children.forEach(childId => {
-				queue.push({
-					id: childId,
-					level: level + 1,
-					offsetX: childOffsetX
-				})
-				childOffsetX += NODE_WIDTH + HORIZONTAL_SPACING
+				queue.push({ id: childId, level: level + 1 })
 			})
 		}
 
-		// Normalize positions to ensure no negative coordinates
-		const minX = Math.min(...positions.map(p => p.x))
-		if (minX < 0) {
-			positions.forEach(p => (p.x -= minX))
-		}
+		// Group nodes by level
+		const nodesByLevel: { [level: number]: string[] } = {}
+
+		levels.forEach((level, nodeId) => {
+			if (!nodesByLevel[level]) {
+				nodesByLevel[level] = []
+			}
+			nodesByLevel[level].push(nodeId)
+		})
+
+		// Fixed spacing between nodes
+		const fixedSpacing = 160
+
+		// Position nodes by level
+		Object.entries(nodesByLevel).forEach(([levelStr, nodeIds]) => {
+			const level = parseInt(levelStr)
+			const y = level * (NODE_HEIGHT + VERTICAL_SPACING) + 40
+
+			// Calculate total width needed
+			const totalWidth = nodeIds.length * NODE_WIDTH + (nodeIds.length - 1) * fixedSpacing
+
+			// Center the nodes on this level
+			const startX = Math.max(40, (1000 - totalWidth) / 2)
+
+			// Position each node
+			nodeIds.forEach((nodeId, index) => {
+				positions.push({
+					id: nodeId,
+					x: startX + index * (NODE_WIDTH + fixedSpacing),
+					y,
+					width: NODE_WIDTH,
+					height: NODE_HEIGHT
+				})
+			})
+		})
 
 		return positions
 	}

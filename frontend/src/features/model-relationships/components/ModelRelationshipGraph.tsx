@@ -92,7 +92,7 @@ const availableModels = [
 // Node dimensions and spacing constants
 const NODE_WIDTH = 140
 const NODE_HEIGHT = 28
-const VERTICAL_SPACING = 16
+const VERTICAL_SPACING = 40
 const HORIZONTAL_SPACING = 12
 
 // Function to transform model data
@@ -476,12 +476,14 @@ export default function ModelRelationshipGraph() {
 					</div>
 					<div className='flex items-center gap-2'>
 						<Select value={selectedModelId} onValueChange={value => setSelectedModelId(value)}>
-							<SelectTrigger className='w-[250px]'>
-								{availableModels.find(model => model.id === selectedModelId)?.name || 'Select Model'}
+							<SelectTrigger className='w-[350px]'>
+								<span className='truncate'>
+									{availableModels.find(model => model.id === selectedModelId)?.name || 'Select Model'}
+								</span>
 							</SelectTrigger>
-							<SelectContent>
+							<SelectContent className='min-w-[350px]'>
 								{availableModels.map(model => (
-									<SelectItem key={model.id} value={model.id}>
+									<SelectItem key={model.id} value={model.id} className='truncate'>
 										{model.name}
 									</SelectItem>
 								))}
@@ -604,7 +606,12 @@ export default function ModelRelationshipGraph() {
 
 			{/* Full Screen Modal */}
 			{isFullScreen && (
-				<div className='fixed inset-0 bg-black/90 z-50 flex items-center justify-center'>
+				<div
+					className='fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8'
+					onClick={e => {
+						if (e.target === e.currentTarget) setIsFullScreen(false)
+					}}
+				>
 					<div className='absolute bottom-4 right-4 flex gap-2 p-2 bg-gray-800 rounded-lg'>
 						<button
 							onClick={handleZoomIn}
@@ -620,16 +627,16 @@ export default function ModelRelationshipGraph() {
 						>
 							<ZoomOut size={18} />
 						</button>
-						<button
-							onClick={() => setIsFullScreen(false)}
-							className='p-1.5 hover:bg-gray-700 rounded-md text-gray-300 hover:text-white transition-colors'
-							title='Close Full Screen'
-						>
-							<X size={18} />
-						</button>
 					</div>
+					<button
+						onClick={() => setIsFullScreen(false)}
+						className='absolute top-4 right-4 p-2 hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white transition-colors'
+						title='Close Full Screen'
+					>
+						<X size={24} />
+					</button>
 					<div
-						className='w-[95vw] h-[90vh] relative overflow-auto'
+						className='w-[95vw] h-[90vh] relative overflow-auto mt-8'
 						style={{
 							backgroundColor: '#1e293b',
 							borderRadius: '8px'

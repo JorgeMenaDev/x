@@ -505,7 +505,7 @@ export default function ModelRelationshipGraph() {
 					) : (
 						<div className='relative'>
 							<div
-								className='absolute right-4 top-4 flex gap-2 p-2 bg-gray-800 rounded-lg z-10'
+								className='absolute right-4 bottom-4 flex gap-2 p-2 bg-gray-800 rounded-lg z-10'
 								style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}
 							>
 								<button
@@ -605,7 +605,7 @@ export default function ModelRelationshipGraph() {
 			{/* Full Screen Modal */}
 			{isFullScreen && (
 				<div className='fixed inset-0 bg-black/90 z-50 flex items-center justify-center'>
-					<div className='absolute top-4 right-4 flex gap-2 p-2 bg-gray-800 rounded-lg'>
+					<div className='absolute bottom-4 right-4 flex gap-2 p-2 bg-gray-800 rounded-lg'>
 						<button
 							onClick={handleZoomIn}
 							className='p-1.5 hover:bg-gray-700 rounded-md text-gray-300 hover:text-white transition-colors'

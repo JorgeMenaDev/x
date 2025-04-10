@@ -93,7 +93,7 @@ const availableModels = [
 const NODE_WIDTH = 140
 const NODE_HEIGHT = 28
 const VERTICAL_SPACING = 40
-const HORIZONTAL_SPACING = 12
+const HORIZONTAL_SPACING = 24
 
 // Function to transform model data
 const transformModelData = (modelResponse: ModelResponse | null): GraphData => {
@@ -243,32 +243,24 @@ export default function ModelRelationshipGraph() {
 		fetchModelRelationships(selectedModelId)
 	}, [selectedModelId])
 
-	// Calculate tree width for a node (recursive)
+	// Function to calculate tree width
 	const calculateTreeWidth = (
 		nodeId: string,
 		level: number,
 		memo: Map<string, number>,
 		visited: Set<string> = new Set()
 	): number => {
-		// Return memoized result if available
 		if (memo.has(nodeId)) return memo.get(nodeId)!
-
-		// Return default width if no data or if we've hit a cycle
 		if (!currentModelData.nodes.length || visited.has(nodeId)) return NODE_WIDTH
-
-		// Mark this node as visited for cycle detection
 		visited.add(nodeId)
 
-		// Get child nodes
 		const children = currentModelData.edges.filter(edge => edge.source === nodeId).map(edge => edge.target)
 
-		// Base case: no children
 		if (children.length === 0) {
 			memo.set(nodeId, NODE_WIDTH)
 			return NODE_WIDTH
 		}
 
-		// Calculate width based on children
 		const childrenWidth = children
 			.map(childId => calculateTreeWidth(childId, level + 1, memo, new Set(visited)))
 			.reduce((a, b) => a + b, 0)
@@ -296,7 +288,7 @@ export default function ModelRelationshipGraph() {
 
 		// Calculate total width needed for the graph
 		const totalWidth = rootNodeIds.reduce((sum, id) => sum + calculateTreeWidth(id, 0, memo), 0)
-		let currentX = 0
+		let currentX = NODE_WIDTH // Add initial padding
 
 		// Start BFS from root nodes
 		const queue: { id: string; level: number; offsetX: number }[] = rootNodeIds.map(id => {
@@ -316,7 +308,7 @@ export default function ModelRelationshipGraph() {
 			positions.push({
 				id,
 				x: offsetX,
-				y: level * (NODE_HEIGHT + VERTICAL_SPACING),
+				y: level * (NODE_HEIGHT + VERTICAL_SPACING) + NODE_HEIGHT, // Add initial vertical padding
 				width: NODE_WIDTH,
 				height: NODE_HEIGHT
 			})
@@ -326,7 +318,7 @@ export default function ModelRelationshipGraph() {
 				.filter(edge => edge.source === id && !seen.has(edge.target))
 				.map(edge => edge.target)
 
-			let childOffsetX = offsetX - (children.length * (NODE_WIDTH + HORIZONTAL_SPACING)) / 2
+			let childOffsetX = offsetX - (children.length * (NODE_WIDTH + HORIZONTAL_SPACING)) / 2 + NODE_WIDTH / 2
 
 			children.forEach(childId => {
 				queue.push({
@@ -542,7 +534,7 @@ export default function ModelRelationshipGraph() {
 								}}
 							>
 								<div
-									className='absolute p-2'
+									className='absolute p-8'
 									style={{
 										height: Math.max(...positions.map(p => p.y + NODE_HEIGHT + 30), 400),
 										width: Math.max(...positions.map(p => p.x + NODE_WIDTH + 30), 800),

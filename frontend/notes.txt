@@ -1,0 +1,5 @@
+The discrepancy isn't an error in the JSON structure itself or the code's implementation of parsing that JSON. The core issue is a mismatch between what the API currently provides and what the desired graph (from the image) represents.
+The API (/api/model-relationships/99009) provides a downstream dependency view starting from model 99009.
+The image shows a holistic view centered around model 99001 (C&FVA), including inputs that do not originate from model 99009 (specifically, Credit Curves - 171 and Simple Mkt Data - 99008).
+Therefore, the JSON for 99009 is correct for showing the relationships starting from 99009, but it's insufficient on its own to build the complete C&FVA-centric graph shown in the image because it lacks information about other models that also feed into C&FVA. The code correctly visualizes the data it receives.
+To achieve the view in the image, the data source (the API response) would need to change to provide all relevant upstream and downstream connections for a central model like C&FVA, regardless of the initially selected model, or the frontend would need a mechanism to fetch and aggregate data from multiple model endpoints.

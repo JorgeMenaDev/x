@@ -3,8 +3,11 @@
 import { useRef, useEffect, useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { showToast } from '@/components/notifications/notification'
 import ModelDetailsCard from '@/components/dependency-graph/model-details-card'
-import { ZoomIn, ZoomOut, Maximize2, X } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, X, Plus } from 'lucide-react'
 
 // Type definitions
 interface ModelGraphNode {
@@ -87,6 +90,20 @@ const availableModels = [
 		id: '171',
 		name: 'Credit Curves'
 	}
+]
+
+// Mock models for the dropdown
+const mockModels = [
+	{ id: '1', name: 'Market Data Model' },
+	{ id: '2', name: 'Risk Assessment Model' },
+	{ id: '3', name: 'Pricing Model' },
+	{ id: '4', name: 'Valuation Model' },
+	{ id: '5', name: 'Portfolio Model' },
+	{ id: '6', name: 'Trading Model' },
+	{ id: '7', name: 'Compliance Model' },
+	{ id: '8', name: 'Reporting Model' },
+	{ id: '9', name: 'Analytics Model' },
+	{ id: '10', name: 'Forecasting Model' }
 ]
 
 // Node dimensions and spacing constants
@@ -196,6 +213,9 @@ export default function ModelRelationshipGraph() {
 	const [selectedNode, setSelectedNode] = useState<string | null>(null)
 	const [zoomLevel, setZoomLevel] = useState(1)
 	const [isFullScreen, setIsFullScreen] = useState(false)
+	const [isAddRelationshipOpen, setIsAddRelationshipOpen] = useState(false)
+	const [selectedInputModel, setSelectedInputModel] = useState('')
+	const [isAddingRelationship, setIsAddingRelationship] = useState(false)
 
 	// Zoom control functions
 	const handleZoomIn = () => {
@@ -472,6 +492,24 @@ export default function ModelRelationshipGraph() {
 	const selectedNodeDetails = getSelectedNodeDetails()
 	const { inputs, outputs } = getNodeConnections()
 
+	const handleAddRelationship = async () => {
+		if (!selectedNode || !selectedInputModel) return
+
+		setIsAddingRelationship(true)
+		try {
+			// Mock API call
+			await new Promise(resolve => setTimeout(resolve, 1000))
+			showToast.success('Relationship added', 'The relationship was successfully created')
+			setIsAddRelationshipOpen(false)
+			// Refresh the graph data
+			fetchModelRelationships(selectedModelId)
+		} catch (error) {
+			showToast.error('Error adding relationship', 'Failed to create the relationship')
+		} finally {
+			setIsAddingRelationship(false)
+		}
+	}
+
 	return (
 		<div className='flex flex-col gap-4'>
 			<Card>
@@ -480,6 +518,10 @@ export default function ModelRelationshipGraph() {
 						<CardTitle>Model Relationship Graph</CardTitle>
 					</div>
 					<div className='flex items-center gap-2'>
+						<Button variant='outline' size='sm' onClick={() => setIsAddRelationshipOpen(true)} disabled={!selectedNode}>
+							<Plus className='mr-2 h-4 w-4' />
+							Add Relationship
+						</Button>
 						<Select value={selectedModelId} onValueChange={value => setSelectedModelId(value)}>
 							<SelectTrigger className='w-[350px]'>
 								<span className='truncate'>
@@ -741,6 +783,46 @@ export default function ModelRelationshipGraph() {
 					}))}
 				/>
 			)}
+
+			{/* Add Relationship Dialog */}
+			<Dialog open={isAddRelationshipOpen} onOpenChange={setIsAddRelationshipOpen}>
+				<DialogContent className='sm:max-w-[425px]'>
+					<DialogHeader>
+						<DialogTitle>Add Relationship</DialogTitle>
+					</DialogHeader>
+					<div className='grid gap-4 py-4'>
+						<div className='grid gap-2'>
+							<label className='text-sm font-medium'>Source Model</label>
+							<div className='p-2 border rounded-md bg-muted'>{selectedNodeDetails?.name}</div>
+						</div>
+						<div className='grid gap-2'>
+							<label className='text-sm font-medium'>Input To</label>
+							<Select value={selectedInputModel} onValueChange={setSelectedInputModel}>
+								<SelectTrigger>
+									<span className='truncate'>
+										{mockModels.find(model => model.id === selectedInputModel)?.name || 'Select Model'}
+									</span>
+								</SelectTrigger>
+								<SelectContent>
+									{mockModels.map(model => (
+										<SelectItem key={model.id} value={model.id}>
+											{model.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+					</div>
+					<DialogFooter>
+						<Button variant='outline' onClick={() => setIsAddRelationshipOpen(false)}>
+							Cancel
+						</Button>
+						<Button onClick={handleAddRelationship} disabled={!selectedInputModel || isAddingRelationship}>
+							{isAddingRelationship ? 'Adding...' : 'Add Relationship'}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	)
 }

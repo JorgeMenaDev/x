@@ -3,74 +3,174 @@ description:
 globs: 
 alwaysApply: false
 ---
-# Database Repository Pattern for Service-Based Architecture
+You are an expert developer in TypeScript, Node.js, Next.js 14 App Router, React, Supabase, GraphQL, Genql, Tailwind CSS, Radix UI, and Shadcn UI.
 
-Here's a draft of the adapted rules for your project structure with multiple services and client-side data fetching:
+   ⚠️ MIGRATION FILES: NEVER add timestamps to migration filenames. ALWAYS use:
+   supabase migration new <name_of_migration>
+   Let Supabase CLI handle timestamps automatically.
 
-## Service Repository Pattern:
 
-- Always use the repository pattern for all service API operations
-- When adding a new service endpoint:
-  1. Create a corresponding model in `src/models/<service-name>/<entity-name>.ts`
-  2. Define a repository interface in `src/repositories/<service-name>/<entity-name>-repository.ts`
-  3. Implement the HTTP adapter in `src/adapters/http/<service-name>/<entity-name>-repository.ts`
-  4. Add a factory function in `src/repositories/index.ts` to expose the repository
-  5. Create React Query hooks in `src/hooks/<service-name>/<entity-name>/use-<operation>.ts`
+   ⚠️ ALWAYS: We're using Next.js 15, all files are by default server but its very IMPORTANT: Every time you create a new file if they're using any hook or they're custom hook itself put at the top of the file "use client".
 
-- Repository interfaces should:
-  1. Define clear method signatures with descriptive names
-  2. Use TypeScript for proper typing of parameters and return values
-  3. Handle all operations needed for the entity (GET, POST, PUT, DELETE)
-  4. Match the service API endpoints and expected data formats
+Let me help you improve the documentation to align with the features-pattern approach. First, I'll analyze the current structure and then propose improvements.
 
-- Repository implementations should:
-  1. Extend BaseHttpRepository for common functionality
-  2. Implement proper error handling using the base repository's handleError method
-  3. Include descriptive logging for debugging purposes
-  4. Follow consistent patterns for API requests and response handling
-  5. Use appropriate HTTP methods for different operations
+I'll search for relevant files to understand the current documentation.
 
-- Service organization:
-  1. Inventory Query Service: `src/repositories/inventory/...`
-  2. Report Service: `src/repositories/reports/...`
-  3. Auth Service: `src/repositories/auth/...`
+Search files...
+Let me analyze the current repository pattern and the features-pattern.md to propose an improved documentation that aligns with the feature-first approach.
 
-- When modifying existing endpoints:
-  1. Update the corresponding model
-  2. Add new methods to the repository interface
-  3. Implement the new methods in the adapter
-  4. Update or create React Query hooks for the new methods
+Here's the improved documentation:
 
-- Always verify API contracts with service teams before implementation
-- Use TypeScript interfaces to ensure type safety across the application
+# Feature Organization Guidelines
 
-## Client-Side Data Fetching:
+## Overview
 
-- Always use React Query (TanStack Query) for all client-side data fetching
-- Avoid using useEffect for data fetching
-- Organize React Query hooks by service and domain in `src/hooks/<service-name>/<entity-name>/` directories
-- Use query keys from the centralized config in `src/lib/query-keys.ts`
-- Follow this pattern for React Query hooks:
-  1. Accept minimal parameters needed for the query
-  2. Use repositories to interact with services
-  3. Handle loading, error, and success states properly
-  4. Return well-typed data and utility functions
-  5. Implement proper caching strategies based on data freshness requirements
+This document outlines our guidelines for organizing features in the application. We follow a feature-first approach where each feature is self-contained and follows a consistent structure.
 
-- For mutations:
-  1. Always invalidate related queries after successful operations
-  2. Use optimistic updates when appropriate for better UX
-  3. Handle error states and rollbacks for failed optimistic updates
+## Directory Structure
 
-- Implement proper authentication handling in repositories:
-  1. Automatically attach auth tokens to requests
-  2. Handle token refresh when needed
-  3. Redirect to login when authentication fails
+```
+src/features/
+└── feature-name/
+    ├── api/
+    │   ├── create-entity.ts
+    │   ├── delete-entity.ts
+    │   ├── get-entity.ts
+    │   ├── get-entities.ts
+    │   └── update-entity.ts
+    ├── components/
+    │   ├── entity-list.tsx
+    │   ├── entity-view.tsx
+    │   ├── create-entity.tsx
+    │   ├── update-entity.tsx
+    │   └── delete-entity.tsx
+    └── types/
+        └── index.ts
+```
 
-- For performance optimization:
-  1. Use pagination where appropriate
-  2. Implement infinite scrolling for large data sets
-  3. Configure proper staleTime and cacheTime for different types of data
-  4. Use prefetching for anticipated user actions
+## Database Operations Guidelines
 
-Would you like me to expand on any specific section or provide more details about the implementation?
+### 1. Migration Files
+
+- NEVER add timestamps to migration filenames
+- Use `supabase migration new <name_of_migration>`
+- Let Supabase CLI handle timestamps automatically
+
+### 2. Feature Module Structure
+
+Each feature should:
+- Be in its own directory under `src/features/`
+- Use kebab-case naming (e.g., `user-settings`, `team-management`)
+- Be self-contained with its own components and API logic
+- Include its own types in a `types` subdirectory
+
+### 3. API Organization
+
+API files should be organized in the `api/` subdirectory following these conventions:
+
+```typescript
+// api/create-entity.ts
+import { z } from 'zod'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+
+// Input validation schema
+export const createEntitySchema = z.object({...})
+export type CreateEntityInput = z.infer<typeof createEntitySchema>
+
+// Server action
+export const createEntity = async (data: CreateEntityInput) => {...}
+
+// React Query hook
+export const useCreateEntity = (config) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: createEntity,
+    onSuccess: () => {
+      queryClient.invalidateQueries([...])
+    },
+    ...config
+  })
+}
+```
+
+Common operations should follow consistent naming:
+- `create-*.ts` - Creation operations
+- `delete-*.ts` - Deletion operations
+- `get-*.ts` - Single entity fetch
+- `get-*s.ts` - List fetch operations
+- `update-*.ts` - Update operations
+
+### 4. Component Organization
+
+Components should be organized in the `components/` subdirectory:
+- Keep components focused and single-responsibility
+- Follow consistent naming patterns:
+  - `*-list.tsx` - List views
+  - `*-view.tsx` - Detail views
+  - `create-*.tsx` - Creation forms
+  - `update-*.tsx` - Update forms
+  - `delete-*.tsx` - Delete confirmations
+
+### 5. State Management
+
+- Use React Query for server state
+- Keep local state minimal and close to where it's used
+- Use proper caching and invalidation strategies
+- Implement optimistic updates when appropriate
+
+### 6. Form Handling
+
+- Use Zod for schema validation
+- Implement proper error handling
+- Show clear error messages
+- Handle loading and success states
+
+### 7. Database Operations
+
+When adding a new database table:
+1. Create a migration file using `supabase migration new <name_of_migration>`
+2. Define the table schema in the migration file
+3. Create corresponding API files in the feature's `api` directory
+4. Create necessary components in the feature's `components` directory
+5. Define types in the feature's `types` directory
+
+When modifying existing tables:
+1. Create a new migration file
+2. Update the corresponding API files
+3. Update affected components
+4. Update types as needed
+
+### 8. Best Practices
+
+- Always verify database schemas using MCP before implementation
+- Use TypeScript for type safety throughout the feature
+- Keep files small and focused (<200 lines)
+- Write clear comments and documentation
+- Implement proper error handling
+- Follow consistent code formatting
+- Use React Query for data fetching
+- Implement proper loading states
+
+## Example Feature Implementation
+
+See the following features in our codebase for reference implementations:
+- `src/features/clients/` - Complete CRUD operations with document management
+- `src/features/electronic-signature/` - Document signing workflow
+
+These examples demonstrate:
+- Proper feature organization
+- API implementation
+- Component structure
+- State management
+- Error handling
+- TypeScript usage
+- Form handling
+- Loading states
+
+This documentation now aligns with the feature-first approach while maintaining the key principles of clean code, type safety, and proper organization. The main differences from the repository pattern are:
+
+1. Feature-centric organization instead of layer-centric
+2. Co-location of related code (API, components, types)
+3. Simplified directory structure
+4. Direct integration with React Query
+5. Clearer separation of concerns within features
